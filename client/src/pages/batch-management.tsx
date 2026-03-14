@@ -146,7 +146,7 @@ export default function BatchManagementPage() {
 
   const onSubmit = (data: BatchChkFormData) => {
     if (selectedBatch) {
-      updateMutation.mutate({ id: selectedBatch.id, data });
+      updateMutation.mutate({ id: selectedBatch.batchChkId, data });
     } else {
       createMutation.mutate(data);
     }
@@ -163,7 +163,7 @@ export default function BatchManagementPage() {
     return new Date(dateString).toLocaleDateString('pt-BR');
   };
 
-  const getStatusBadge = (status: string | null) => {
+  const getStatusBadge = (status: string | null | undefined) => {
     switch (status) {
       case "completed":
         return <Badge variant="default" className="bg-green-500">Concluído</Badge>;
@@ -253,13 +253,13 @@ export default function BatchManagementPage() {
                       </TableHeader>
                       <TableBody>
                         {filteredBatchChecks.map((batch) => (
-                          <TableRow key={batch.id} className="border-border/40 hover:bg-muted/20">
+                          <TableRow key={batch.batchChkId} className="border-border/40 hover:bg-muted/20">
                             <TableCell className="font-medium">
                               <div className="flex items-center">
                                 <div className="neu-pressed rounded-lg w-8 h-8 flex items-center justify-center mr-3">
                                   <Hash className="w-4 h-4 text-primary" />
                                 </div>
-                                {batch.id}
+                                {batch.batchChkId}
                               </div>
                             </TableCell>
                             <TableCell>
@@ -304,7 +304,7 @@ export default function BatchManagementPage() {
                                     <AlertDialogFooter>
                                       <AlertDialogCancel className="neu-button rounded-xl">Cancelar</AlertDialogCancel>
                                       <AlertDialogAction
-                                        onClick={() => handleDelete(batch.id)}
+                                        onClick={() => handleDelete(batch.batchChkId)}
                                         className="neu-button rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90"
                                       >
                                         Excluir
@@ -490,7 +490,7 @@ export default function BatchManagementPage() {
             <TabsContent value="batch-details" className="space-y-6 mt-6">
               {selectedBatch ? (
                 <BatchDetailForm 
-                  batchId={selectedBatch.id} 
+                  batchId={selectedBatch.batchChkId}
                   batchNumber={selectedBatch.batchNumber} 
                 />
               ) : (

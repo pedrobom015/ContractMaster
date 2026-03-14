@@ -51,7 +51,7 @@ export default function BatchChkForm({ batch }: BatchChkFormProps) {
                 </div>
                 <label className="text-sm font-medium text-foreground">Status</label>
               </div>
-              <p className="text-lg font-semibold text-foreground ml-11 capitalize">{batch.status || "Pendente"}</p>
+              <p className="text-lg font-semibold text-foreground ml-11 capitalize">{batch.detail || "Pendente"}</p>
             </div>
 
             {/* Process Date */}
@@ -62,7 +62,7 @@ export default function BatchChkForm({ batch }: BatchChkFormProps) {
                 </div>
                 <label className="text-sm font-medium text-foreground">Data de Processamento</label>
               </div>
-              <p className="text-lg font-semibold text-foreground ml-11">{formatDate(batch.processDate?.toString() || null)}</p>
+              <p className="text-lg font-semibold text-foreground ml-11">{formatDate(batch.dischargeDate?.toString() || null)}</p>
             </div>
 
             {/* Total Amount */}
@@ -73,7 +73,7 @@ export default function BatchChkForm({ batch }: BatchChkFormProps) {
                 </div>
                 <label className="text-sm font-medium text-foreground">Valor Total</label>
               </div>
-              <p className="text-lg font-semibold text-green-600 ml-11">{formatCurrency(batch.totalAmount)}</p>
+              <p className="text-lg font-semibold text-green-600 ml-11">{formatCurrency(batch.paymentValue)}</p>
             </div>
 
             {/* Record Count */}
@@ -84,7 +84,7 @@ export default function BatchChkForm({ batch }: BatchChkFormProps) {
                 </div>
                 <label className="text-sm font-medium text-foreground">Quantidade de Registros</label>
               </div>
-              <p className="text-lg font-semibold text-foreground ml-11">{batch.recordCount || 0}</p>
+              <p className="text-lg font-semibold text-foreground ml-11">{batch.qtdBill || 0}</p>
             </div>
 
             {/* Created Date */}

@@ -27,7 +27,7 @@ const addressTypeSchema = z.object({
 type AddressTypeFormData = z.infer<typeof addressTypeSchema>;
 
 interface AddressType {
-  id: number;
+  addressTypeId: number;
   typeName: string;
   description?: string;
   active: boolean;
@@ -56,7 +56,7 @@ export default function AddressTypesPage() {
   // Default address types that will be created in the database
   const addressTypes: AddressType[] = [
     {
-      id: 1,
+      addressTypeId: 1,
       typeName: "Residencial",
       description: "Endereço residencial do cliente",
       active: true,
@@ -64,7 +64,7 @@ export default function AddressTypesPage() {
       updatedAt: new Date().toISOString(),
     },
     {
-      id: 2,
+      addressTypeId: 2,
       typeName: "Comercial",
       description: "Endereço comercial para correspondência",
       active: true,
@@ -72,7 +72,7 @@ export default function AddressTypesPage() {
       updatedAt: new Date().toISOString(),
     },
     {
-      id: 3,
+      addressTypeId: 3,
       typeName: "Cobrança",
       description: "Endereço específico para cobrança",
       active: true,
@@ -80,7 +80,7 @@ export default function AddressTypesPage() {
       updatedAt: new Date().toISOString(),
     },
     {
-      id: 4,
+      addressTypeId: 4,
       typeName: "Entrega",
       description: "Endereço para entrega de produtos",
       active: false,
@@ -285,7 +285,7 @@ export default function AddressTypesPage() {
                       </TableRow>
                     ) : (
                       filteredTypes.map((type) => (
-                        <TableRow key={type.id} className="border-gray-200">
+                        <TableRow key={type.addressTypeId} className="border-gray-200">
                           <TableCell className="font-medium">
                             <div className="flex items-center space-x-2">
                               <Database className="h-4 w-4 text-gray-500" />
@@ -335,7 +335,7 @@ export default function AddressTypesPage() {
                                   <AlertDialogFooter>
                                     <AlertDialogCancel className="neu-button">Cancelar</AlertDialogCancel>
                                     <AlertDialogAction
-                                      onClick={() => handleDelete(type.id)}
+                                    onClick={() => handleDelete(type.addressTypeId)}
                                       className="neu-button bg-red-600 hover:bg-red-700"
                                     >
                                       Excluir

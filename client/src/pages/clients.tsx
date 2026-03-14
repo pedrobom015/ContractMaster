@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import ClientList from "@/components/clients/client-list";
 import ClientDetail from "@/components/clients/client-detail";
+import ClientForm from "@/components/clients/client-form";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 import type { Client } from "@shared/schema";

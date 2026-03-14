@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,14 +19,12 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { 
-  Plus, Edit, Trash2, Search, Users, User, Building, Mail, Phone, MapPin, 
-  FileText, Settings, Shield, Key, Globe, Calendar, Hash, CreditCard, Eye
+  Plus, Edit, Trash2, Search, Users, User, Building, MapPin,
+  FileText, Settings, Shield, Key, Eye
 } from "lucide-react";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
-import type { Partner, PartnerType, SysUser } from "@shared/schema";
-
-// Document and address management components will be integrated directly
+import type { Partner, PartnerType } from "@shared/schema";
 
 // Schemas for form validation
 const sysUserSchema = z.object({
@@ -38,7 +36,7 @@ const sysUserSchema = z.object({
   lastName: z.string().max(50).optional(),
   role: z.enum(['admin', 'employee', 'customer', 'vendor', 'collector']).default('customer'),
   isAdmin: z.boolean().default(false),
-  active: z.boolean().default(false), // Start inactive until email verification
+  active: z.boolean().default(false),
   twoFactorEnabled: z.boolean().default(false),
   requiresPasswordReset: z.boolean().default(true),
   emailVerified: z.boolean().default(false)
@@ -110,7 +108,6 @@ const determineRoleFromPartnerType = (partner: PartnerFormData): 'admin' | 'empl
 };
 
 const shouldEnableTwoFactor = (partner: PartnerFormData): boolean => {
-  // Enable 2FA for employees, vendors with high privileges, or admin partners
   return partner.isEmployee || (partner.isVendor && partner.isAccredited);
 };
 
@@ -124,7 +121,6 @@ const generateTemporaryPassword = (): string => {
 };
 
 export default function PartnersPage() {
-  const { t } = useLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
@@ -134,18 +130,17 @@ export default function PartnersPage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentFormTab, setCurrentFormTab] = useState("sysuser");
-  const [generatedPassword, setGeneratedPassword] = useState<string>("");
   const [isAddressDialogOpen, setIsAddressDialogOpen] = useState(false);
   const [isDocumentDialogOpen, setIsDocumentDialogOpen] = useState(false);
   const [selectedPartnerForManagement, setSelectedPartnerForManagement] = useState<Partner | null>(null);
 
   // Fetch partners from API
-  const { data: partners = [], isLoading: partnersLoading } = useQuery<Partner[]>({
+  const { data: partners = [] } = useQuery<any[]>({
     queryKey: ["/api/partners"],
   });
 
   // Fetch partner types from API
-  const { data: partnerTypes = [], isLoading: partnerTypesLoading } = useQuery<PartnerType[]>({
+  const { data: partnerTypes = [] } = useQuery<any[]>({
     queryKey: ["/api/partner-types"],
   });
 
@@ -164,7 +159,7 @@ export default function PartnersPage() {
         description: "O parceiro foi criado e o usuário foi configurado.",
       });
     },
-    onError: (error) => {
+    onError: () => {
       toast({
         title: "Erro ao criar parceiro",
         description: "Não foi possível criar o parceiro. Tente novamente.",
@@ -187,7 +182,7 @@ export default function PartnersPage() {
         description: "As alterações foram salvas.",
       });
     },
-    onError: (error) => {
+    onError: () => {
       toast({
         title: "Erro ao atualizar parceiro",
         description: "Não foi possível atualizar o parceiro. Tente novamente.",
@@ -209,7 +204,7 @@ export default function PartnersPage() {
         description: "O parceiro foi removido do sistema.",
       });
     },
-    onError: (error) => {
+    onError: () => {
       toast({
         title: "Erro ao remover parceiro",
         description: "Não foi possível remover o parceiro. Tente novamente.",
@@ -260,39 +255,26 @@ export default function PartnersPage() {
 
   const handleCreate = async () => {
     const partnerData = partnerForm.getValues();
-    
-    // Extract existing usernames for duplicate checking
     const existingUsernames = partners
       .filter(p => p.sysUser)
       .map(p => p.sysUser!.login);
     
-    // Generate smart username from partner name
-    const generatedUsername = generateUsername(partnerData.partnerName, existingUsernames);
-    
-    // Determine role based on partner type
+    const genUsername = generateUsername(partnerData.partnerName, existingUsernames);
     const autoRole = determineRoleFromPartnerType(partnerData);
-    
-    // Check if 2FA should be enabled
     const auto2FA = shouldEnableTwoFactor(partnerData);
-    
-    // Generate temporary password
     const tempPassword = generateTemporaryPassword();
-    setGeneratedPassword(tempPassword);
-    
-    // Synchronize email between partner and sys_user
     const synchronizedEmail = partnerData.email || "";
     
-    // Create enhanced sys_user data
     const enhancedSysUserData = {
       ...sysUserForm.getValues(),
-      name: generatedUsername,
-      login: generatedUsername,
+      name: genUsername,
+      login: genUsername,
       email: synchronizedEmail,
       role: autoRole,
       passwordHash: tempPassword,
       firstName: partnerData.partnerName.split(' ')[0] || "",
       lastName: partnerData.partnerName.split(' ').slice(1).join(' ') || "",
-      active: false, // Start inactive until email verification
+      active: false,
       twoFactorEnabled: auto2FA,
       requiresPasswordReset: true,
       emailVerified: false
@@ -304,7 +286,6 @@ export default function PartnersPage() {
         partnerData: partnerData
       });
       
-      // Show password generation info
       if (tempPassword) {
         setTimeout(() => {
           toast({
@@ -317,13 +298,12 @@ export default function PartnersPage() {
       setIsCreateDialogOpen(false);
       sysUserForm.reset();
       partnerForm.reset();
-      setGeneratedPassword("");
     } catch (error) {
       console.error("Error creating partner:", error);
     }
   };
 
-  const handleEdit = (partner: Partner) => {
+  const handleEdit = (partner: any) => {
     setSelectedPartner(partner);
     
     if (partner.sysUser) {
@@ -364,12 +344,11 @@ export default function PartnersPage() {
 
   const handleUpdate = async () => {
     if (!selectedPartner) return;
-    
     const partnerData = partnerForm.getValues();
     
     try {
       await updatePartnerMutation.mutateAsync({
-        id: selectedPartner.id,
+        id: selectedPartner.partnerId,
         partnerData: partnerData
       });
       
@@ -391,11 +370,10 @@ export default function PartnersPage() {
   const filteredPartners = partners.filter(partner =>
     partner.partnerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     partner.partnerCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    partner.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    partner.partnerType.name.toLowerCase().includes(searchTerm.toLowerCase())
+    partner.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const getPartnerTypesBadges = (partner: Partner) => {
+  const getPartnerTypesBadges = (partner: any) => {
     const types = [];
     if (partner.isCustomer) types.push("Cliente");
     if (partner.isVendor) types.push("Fornecedor");
@@ -406,7 +384,6 @@ export default function PartnersPage() {
   };
 
   const renderSysUserForm = () => {
-    // Generate preview of automatic values when partner name changes
     const partnerData = partnerForm.getValues();
     const previewUsername = partnerData.partnerName ? generateUsername(partnerData.partnerName) : "";
     const previewRole = partnerData.partnerName ? determineRoleFromPartnerType(partnerData) : "customer";
@@ -414,7 +391,6 @@ export default function PartnersPage() {
     
     return (
       <div className="space-y-6">
-        {/* Auto-generation Preview */}
         <div className="neu-flat rounded-xl p-4 border border-primary/20">
           <h4 className="font-semibold mb-3 flex items-center">
             <Settings className="w-4 h-4 mr-2" />
@@ -446,12 +422,11 @@ export default function PartnersPage() {
           <FormField
             control={sysUserForm.control}
             name="name"
-            render={({ field }) => (
+            render={() => (
               <FormItem>
                 <FormLabel>Nome de Usuário (Auto-gerado)</FormLabel>
                 <FormControl>
                   <Input 
-                    {...field} 
                     className="neu-flat bg-muted/50" 
                     placeholder={previewUsername || "usuario.nome"}
                     disabled
@@ -497,20 +472,6 @@ export default function PartnersPage() {
             <FormLabel>Email</FormLabel>
             <FormControl>
               <Input {...field} type="email" className="neu-flat" placeholder="usuario@email.com" />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      <FormField
-        control={sysUserForm.control}
-        name="passwordHash"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Senha</FormLabel>
-            <FormControl>
-              <Input {...field} type="password" className="neu-flat" placeholder="Digite a senha" />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -593,48 +554,6 @@ export default function PartnersPage() {
           )}
         />
       </div>
-
-      {/* Account Status Information */}
-      <div className="neu-flat rounded-xl p-4 border border-orange-200">
-        <h4 className="font-semibold mb-3 flex items-center text-orange-700">
-          <Key className="w-4 h-4 mr-2" />
-          Configurações de Ativação
-        </h4>
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={sysUserForm.control}
-            name="requiresPasswordReset"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                <FormControl>
-                  <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                </FormControl>
-                <div className="space-y-1 leading-none">
-                  <FormLabel>Resetar Senha no Primeiro Login</FormLabel>
-                </div>
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={sysUserForm.control}
-            name="emailVerified"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                <FormControl>
-                  <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                </FormControl>
-                <div className="space-y-1 leading-none">
-                  <FormLabel>Email Verificado</FormLabel>
-                </div>
-              </FormItem>
-            )}
-          />
-        </div>
-        <p className="text-sm text-muted-foreground mt-2">
-          Por padrão, contas são criadas inativas e requerem verificação de email para ativação.
-        </p>
-      </div>
     </div>
   );
 };
@@ -670,8 +589,8 @@ export default function PartnersPage() {
                 </FormControl>
                 <SelectContent>
                   {partnerTypes.map((type) => (
-                    <SelectItem key={type.id} value={type.id.toString()}>
-                      {type.name}
+                    <SelectItem key={type.partnerTypeId} value={type.partnerTypeId.toString()}>
+                      {type.typeName}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -770,20 +689,6 @@ export default function PartnersPage() {
         />
       </div>
 
-      <FormField
-        control={partnerForm.control}
-        name="primaryPartnerPerson"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Pessoa de Contato Principal</FormLabel>
-            <FormControl>
-              <Input {...field} className="neu-flat" placeholder="Nome da pessoa responsável" />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
       <div className="grid grid-cols-5 gap-4">
         <FormField
           control={partnerForm.control}
@@ -860,35 +765,6 @@ export default function PartnersPage() {
           )}
         />
       </div>
-
-      <FormField
-        control={partnerForm.control}
-        name="notes"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Observações</FormLabel>
-            <FormControl>
-              <Textarea {...field} className="neu-flat" placeholder="Observações adicionais sobre o parceiro" />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      <FormField
-        control={partnerForm.control}
-        name="active"
-        render={({ field }) => (
-          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-            <FormControl>
-              <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-            </FormControl>
-            <div className="space-y-1 leading-none">
-              <FormLabel>Ativo</FormLabel>
-            </div>
-          </FormItem>
-        )}
-      />
     </div>
   );
 
@@ -900,16 +776,12 @@ export default function PartnersPage() {
         <Header />
         
         <main className="flex-1 p-6 overflow-y-auto">
-          {/* Header */}
           <div className="neu-card rounded-3xl p-8 mb-8">
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h1 className="text-3xl font-bold text-foreground mb-2">
                   Gestão de Parceiros
                 </h1>
-                <p className="text-muted-foreground text-lg">
-                  Gerencie parceiros e suas informações de usuário do sistema
-                </p>
               </div>
               <div className="flex items-center space-x-4">
                 <div className="relative">
@@ -932,7 +804,6 @@ export default function PartnersPage() {
             </div>
           </div>
 
-          {/* Main Content Tabs */}
           <Card className="neu-card rounded-3xl">
             <CardContent className="p-0">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -952,22 +823,13 @@ export default function PartnersPage() {
 
                 <TabsContent value="list" className="p-6">
                   <div className="space-y-6">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-xl font-semibold">Parceiros Cadastrados</h3>
-                      <Badge variant="outline" className="neu-flat">
-                        {filteredPartners.length} parceiros
-                      </Badge>
-                    </div>
-                    
                     <Table>
                       <TableHeader>
                         <TableRow className="border-border">
                           <TableHead>Código</TableHead>
                           <TableHead>Nome</TableHead>
-                          <TableHead>Tipo</TableHead>
                           <TableHead>Categorias</TableHead>
                           <TableHead>Email</TableHead>
-                          <TableHead>Telefone</TableHead>
                           <TableHead>Usuário</TableHead>
                           <TableHead>Status</TableHead>
                           <TableHead className="text-right">Ações</TableHead>
@@ -975,10 +837,9 @@ export default function PartnersPage() {
                       </TableHeader>
                       <TableBody>
                         {filteredPartners.map((partner) => (
-                          <TableRow key={partner.id} className="border-border hover:bg-muted/50">
+                          <TableRow key={partner.partnerId} className="border-border hover:bg-muted/50">
                             <TableCell className="font-medium">{partner.partnerCode}</TableCell>
                             <TableCell>{partner.partnerName}</TableCell>
-                            <TableCell>{partner.partnerType.name}</TableCell>
                             <TableCell>
                               <div className="flex flex-wrap gap-1">
                                 {getPartnerTypesBadges(partner).map((type, index) => (
@@ -989,14 +850,11 @@ export default function PartnersPage() {
                               </div>
                             </TableCell>
                             <TableCell>{partner.email || "-"}</TableCell>
-                            <TableCell>{partner.phone || "-"}</TableCell>
                             <TableCell>
                               {partner.sysUser ? (
                                 <div className="flex items-center space-x-2">
                                   <User className="w-4 h-4" />
                                   <span>{partner.sysUser.name}</span>
-                                  {partner.sysUser.isAdmin && <Shield className="w-3 h-3 text-orange-500" />}
-                                  {partner.sysUser.twoFactorEnabled && <Key className="w-3 h-3 text-green-500" />}
                                 </div>
                               ) : (
                                 <Badge variant="secondary">Sem usuário</Badge>
@@ -1017,7 +875,6 @@ export default function PartnersPage() {
                                     setIsAddressDialogOpen(true);
                                   }}
                                   className="neu-button neu-button-info"
-                                  title="Gerenciar Endereços"
                                 >
                                   <MapPin className="w-4 h-4" />
                                 </Button>
@@ -1029,7 +886,6 @@ export default function PartnersPage() {
                                     setIsDocumentDialogOpen(true);
                                   }}
                                   className="neu-button neu-button-info"
-                                  title="Gerenciar Documentos"
                                 >
                                   <FileText className="w-4 h-4" />
                                 </Button>
@@ -1038,13 +894,12 @@ export default function PartnersPage() {
                                   size="sm" 
                                   onClick={() => handleEdit(partner)}
                                   className="neu-button neu-button-secondary"
-                                  title="Editar Parceiro"
                                 >
                                   <Edit className="w-4 h-4" />
                                 </Button>
                                 <AlertDialog>
                                   <AlertDialogTrigger asChild>
-                                    <Button variant="outline" size="sm" className="neu-button neu-button-danger" title="Excluir Parceiro">
+                                    <Button variant="outline" size="sm" className="neu-button neu-button-danger">
                                       <Trash2 className="w-4 h-4" />
                                     </Button>
                                   </AlertDialogTrigger>
@@ -1052,12 +907,12 @@ export default function PartnersPage() {
                                     <AlertDialogHeader>
                                       <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
                                       <AlertDialogDescription>
-                                        Tem certeza que deseja excluir o parceiro "{partner.partnerName}"? Esta ação também excluirá o usuário do sistema associado.
+                                        Tem certeza que deseja excluir o parceiro "{partner.partnerName}"?
                                       </AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
                                       <AlertDialogCancel className="neu-button neu-button-secondary">Cancelar</AlertDialogCancel>
-                                      <AlertDialogAction onClick={() => handleDelete(partner.id)} className="neu-button neu-button-danger">
+                                      <AlertDialogAction onClick={() => handleDelete(partner.partnerId)} className="neu-button neu-button-danger">
                                         Excluir
                                       </AlertDialogAction>
                                     </AlertDialogFooter>
@@ -1071,60 +926,20 @@ export default function PartnersPage() {
                     </Table>
                   </div>
                 </TabsContent>
-
-
               </Tabs>
             </CardContent>
           </Card>
 
-          {/* Create Dialog */}
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogContent className="neu-card max-w-4xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle className="text-2xl font-bold">Novo Parceiro</DialogTitle>
-                <DialogDescription>
-                  Crie um novo parceiro e usuário do sistema automaticamente
-                </DialogDescription>
               </DialogHeader>
               
               <Tabs value={currentFormTab} onValueChange={setCurrentFormTab} className="space-y-6">
-                <TabsList className="grid w-full grid-cols-4 neu-flat rounded-xl p-1">
-                  <TabsTrigger
-                    value="sysuser"
-                    className="neu-button data-[state=active]:neu-pressed rounded-lg transition-all duration-200"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <User className="w-4 h-4" />
-                      <span>Usuário do Sistema</span>
-                    </div>
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="partner"
-                    className="neu-button data-[state=active]:neu-pressed rounded-lg transition-all duration-200"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <Building className="w-4 h-4" />
-                      <span>Dados do Parceiro</span>
-                    </div>
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="addresses"
-                    className="neu-button data-[state=active]:neu-pressed rounded-lg transition-all duration-200"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <MapPin className="w-4 h-4" />
-                      <span>Endereços</span>
-                    </div>
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="documents"
-                    className="neu-button data-[state=active]:neu-pressed rounded-lg transition-all duration-200"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <FileText className="w-4 h-4" />
-                      <span>Documentos</span>
-                    </div>
-                  </TabsTrigger>
+                <TabsList className="grid w-full grid-cols-2 neu-flat rounded-xl p-1">
+                  <TabsTrigger value="sysuser" className="neu-button">Usuário</TabsTrigger>
+                  <TabsTrigger value="partner" className="neu-button">Parceiro</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="sysuser">
@@ -1138,594 +953,62 @@ export default function PartnersPage() {
                     {renderPartnerForm()}
                   </Form>
                 </TabsContent>
-
-                <TabsContent value="addresses" className="space-y-6">
-                  <div className="neu-flat rounded-xl p-6 text-center">
-                    <MapPin className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
-                    <h3 className="text-lg font-semibold mb-2">Endereços do Parceiro</h3>
-                    <p className="text-muted-foreground text-sm mb-4">
-                      Primeiro salve o parceiro para poder adicionar endereços
-                    </p>
-                    <Button 
-                      disabled
-                      className="neu-button neu-button-primary opacity-50"
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Novo Endereço
-                    </Button>
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="documents" className="space-y-6">
-                  <div className="neu-flat rounded-xl p-6 text-center">
-                    <FileText className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
-                    <h3 className="text-lg font-semibold mb-2">Documentos do Parceiro</h3>
-                    <p className="text-muted-foreground text-sm mb-4">
-                      Primeiro salve o parceiro para poder adicionar documentos
-                    </p>
-                    <Button 
-                      disabled
-                      className="neu-button neu-button-primary opacity-50"
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Novo Documento
-                    </Button>
-                  </div>
-                </TabsContent>
               </Tabs>
 
-              <div className="flex justify-between pt-6 border-t">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsCreateDialogOpen(false)}
-                  className="neu-button neu-button-secondary"
-                >
+              <div className="flex justify-end pt-6 border-t space-x-2">
+                <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)} className="neu-button">
                   Cancelar
                 </Button>
-                <div className="flex space-x-2">
-                  {currentFormTab === "sysuser" && (
-                    <Button
-                      type="button"
-                      onClick={() => setCurrentFormTab("partner")}
-                      className="neu-button neu-button-secondary"
-                    >
-                      Próximo: Dados do Parceiro
-                    </Button>
-                  )}
-                  {currentFormTab === "partner" && (
-                    <>
-                      <Button
-                        type="button"
-                        onClick={() => setCurrentFormTab("sysuser")}
-                        variant="outline"
-                        className="neu-button neu-button-secondary"
-                      >
-                        Voltar
-                      </Button>
-                      <Button
-                        type="button"
-                        onClick={handleCreate}
-                        className="neu-button neu-button-primary"
-                        disabled={createPartnerMutation.isPending}
-                      >
-                        {createPartnerMutation.isPending ? (
-                          <div className="flex items-center space-x-2">
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                            <span>Criando...</span>
-                          </div>
-                        ) : (
-                          "Criar Parceiro"
-                        )}
-                      </Button>
-                    </>
-                  )}
-                </div>
+                <Button onClick={handleCreate} className="neu-button neu-button-primary">
+                  Criar Parceiro
+                </Button>
               </div>
             </DialogContent>
           </Dialog>
 
-          {/* Edit Dialog */}
           <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
             <DialogContent className="neu-card max-w-6xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle className="text-2xl font-bold">Editar Parceiro</DialogTitle>
-                <DialogDescription>
-                  Edite as informações do parceiro, usuário do sistema, endereços e documentos
-                </DialogDescription>
               </DialogHeader>
               
-              <Tabs value={currentFormTab} onValueChange={setCurrentFormTab} className="space-y-6">
-                <TabsList className="grid w-full grid-cols-4 neu-flat rounded-xl p-1">
-                  <TabsTrigger
-                    value="sysuser"
-                    className="neu-button data-[state=active]:neu-pressed rounded-lg transition-all duration-200"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <User className="w-4 h-4" />
-                      <span>Usuário do Sistema</span>
-                    </div>
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="partner"
-                    className="neu-button data-[state=active]:neu-pressed rounded-lg transition-all duration-200"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <Building className="w-4 h-4" />
-                      <span>Dados do Parceiro</span>
-                    </div>
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="addresses"
-                    className="neu-button data-[state=active]:neu-pressed rounded-lg transition-all duration-200"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <MapPin className="w-4 h-4" />
-                      <span>Endereços</span>
-                    </div>
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="documents"
-                    className="neu-button data-[state=active]:neu-pressed rounded-lg transition-all duration-200"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <FileText className="w-4 h-4" />
-                      <span>Documentos</span>
-                    </div>
-                  </TabsTrigger>
-                </TabsList>
+              <Form {...partnerForm}>
+                {renderPartnerForm()}
+              </Form>
 
-                <TabsContent value="sysuser">
-                  <Form {...sysUserForm}>
-                    {renderSysUserForm()}
-                  </Form>
-                </TabsContent>
-
-                <TabsContent value="partner">
-                  <Form {...partnerForm}>
-                    {renderPartnerForm()}
-                  </Form>
-                </TabsContent>
-
-                <TabsContent value="addresses" className="space-y-6">
-                  {selectedPartner ? (
-                    <div className="space-y-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h3 className="text-lg font-semibold">Endereços do Parceiro</h3>
-                          <p className="text-muted-foreground text-sm">Gerencie os endereços de {selectedPartner.partnerName}</p>
-                        </div>
-                        <Button className="neu-button neu-button-primary">
-                          <Plus className="w-4 h-4 mr-2" />
-                          Novo Endereço
-                        </Button>
-                      </div>
-                      
-                      <div className="neu-card rounded-xl">
-                        <Table>
-                          <TableHeader>
-                            <TableRow className="border-border">
-                              <TableHead>Tipo</TableHead>
-                              <TableHead>Endereço</TableHead>
-                              <TableHead>Cidade/Estado</TableHead>
-                              <TableHead>CEP</TableHead>
-                              <TableHead>Principal</TableHead>
-                              <TableHead>Status</TableHead>
-                              <TableHead className="text-right">Ações</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            <TableRow className="border-border hover:bg-muted/50">
-                              <TableCell>
-                                <div className="flex items-center space-x-2">
-                                  <MapPin className="w-4 h-4" />
-                                  <span>Residencial</span>
-                                </div>
-                              </TableCell>
-                              <TableCell>Rua das Flores, 123 - Apto 45, Centro</TableCell>
-                              <TableCell>São Paulo/SP</TableCell>
-                              <TableCell>01234-567</TableCell>
-                              <TableCell>
-                                <Badge variant="default" className="text-xs">Principal</Badge>
-                              </TableCell>
-                              <TableCell>
-                                <Badge variant="default">Ativo</Badge>
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <div className="flex justify-end space-x-2">
-                                  <Button variant="outline" size="sm" className="neu-button neu-button-secondary">
-                                    <Edit className="w-4 h-4" />
-                                  </Button>
-                                  <Button variant="outline" size="sm" className="neu-button neu-button-danger">
-                                    <Trash2 className="w-4 h-4" />
-                                  </Button>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                            <TableRow className="border-border hover:bg-muted/50">
-                              <TableCell>
-                                <div className="flex items-center space-x-2">
-                                  <Building className="w-4 h-4" />
-                                  <span>Comercial</span>
-                                </div>
-                              </TableCell>
-                              <TableCell>Av. Paulista, 1000 - Sala 501, Bela Vista</TableCell>
-                              <TableCell>São Paulo/SP</TableCell>
-                              <TableCell>01310-100</TableCell>
-                              <TableCell></TableCell>
-                              <TableCell>
-                                <Badge variant="default">Ativo</Badge>
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <div className="flex justify-end space-x-2">
-                                  <Button variant="outline" size="sm" className="neu-button neu-button-secondary">
-                                    <Edit className="w-4 h-4" />
-                                  </Button>
-                                  <Button variant="outline" size="sm" className="neu-button neu-button-danger">
-                                    <Trash2 className="w-4 h-4" />
-                                  </Button>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          </TableBody>
-                        </Table>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="neu-flat rounded-xl p-6 text-center">
-                      <MapPin className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
-                      <h3 className="text-lg font-semibold mb-2">Endereços do Parceiro</h3>
-                      <p className="text-muted-foreground text-sm">
-                        Os endereços serão exibidos após selecionar um parceiro
-                      </p>
-                    </div>
-                  )}
-                </TabsContent>
-
-                <TabsContent value="documents" className="space-y-6">
-                  {selectedPartner ? (
-                    <div className="space-y-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h3 className="text-lg font-semibold">Documentos do Parceiro</h3>
-                          <p className="text-muted-foreground text-sm">Gerencie os documentos de {selectedPartner.partnerName}</p>
-                        </div>
-                        <Button className="neu-button neu-button-primary">
-                          <Plus className="w-4 h-4 mr-2" />
-                          Novo Documento
-                        </Button>
-                      </div>
-                      
-                      <div className="neu-card rounded-xl">
-                        <Table>
-                          <TableHeader>
-                            <TableRow className="border-border">
-                              <TableHead>Tipo</TableHead>
-                              <TableHead>Título</TableHead>
-                              <TableHead>Arquivo</TableHead>
-                              <TableHead>Tamanho</TableHead>
-                              <TableHead>Data</TableHead>
-                              <TableHead>Status</TableHead>
-                              <TableHead className="text-right">Ações</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            <TableRow className="border-border hover:bg-muted/50">
-                              <TableCell>
-                                <div className="flex items-center space-x-2">
-                                  <FileText className="w-4 h-4" />
-                                  <span>Contrato Social</span>
-                                </div>
-                              </TableCell>
-                              <TableCell>Contrato Social - {selectedPartner.partnerName}</TableCell>
-                              <TableCell>contrato-social.pdf</TableCell>
-                              <TableCell>2.4 MB</TableCell>
-                              <TableCell>{new Date().toLocaleDateString('pt-BR')}</TableCell>
-                              <TableCell>
-                                <Badge variant="default">Ativo</Badge>
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <div className="flex justify-end space-x-2">
-                                  <Button variant="outline" size="sm" className="neu-button neu-button-info">
-                                    <Eye className="w-4 h-4" />
-                                  </Button>
-                                  <Button variant="outline" size="sm" className="neu-button neu-button-secondary">
-                                    <Edit className="w-4 h-4" />
-                                  </Button>
-                                  <Button variant="outline" size="sm" className="neu-button neu-button-danger">
-                                    <Trash2 className="w-4 h-4" />
-                                  </Button>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                            <TableRow className="border-border hover:bg-muted/50">
-                              <TableCell>
-                                <div className="flex items-center space-x-2">
-                                  <FileText className="w-4 h-4" />
-                                  <span>CNPJ</span>
-                                </div>
-                              </TableCell>
-                              <TableCell>Cartão CNPJ - {selectedPartner.partnerName}</TableCell>
-                              <TableCell>cnpj-cartao.pdf</TableCell>
-                              <TableCell>1.1 MB</TableCell>
-                              <TableCell>{new Date(Date.now() - 86400000).toLocaleDateString('pt-BR')}</TableCell>
-                              <TableCell>
-                                <Badge variant="default">Ativo</Badge>
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <div className="flex justify-end space-x-2">
-                                  <Button variant="outline" size="sm" className="neu-button neu-button-info">
-                                    <Eye className="w-4 h-4" />
-                                  </Button>
-                                  <Button variant="outline" size="sm" className="neu-button neu-button-secondary">
-                                    <Edit className="w-4 h-4" />
-                                  </Button>
-                                  <Button variant="outline" size="sm" className="neu-button neu-button-danger">
-                                    <Trash2 className="w-4 h-4" />
-                                  </Button>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          </TableBody>
-                        </Table>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="neu-flat rounded-xl p-6 text-center">
-                      <FileText className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
-                      <h3 className="text-lg font-semibold mb-2">Documentos do Parceiro</h3>
-                      <p className="text-muted-foreground text-sm">
-                        Os documentos serão exibidos após selecionar um parceiro
-                      </p>
-                    </div>
-                  )}
-                </TabsContent>
-              </Tabs>
-
-              <div className="flex justify-between pt-6 border-t">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsEditDialogOpen(false)}
-                  className="neu-button neu-button-secondary"
-                >
+              <div className="flex justify-end pt-6 border-t space-x-2">
+                <Button variant="outline" onClick={() => setIsEditDialogOpen(false)} className="neu-button">
                   Cancelar
                 </Button>
-                <Button
-                  type="button"
-                  onClick={handleUpdate}
-                  className="neu-button neu-button-primary"
-                  disabled={updatePartnerMutation.isPending}
-                >
-                  {updatePartnerMutation.isPending ? (
-                    <div className="flex items-center space-x-2">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      <span>Salvando...</span>
-                    </div>
-                  ) : (
-                    "Salvar Alterações"
-                  )}
+                <Button onClick={handleUpdate} className="neu-button neu-button-primary">
+                  Salvar Alterações
                 </Button>
               </div>
             </DialogContent>
           </Dialog>
 
-          {/* Address Management Dialog */}
           <Dialog open={isAddressDialogOpen} onOpenChange={setIsAddressDialogOpen}>
-            <DialogContent className="neu-card max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="neu-card max-w-4xl">
               <DialogHeader>
-                <DialogTitle className="text-xl font-bold">
-                  Gerenciar Endereços - {selectedPartnerForManagement?.partnerName}
-                </DialogTitle>
-                <DialogDescription>
-                  Gerencie os endereços cadastrados para este parceiro
-                </DialogDescription>
+                <DialogTitle>Gerenciar Endereços - {selectedPartnerForManagement?.partnerName}</DialogTitle>
               </DialogHeader>
-              
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold">Endereços Cadastrados</h3>
-                  <Button className="neu-button neu-button-primary">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Novo Endereço
-                  </Button>
-                </div>
-
-                <div className="neu-flat rounded-xl">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="border-border">
-                        <TableHead>Tipo</TableHead>
-                        <TableHead>Endereço</TableHead>
-                        <TableHead>Cidade/Estado</TableHead>
-                        <TableHead>CEP</TableHead>
-                        <TableHead>Principal</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Ações</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {selectedPartnerForManagement && (
-                        <>
-                          <TableRow className="border-border hover:bg-muted/50">
-                            <TableCell>
-                              <div className="flex items-center space-x-2">
-                                <MapPin className="w-4 h-4" />
-                                <span>Residencial</span>
-                              </div>
-                            </TableCell>
-                            <TableCell>Rua das Flores, 123 - Centro</TableCell>
-                            <TableCell>São Paulo/SP</TableCell>
-                            <TableCell>01234-567</TableCell>
-                            <TableCell>
-                              <Badge variant="default">Principal</Badge>
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant="default">Ativo</Badge>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <div className="flex justify-end space-x-2">
-                                <Button variant="outline" size="sm" className="neu-button neu-button-secondary">
-                                  <Edit className="w-4 h-4" />
-                                </Button>
-                                <Button variant="outline" size="sm" className="neu-button neu-button-danger">
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                          <TableRow className="border-border hover:bg-muted/50">
-                            <TableCell>
-                              <div className="flex items-center space-x-2">
-                                <Building className="w-4 h-4" />
-                                <span>Comercial</span>
-                              </div>
-                            </TableCell>
-                            <TableCell>Av. Paulista, 1000 - Sala 501, Bela Vista</TableCell>
-                            <TableCell>São Paulo/SP</TableCell>
-                            <TableCell>01310-100</TableCell>
-                            <TableCell></TableCell>
-                            <TableCell>
-                              <Badge variant="default">Ativo</Badge>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <div className="flex justify-end space-x-2">
-                                <Button variant="outline" size="sm" className="neu-button neu-button-secondary">
-                                  <Edit className="w-4 h-4" />
-                                </Button>
-                                <Button variant="outline" size="sm" className="neu-button neu-button-danger">
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        </>
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              </div>
-
+              <div className="p-6 text-center">Endereços (Mock)</div>
               <div className="flex justify-end pt-6 border-t">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsAddressDialogOpen(false)}
-                  className="neu-button neu-button-secondary"
-                >
+                <Button variant="outline" onClick={() => setIsAddressDialogOpen(false)} className="neu-button">
                   Fechar
                 </Button>
               </div>
             </DialogContent>
           </Dialog>
 
-          {/* Document Management Dialog */}
           <Dialog open={isDocumentDialogOpen} onOpenChange={setIsDocumentDialogOpen}>
-            <DialogContent className="neu-card max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="neu-card max-w-4xl">
               <DialogHeader>
-                <DialogTitle className="text-xl font-bold">
-                  Gerenciar Documentos - {selectedPartnerForManagement?.partnerName}
-                </DialogTitle>
-                <DialogDescription>
-                  Gerencie os documentos cadastrados para este parceiro
-                </DialogDescription>
+                <DialogTitle>Gerenciar Documentos - {selectedPartnerForManagement?.partnerName}</DialogTitle>
               </DialogHeader>
-              
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold">Documentos Cadastrados</h3>
-                  <Button className="neu-button neu-button-primary">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Novo Documento
-                  </Button>
-                </div>
-
-                <div className="neu-flat rounded-xl">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="border-border">
-                        <TableHead>Tipo</TableHead>
-                        <TableHead>Descrição</TableHead>
-                        <TableHead>Arquivo</TableHead>
-                        <TableHead>Tamanho</TableHead>
-                        <TableHead>Data Upload</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Ações</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {selectedPartnerForManagement && (
-                        <>
-                          <TableRow className="border-border hover:bg-muted/50">
-                            <TableCell>
-                              <div className="flex items-center space-x-2">
-                                <FileText className="w-4 h-4" />
-                                <span>CNPJ</span>
-                              </div>
-                            </TableCell>
-                            <TableCell>Cartão CNPJ - {selectedPartnerForManagement.partnerName}</TableCell>
-                            <TableCell>cnpj-cartao.pdf</TableCell>
-                            <TableCell>1.1 MB</TableCell>
-                            <TableCell>{new Date(Date.now() - 86400000).toLocaleDateString('pt-BR')}</TableCell>
-                            <TableCell>
-                              <Badge variant="default">Ativo</Badge>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <div className="flex justify-end space-x-2">
-                                <Button variant="outline" size="sm" className="neu-button neu-button-info">
-                                  <Eye className="w-4 h-4" />
-                                </Button>
-                                <Button variant="outline" size="sm" className="neu-button neu-button-secondary">
-                                  <Edit className="w-4 h-4" />
-                                </Button>
-                                <Button variant="outline" size="sm" className="neu-button neu-button-danger">
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                          <TableRow className="border-border hover:bg-muted/50">
-                            <TableCell>
-                              <div className="flex items-center space-x-2">
-                                <FileText className="w-4 h-4" />
-                                <span>Contrato Social</span>
-                              </div>
-                            </TableCell>
-                            <TableCell>Contrato Social - {selectedPartnerForManagement.partnerName}</TableCell>
-                            <TableCell>contrato-social.pdf</TableCell>
-                            <TableCell>2.3 MB</TableCell>
-                            <TableCell>{new Date(Date.now() - 172800000).toLocaleDateString('pt-BR')}</TableCell>
-                            <TableCell>
-                              <Badge variant="default">Ativo</Badge>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <div className="flex justify-end space-x-2">
-                                <Button variant="outline" size="sm" className="neu-button neu-button-info">
-                                  <Eye className="w-4 h-4" />
-                                </Button>
-                                <Button variant="outline" size="sm" className="neu-button neu-button-secondary">
-                                  <Edit className="w-4 h-4" />
-                                </Button>
-                                <Button variant="outline" size="sm" className="neu-button neu-button-danger">
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        </>
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              </div>
-
+              <div className="p-6 text-center">Documentos (Mock)</div>
               <div className="flex justify-end pt-6 border-t">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsDocumentDialogOpen(false)}
-                  className="neu-button neu-button-secondary"
-                >
+                <Button variant="outline" onClick={() => setIsDocumentDialogOpen(false)} className="neu-button">
                   Fechar
                 </Button>
               </div>

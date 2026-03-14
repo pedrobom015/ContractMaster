@@ -36,9 +36,7 @@ export default function DocumentTypesPage() {
   const form = useForm<DocumentTypeFormData>({
     resolver: zodResolver(insertDocumentTypeSchema),
     defaultValues: {
-      name: "",
       description: "",
-      active: true,
     },
   });
 
@@ -122,9 +120,7 @@ export default function DocumentTypesPage() {
   const handleEdit = (documentType: DocumentType) => {
     setSelectedDocumentType(documentType);
     form.reset({
-      name: documentType.name,
-      description: documentType.description || "",
-      active: documentType.active,
+      description: documentType.description,
     });
     setIsEditDialogOpen(true);
   };
@@ -132,7 +128,7 @@ export default function DocumentTypesPage() {
   const handleUpdate = (data: DocumentTypeFormData) => {
     if (selectedDocumentType) {
       updateDocumentTypeMutation.mutate({ 
-        id: selectedDocumentType.id, 
+        id: selectedDocumentType.documentTypeId,
         data 
       });
     }
@@ -143,8 +139,7 @@ export default function DocumentTypesPage() {
   };
 
   const filteredDocumentTypes = documentTypes?.filter(dt =>
-    dt.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    dt.description?.toLowerCase().includes(searchTerm.toLowerCase())
+    dt.description.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
 
   const renderFormDialog = (open: boolean, onOpenChange: (open: boolean) => void, title: string, onSubmit: (data: DocumentTypeFormData) => void) => (
@@ -160,46 +155,14 @@ export default function DocumentTypesPage() {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
-              name="name"
+              name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Nome do Tipo *</FormLabel>
+                  <FormLabel>Descrição *</FormLabel>
                   <FormControl>
                     <Input placeholder="Ex: RG, CPF, Contrato" className="neu-input" {...field} />
                   </FormControl>
                   <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Descrição</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Descrição do tipo de documento" className="neu-input" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="active"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-center space-x-3 space-y-0">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel>Ativo</FormLabel>
-                  </div>
                 </FormItem>
               )}
             />
@@ -281,25 +244,17 @@ export default function DocumentTypesPage() {
                 <Table>
                   <TableHeader>
                     <TableRow className="border-b-0">
-                      <TableHead>Nome</TableHead>
                       <TableHead>Descrição</TableHead>
-                      <TableHead>Status</TableHead>
                       <TableHead>Criado em</TableHead>
                       <TableHead className="text-right">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredDocumentTypes.map((docType) => (
-                      <TableRow key={docType.id} className="border-b-0">
-                        <TableCell className="font-medium">{docType.name}</TableCell>
-                        <TableCell>{docType.description || "-"}</TableCell>
+                      <TableRow key={docType.documentTypeId} className="border-b-0">
+                        <TableCell className="font-medium">{docType.description}</TableCell>
                         <TableCell>
-                          <Badge variant={docType.active ? "default" : "secondary"}>
-                            {docType.active ? "Ativo" : "Inativo"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {new Date(docType.createdAt).toLocaleDateString('pt-BR')}
+                          {docType.createdAt ? new Date(docType.createdAt).toLocaleDateString('pt-BR') : "-"}
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end space-x-2">
@@ -320,13 +275,13 @@ export default function DocumentTypesPage() {
                                 <AlertDialogHeader>
                                   <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
                                   <AlertDialogDescription>
-                                    Tem certeza que deseja excluir o tipo de documento "{docType.name}"?
+                                    Tem certeza que deseja excluir o tipo de documento "{docType.description}"?
                                     Esta ação não pode ser desfeita.
                                   </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
                                   <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                  <AlertDialogAction onClick={() => handleDelete(docType.id)}>
+                                  <AlertDialogAction onClick={() => handleDelete(docType.documentTypeId)}>
                                     Excluir
                                   </AlertDialogAction>
                                 </AlertDialogFooter>

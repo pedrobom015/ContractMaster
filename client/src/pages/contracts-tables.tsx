@@ -99,7 +99,7 @@ type ContractActiveFormData = z.infer<typeof contractActiveSchema>;
 
 // Interfaces
 interface PerformedService {
-  id: number;
+  performedServiceId: number;
   name: string;
   description?: string;
   code?: string;
@@ -108,7 +108,7 @@ interface PerformedService {
 }
 
 interface GroupBatch {
-  id: number;
+  groupBatchId: number;
   name: string;
   description?: string;
   code?: string;
@@ -118,7 +118,7 @@ interface GroupBatch {
 }
 
 interface Charge {
-  id: number;
+  chargeId: number;
   name: string;
   description?: string;
   code?: string;
@@ -129,7 +129,7 @@ interface Charge {
 }
 
 interface ProratedService {
-  id: number;
+  proratedServiceId: number;
   chargeId: number;
   serviceDescription: string;
   quantity: number;
@@ -143,7 +143,7 @@ interface ProratedService {
 }
 
 interface Classe {
-  id: number;
+  categoryId: number;
   name: string;
   description?: string;
   amountContracts?: number;
@@ -152,7 +152,7 @@ interface Classe {
 }
 
 interface Addendum {
-  id: number;
+  addendumId: number;
   type: string;
   description: string;
   oldValue?: string;
@@ -163,7 +163,7 @@ interface Addendum {
 }
 
 interface ContractStatus {
-  id: number;
+  contractStatusId: number;
   name: string;
   description?: string;
   code?: string;
@@ -174,7 +174,7 @@ interface ContractStatus {
 }
 
 interface PaymentStatus {
-  id: number;
+  paymentStatusId: number;
   name: string;
   description?: string;
   code?: string;
@@ -185,7 +185,7 @@ interface PaymentStatus {
 }
 
 interface ContractActive {
-  id: number;
+  contractActiveId: number;
   name: string;
   description?: string;
   code?: string;
@@ -248,67 +248,67 @@ export default function ContractsTablesPage() {
 
   // State for new tables
   const [contractStatuses, setContractStatuses] = useState<ContractStatus[]>([
-    { id: 1, name: "Ativo", description: "Contrato em vigência", code: "ATIVO", color: "#22c55e", isDefault: true, active: true, createdAt: new Date().toISOString() },
-    { id: 2, name: "Suspenso", description: "Contrato temporariamente suspenso", code: "SUSPENSO", color: "#f59e0b", isDefault: false, active: true, createdAt: new Date().toISOString() },
-    { id: 3, name: "Cancelado", description: "Contrato cancelado", code: "CANCELADO", color: "#ef4444", isDefault: false, active: true, createdAt: new Date().toISOString() },
-    { id: 4, name: "Renovado", description: "Contrato renovado", code: "RENOVADO", color: "#3b82f6", isDefault: false, active: true, createdAt: new Date().toISOString() },
+    { contractStatusId: 1, name: "Ativo", description: "Contrato em vigência", code: "ATIVO", color: "#22c55e", isDefault: true, active: true, createdAt: new Date().toISOString() },
+    { contractStatusId: 2, name: "Suspenso", description: "Contrato temporariamente suspenso", code: "SUSPENSO", color: "#f59e0b", isDefault: false, active: true, createdAt: new Date().toISOString() },
+    { contractStatusId: 3, name: "Cancelado", description: "Contrato cancelado", code: "CANCELADO", color: "#ef4444", isDefault: false, active: true, createdAt: new Date().toISOString() },
+    { contractStatusId: 4, name: "Renovado", description: "Contrato renovado", code: "RENOVADO", color: "#3b82f6", isDefault: false, active: true, createdAt: new Date().toISOString() },
   ]);
 
   const [paymentStatuses, setPaymentStatuses] = useState<PaymentStatus[]>([
-    { id: 1, name: "Em Dia", description: "Pagamentos em dia", code: "EM_DIA", color: "#22c55e", isDefault: true, active: true, createdAt: new Date().toISOString() },
-    { id: 2, name: "Atraso", description: "Pagamento em atraso", code: "ATRASO", color: "#f59e0b", isDefault: false, active: true, createdAt: new Date().toISOString() },
-    { id: 3, name: "Inadimplente", description: "Cliente inadimplente", code: "INADIMPLENTE", color: "#ef4444", isDefault: false, active: true, createdAt: new Date().toISOString() },
-    { id: 4, name: "Quitado", description: "Totalmente quitado", code: "QUITADO", color: "#10b981", isDefault: false, active: true, createdAt: new Date().toISOString() },
+    { paymentStatusId: 1, name: "Em Dia", description: "Pagamentos em dia", code: "EM_DIA", color: "#22c55e", isDefault: true, active: true, createdAt: new Date().toISOString() },
+    { paymentStatusId: 2, name: "Atraso", description: "Pagamento em atraso", code: "ATRASO", color: "#f59e0b", isDefault: false, active: true, createdAt: new Date().toISOString() },
+    { paymentStatusId: 3, name: "Inadimplente", description: "Cliente inadimplente", code: "INADIMPLENTE", color: "#ef4444", isDefault: false, active: true, createdAt: new Date().toISOString() },
+    { paymentStatusId: 4, name: "Quitado", description: "Totalmente quitado", code: "QUITADO", color: "#10b981", isDefault: false, active: true, createdAt: new Date().toISOString() },
   ]);
 
   const [contractActives, setContractActives] = useState<ContractActive[]>([
-    { id: 1, name: "Ativo", description: "Contrato ativo no sistema", code: "ATIVO", isDefault: true, active: true, createdAt: new Date().toISOString() },
-    { id: 2, name: "Inativo", description: "Contrato inativo no sistema", code: "INATIVO", isDefault: false, active: true, createdAt: new Date().toISOString() },
-    { id: 3, name: "Bloqueado", description: "Contrato temporariamente bloqueado", code: "BLOQUEADO", isDefault: false, active: true, createdAt: new Date().toISOString() },
+    { contractActiveId: 1, name: "Ativo", description: "Contrato ativo no sistema", code: "ATIVO", isDefault: true, active: true, createdAt: new Date().toISOString() },
+    { contractActiveId: 2, name: "Inativo", description: "Contrato inativo no sistema", code: "INATIVO", isDefault: false, active: true, createdAt: new Date().toISOString() },
+    { contractActiveId: 3, name: "Bloqueado", description: "Contrato temporariamente bloqueado", code: "BLOQUEADO", isDefault: false, active: true, createdAt: new Date().toISOString() },
   ]);
 
   // Sample data
   const mockPerformedServices: PerformedService[] = [
-    { id: 1, name: "Consulta Médica", description: "Consulta médica geral", code: "CONS001", active: true, createdAt: new Date().toISOString() },
-    { id: 2, name: "Exame Laboratorial", description: "Exames de laboratório", code: "EXAM001", active: true, createdAt: new Date().toISOString() },
-    { id: 3, name: "Cirurgia Eletiva", description: "Procedimentos cirúrgicos eletivos", code: "CIR001", active: true, createdAt: new Date().toISOString() },
-    { id: 4, name: "Fisioterapia", description: "Sessões de fisioterapia", code: "FISIO001", active: true, createdAt: new Date().toISOString() },
+    { performedServiceId: 1, name: "Consulta Médica", description: "Consulta médica geral", code: "CONS001", active: true, createdAt: new Date().toISOString() },
+    { performedServiceId: 2, name: "Exame Laboratorial", description: "Exames de laboratório", code: "EXAM001", active: true, createdAt: new Date().toISOString() },
+    { performedServiceId: 3, name: "Cirurgia Eletiva", description: "Procedimentos cirúrgicos eletivos", code: "CIR001", active: true, createdAt: new Date().toISOString() },
+    { performedServiceId: 4, name: "Fisioterapia", description: "Sessões de fisioterapia", code: "FISIO001", active: true, createdAt: new Date().toISOString() },
   ];
 
   const mockGroupBatches: GroupBatch[] = [
-    { id: 1, name: "Grupo A", description: "Grupo principal de processamento", code: "GPA", batchSize: 100, active: true, createdAt: new Date().toISOString() },
-    { id: 2, name: "Grupo B", description: "Grupo secundário de processamento", code: "GPB", batchSize: 50, active: true, createdAt: new Date().toISOString() },
-    { id: 3, name: "Grupo C", description: "Grupo especializado", code: "GPC", batchSize: 25, active: true, createdAt: new Date().toISOString() },
-    { id: 4, name: "Grupo Emergência", description: "Grupo para casos urgentes", code: "GPE", batchSize: 10, active: true, createdAt: new Date().toISOString() },
+    { groupBatchId: 1, name: "Grupo A", description: "Grupo principal de processamento", code: "GPA", batchSize: 100, active: true, createdAt: new Date().toISOString() },
+    { groupBatchId: 2, name: "Grupo B", description: "Grupo secundário de processamento", code: "GPB", batchSize: 50, active: true, createdAt: new Date().toISOString() },
+    { groupBatchId: 3, name: "Grupo C", description: "Grupo especializado", code: "GPC", batchSize: 25, active: true, createdAt: new Date().toISOString() },
+    { groupBatchId: 4, name: "Grupo Emergência", description: "Grupo para casos urgentes", code: "GPE", batchSize: 10, active: true, createdAt: new Date().toISOString() },
   ];
 
   const mockCharges: Charge[] = [
-    { id: 1, name: "Taxa de Adesão", description: "Taxa inicial de adesão ao plano", code: "TAXA001", amount: "R$ 50,00", type: "Única", active: true, createdAt: new Date().toISOString() },
-    { id: 2, name: "Mensalidade Básica", description: "Mensalidade do plano básico", code: "MENS001", amount: "R$ 120,00", type: "Mensal", active: true, createdAt: new Date().toISOString() },
-    { id: 3, name: "Coparticipação", description: "Taxa de coparticipação por consulta", code: "COPART001", amount: "R$ 25,00", type: "Por uso", active: true, createdAt: new Date().toISOString() },
-    { id: 4, name: "Taxa Administrativa", description: "Taxa administrativa mensal", code: "ADM001", amount: "R$ 15,00", type: "Mensal", active: true, createdAt: new Date().toISOString() },
+    { chargeId: 1, name: "Taxa de Adesão", description: "Taxa inicial de adesão ao plano", code: "TAXA001", amount: "R$ 50,00", type: "Única", active: true, createdAt: new Date().toISOString() },
+    { chargeId: 2, name: "Mensalidade Básica", description: "Mensalidade do plano básico", code: "MENS001", amount: "R$ 120,00", type: "Mensal", active: true, createdAt: new Date().toISOString() },
+    { chargeId: 3, name: "Coparticipação", description: "Taxa de coparticipação por consulta", code: "COPART001", amount: "R$ 25,00", type: "Por uso", active: true, createdAt: new Date().toISOString() },
+    { chargeId: 4, name: "Taxa Administrativa", description: "Taxa administrativa mensal", code: "ADM001", amount: "R$ 15,00", type: "Mensal", active: true, createdAt: new Date().toISOString() },
   ];
 
   const mockProratedServices: ProratedService[] = [
-    { id: 1, chargeId: 2, serviceDescription: "Consulta Cardiológica", quantity: 1, unitValue: "R$ 150,00", totalValue: "R$ 150,00", serviceDate: "2024-01-15", isProrated: true, proratedFactor: 1.0, status: "ativo", createdAt: new Date().toISOString() },
-    { id: 2, chargeId: 2, serviceDescription: "Exame de Sangue", quantity: 2, unitValue: "R$ 45,00", totalValue: "R$ 90,00", serviceDate: "2024-01-20", isProrated: false, proratedFactor: 1.0, status: "ativo", createdAt: new Date().toISOString() },
-    { id: 3, chargeId: 3, serviceDescription: "Fisioterapia", quantity: 10, unitValue: "R$ 80,00", totalValue: "R$ 800,00", serviceDate: "2024-01-10", isProrated: true, proratedFactor: 0.8, status: "ativo", createdAt: new Date().toISOString() },
-    { id: 4, chargeId: 3, serviceDescription: "Raio-X Tórax", quantity: 1, unitValue: "R$ 120,00", totalValue: "R$ 120,00", serviceDate: "2024-01-25", isProrated: false, proratedFactor: 1.0, status: "ativo", createdAt: new Date().toISOString() },
-    { id: 5, chargeId: 4, serviceDescription: "Processamento Administrativo", quantity: 1, unitValue: "R$ 15,00", totalValue: "R$ 15,00", serviceDate: "2024-01-01", isProrated: false, proratedFactor: 1.0, status: "ativo", createdAt: new Date().toISOString() },
+    { proratedServiceId: 1, chargeId: 2, serviceDescription: "Consulta Cardiológica", quantity: 1, unitValue: "R$ 150,00", totalValue: "R$ 150,00", serviceDate: "2024-01-15", isProrated: true, proratedFactor: 1.0, status: "ativo", createdAt: new Date().toISOString() },
+    { proratedServiceId: 2, chargeId: 2, serviceDescription: "Exame de Sangue", quantity: 2, unitValue: "R$ 45,00", totalValue: "R$ 90,00", serviceDate: "2024-01-20", isProrated: false, proratedFactor: 1.0, status: "ativo", createdAt: new Date().toISOString() },
+    { proratedServiceId: 3, chargeId: 3, serviceDescription: "Fisioterapia", quantity: 10, unitValue: "R$ 80,00", totalValue: "R$ 800,00", serviceDate: "2024-01-10", isProrated: true, proratedFactor: 0.8, status: "ativo", createdAt: new Date().toISOString() },
+    { proratedServiceId: 4, chargeId: 3, serviceDescription: "Raio-X Tórax", quantity: 1, unitValue: "R$ 120,00", totalValue: "R$ 120,00", serviceDate: "2024-01-25", isProrated: false, proratedFactor: 1.0, status: "ativo", createdAt: new Date().toISOString() },
+    { proratedServiceId: 5, chargeId: 4, serviceDescription: "Processamento Administrativo", quantity: 1, unitValue: "R$ 15,00", totalValue: "R$ 15,00", serviceDate: "2024-01-01", isProrated: false, proratedFactor: 1.0, status: "ativo", createdAt: new Date().toISOString() },
   ];
 
   const mockClasses: Classe[] = [
-    { id: 1, name: "Categoria Premium", description: "Categoria premium com todos os benefícios", amountContracts: 150, active: true, createdAt: new Date().toISOString() },
-    { id: 2, name: "Categoria Básica", description: "Categoria básica com benefícios essenciais", amountContracts: 320, active: true, createdAt: new Date().toISOString() },
-    { id: 3, name: "Categoria Familiar", description: "Categoria para planos familiares", amountContracts: 85, active: true, createdAt: new Date().toISOString() },
-    { id: 4, name: "Categoria Executiva", description: "Categoria para executivos com cobertura ampliada", amountContracts: 45, active: true, createdAt: new Date().toISOString() },
+    { categoryId: 1, name: "Categoria Premium", description: "Categoria premium com todos os benefícios", amountContracts: 150, active: true, createdAt: new Date().toISOString() },
+    { categoryId: 2, name: "Categoria Básica", description: "Categoria básica com benefícios essenciais", amountContracts: 320, active: true, createdAt: new Date().toISOString() },
+    { categoryId: 3, name: "Categoria Familiar", description: "Categoria para planos familiares", amountContracts: 85, active: true, createdAt: new Date().toISOString() },
+    { categoryId: 4, name: "Categoria Executiva", description: "Categoria para executivos com cobertura ampliada", amountContracts: 45, active: true, createdAt: new Date().toISOString() },
   ];
 
   const mockAddendums: Addendum[] = [
-    { id: 1, type: "value_change", description: "Alteração de valor mensal do plano", oldValue: "R$ 120,00", newValue: "R$ 135,00", effectiveDate: "2024-02-01", active: true, createdAt: new Date().toISOString() },
-    { id: 2, type: "plan_change", description: "Mudança de plano básico para premium", oldValue: "Plano Básico", newValue: "Plano Premium", effectiveDate: "2024-01-15", active: true, createdAt: new Date().toISOString() },
-    { id: 3, type: "suspension", description: "Suspensão temporária do contrato", oldValue: "Ativo", newValue: "Suspenso", effectiveDate: "2024-03-01", active: true, createdAt: new Date().toISOString() },
-    { id: 4, type: "term_extension", description: "Extensão do prazo do contrato", oldValue: "12 meses", newValue: "24 meses", effectiveDate: "2024-01-01", active: true, createdAt: new Date().toISOString() },
+    { addendumId: 1, type: "value_change", description: "Alteração de valor mensal do plano", oldValue: "R$ 120,00", newValue: "R$ 135,00", effectiveDate: "2024-02-01", active: true, createdAt: new Date().toISOString() },
+    { addendumId: 2, type: "plan_change", description: "Mudança de plano básico para premium", oldValue: "Plano Básico", newValue: "Plano Premium", effectiveDate: "2024-01-15", active: true, createdAt: new Date().toISOString() },
+    { addendumId: 3, type: "suspension", description: "Suspensão temporária do contrato", oldValue: "Ativo", newValue: "Suspenso", effectiveDate: "2024-03-01", active: true, createdAt: new Date().toISOString() },
+    { addendumId: 4, type: "term_extension", description: "Extensão do prazo do contrato", oldValue: "12 meses", newValue: "24 meses", effectiveDate: "2024-01-01", active: true, createdAt: new Date().toISOString() },
   ];
 
   // Utility functions
@@ -455,7 +455,7 @@ export default function ContractsTablesPage() {
             </TableHeader>
             <TableBody>
               {filteredServices.map((service: PerformedService) => (
-                <TableRow key={service.id} className="border-border hover:bg-muted/50">
+                <TableRow key={service.performedServiceId} className="border-border hover:bg-muted/50">
                   <TableCell className="font-medium">{service.name}</TableCell>
                   <TableCell>{service.code || "-"}</TableCell>
                   <TableCell>{service.description || "-"}</TableCell>
@@ -489,7 +489,7 @@ export default function ContractsTablesPage() {
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel className="neu-button neu-button-secondary">Cancelar</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDelete(service.id)} className="neu-button neu-button-danger">
+                          <AlertDialogAction onClick={() => handleDelete(service.performedServiceId)} className="neu-button neu-button-danger">
                               Excluir
                             </AlertDialogAction>
                           </AlertDialogFooter>
@@ -537,7 +537,7 @@ export default function ContractsTablesPage() {
             </TableHeader>
             <TableBody>
               {filteredGroups.map((group: GroupBatch) => (
-                <TableRow key={group.id} className="border-border hover:bg-muted/50">
+                <TableRow key={group.groupBatchId} className="border-border hover:bg-muted/50">
                   <TableCell className="font-medium">{group.name}</TableCell>
                   <TableCell>{group.code || "-"}</TableCell>
                   <TableCell>{group.description || "-"}</TableCell>
@@ -572,7 +572,7 @@ export default function ContractsTablesPage() {
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel className="neu-button neu-button-secondary">Cancelar</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDelete(group.id)} className="neu-button neu-button-danger">
+                          <AlertDialogAction onClick={() => handleDelete(group.groupBatchId)} className="neu-button neu-button-danger">
                               Excluir
                             </AlertDialogAction>
                           </AlertDialogFooter>
@@ -622,18 +622,18 @@ export default function ContractsTablesPage() {
             </TableHeader>
             <TableBody>
               {filteredCharges.map((charge: Charge) => {
-                const proratedServices = getProratedServicesByCharge(charge.id);
-                const isExpanded = expandedCharges.has(charge.id);
+                const proratedServices = getProratedServicesByCharge(charge.chargeId);
+                const isExpanded = expandedCharges.has(charge.chargeId);
                 
                 return (
-                  <React.Fragment key={`charge-${charge.id}`}>
+                  <React.Fragment key={`charge-${charge.chargeId}`}>
                     <TableRow className="border-border hover:bg-muted/50">
                       <TableCell>
                         {proratedServices.length > 0 && (
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => toggleChargeExpansion(charge.id)}
+                            onClick={() => toggleChargeExpansion(charge.chargeId)}
                             className="p-1 h-8 w-8"
                           >
                             {isExpanded ? (
@@ -660,7 +660,7 @@ export default function ContractsTablesPage() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => toggleChargeExpansion(charge.id)}
+                              onClick={() => toggleChargeExpansion(charge.chargeId)}
                               className="neu-flat text-xs px-2 py-1 h-6"
                             >
                               {proratedServices.length} serviços
@@ -689,7 +689,7 @@ export default function ContractsTablesPage() {
                               </AlertDialogHeader>
                               <AlertDialogFooter>
                                 <AlertDialogCancel className="neu-button neu-button-secondary">Cancelar</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => handleDelete(charge.id)} className="neu-button neu-button-danger">
+                          <AlertDialogAction onClick={() => handleDelete(charge.chargeId)} className="neu-button neu-button-danger">
                                   Excluir
                                 </AlertDialogAction>
                               </AlertDialogFooter>
@@ -701,7 +701,7 @@ export default function ContractsTablesPage() {
                     
                     {/* Prorated Services Detail Rows */}
                     {isExpanded && proratedServices.length > 0 && (
-                      <TableRow key={`details-${charge.id}`} className="bg-muted/20">
+                      <TableRow key={`details-${charge.chargeId}`} className="bg-muted/20">
                         <TableCell colSpan={8} className="p-0">
                           <div className="p-4 border-l-4 border-primary/20">
                             <div className="mb-3">
@@ -724,7 +724,7 @@ export default function ContractsTablesPage() {
                               </TableHeader>
                               <TableBody>
                                 {proratedServices.map((service: ProratedService) => (
-                                  <TableRow key={service.id} className="border-border">
+                                  <TableRow key={service.proratedServiceId} className="border-border">
                                     <TableCell className="text-sm">{service.serviceDescription}</TableCell>
                                     <TableCell className="text-sm">{service.quantity}</TableCell>
                                     <TableCell className="text-sm">{service.unitValue}</TableCell>
@@ -789,7 +789,7 @@ export default function ContractsTablesPage() {
             </TableHeader>
             <TableBody>
               {filteredCategories.map((category: Classe) => (
-                <TableRow key={category.id} className="border-border hover:bg-muted/50">
+                <TableRow key={category.categoryId} className="border-border hover:bg-muted/50">
                   <TableCell className="font-medium">{category.name}</TableCell>
                   <TableCell>{category.description || "-"}</TableCell>
                   <TableCell>{category.amountContracts || 0}</TableCell>
@@ -823,7 +823,7 @@ export default function ContractsTablesPage() {
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel className="neu-button neu-button-secondary">Cancelar</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDelete(category.id)} className="neu-button neu-button-danger">
+                          <AlertDialogAction onClick={() => handleDelete(category.categoryId)} className="neu-button neu-button-danger">
                               Excluir
                             </AlertDialogAction>
                           </AlertDialogFooter>
@@ -872,7 +872,7 @@ export default function ContractsTablesPage() {
             </TableHeader>
             <TableBody>
               {filteredAddendums.map((addendum: Addendum) => (
-                <TableRow key={addendum.id} className="border-border hover:bg-muted/50">
+                <TableRow key={addendum.addendumId} className="border-border hover:bg-muted/50">
                   <TableCell className="font-medium">
                     <Badge variant="outline" className="neu-flat">
                       {addendum.type.replace('_', ' ')}
@@ -912,7 +912,7 @@ export default function ContractsTablesPage() {
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel className="neu-button neu-button-secondary">Cancelar</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDelete(addendum.id)} className="neu-button neu-button-danger">
+                          <AlertDialogAction onClick={() => handleDelete(addendum.addendumId)} className="neu-button neu-button-danger">
                               Excluir
                             </AlertDialogAction>
                           </AlertDialogFooter>
@@ -950,7 +950,7 @@ export default function ContractsTablesPage() {
             </TableHeader>
             <TableBody>
               {filteredData.map((status: ContractStatus) => (
-                <TableRow key={status.id} className="border-border hover:bg-muted/50">
+                <TableRow key={status.contractStatusId} className="border-border hover:bg-muted/50">
                   <TableCell className="font-medium">{status.name}</TableCell>
                   <TableCell>{status.code || "-"}</TableCell>
                   <TableCell>{status.description || "-"}</TableCell>
@@ -1000,7 +1000,7 @@ export default function ContractsTablesPage() {
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel className="neu-button neu-button-secondary">Cancelar</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDelete(status.id)} className="neu-button neu-button-danger">
+                          <AlertDialogAction onClick={() => handleDelete(status.contractStatusId)} className="neu-button neu-button-danger">
                               Excluir
                             </AlertDialogAction>
                           </AlertDialogFooter>
@@ -1037,7 +1037,7 @@ export default function ContractsTablesPage() {
             </TableHeader>
             <TableBody>
               {filteredData.map((status: PaymentStatus) => (
-                <TableRow key={status.id} className="border-border hover:bg-muted/50">
+                <TableRow key={status.paymentStatusId} className="border-border hover:bg-muted/50">
                   <TableCell className="font-medium">{status.name}</TableCell>
                   <TableCell>{status.code || "-"}</TableCell>
                   <TableCell>{status.description || "-"}</TableCell>
@@ -1087,7 +1087,7 @@ export default function ContractsTablesPage() {
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel className="neu-button neu-button-secondary">Cancelar</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDelete(status.id)} className="neu-button neu-button-danger">
+                          <AlertDialogAction onClick={() => handleDelete(status.paymentStatusId)} className="neu-button neu-button-danger">
                               Excluir
                             </AlertDialogAction>
                           </AlertDialogFooter>
@@ -1123,7 +1123,7 @@ export default function ContractsTablesPage() {
             </TableHeader>
             <TableBody>
               {filteredData.map((active: ContractActive) => (
-                <TableRow key={active.id} className="border-border hover:bg-muted/50">
+                <TableRow key={active.contractActiveId} className="border-border hover:bg-muted/50">
                   <TableCell className="font-medium">{active.name}</TableCell>
                   <TableCell>{active.code || "-"}</TableCell>
                   <TableCell>{active.description || "-"}</TableCell>
@@ -1162,7 +1162,7 @@ export default function ContractsTablesPage() {
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel className="neu-button neu-button-secondary">Cancelar</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDelete(active.id)} className="neu-button neu-button-danger">
+                          <AlertDialogAction onClick={() => handleDelete(active.contractActiveId)} className="neu-button neu-button-danger">
                               Excluir
                             </AlertDialogAction>
                           </AlertDialogFooter>
@@ -2577,8 +2577,8 @@ export default function ContractsTablesPage() {
                               </TableRow>
                             </TableHeader>
                             <TableBody>
-                              {getProratedServicesByCharge(selectedEntity.id).map((service: ProratedService) => (
-                                <TableRow key={service.id} className="border-border">
+                              {getProratedServicesByCharge(selectedEntity.chargeId).map((service: ProratedService) => (
+                                <TableRow key={service.proratedServiceId} className="border-border">
                                   <TableCell className="text-sm">{service.serviceDescription}</TableCell>
                                   <TableCell className="text-sm">{service.quantity}</TableCell>
                                   <TableCell className="text-sm">{service.unitValue}</TableCell>
@@ -2606,7 +2606,7 @@ export default function ContractsTablesPage() {
                                   </TableCell>
                                 </TableRow>
                               ))}
-                              {getProratedServicesByCharge(selectedEntity?.id || 0).length === 0 && (
+                              {getProratedServicesByCharge(selectedEntity.chargeId).length === 0 && (
                                 <TableRow>
                                   <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
                                     Nenhum serviço rateado encontrado para esta circular.
