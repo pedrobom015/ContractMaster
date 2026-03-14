@@ -256,7 +256,7 @@ export default function ContractsEntries() {
 
   const onSubmit = (data: ContractFormData) => {
     if (selectedContract) {
-      updateMutation.mutate({ id: selectedContract.id, data });
+      updateMutation.mutate({ id: selectedContract.contractId, data });
     } else {
       createMutation.mutate(data);
     }
@@ -334,7 +334,7 @@ export default function ContractsEntries() {
                   </TableHeader>
                   <TableBody>
                     {filteredContracts.map((contract) => (
-                      <TableRow key={contract.id} className="border-border/40 hover:bg-muted/20">
+                      <TableRow key={contract.contractId} className="border-border/40 hover:bg-muted/20">
                         <TableCell className="font-medium">{contract.contractNumber}</TableCell>
                         <TableCell>{contract.contractName}</TableCell>
                         <TableCell>{contract.contractType}</TableCell>
@@ -374,7 +374,7 @@ export default function ContractsEntries() {
                                 <AlertDialogFooter>
                                   <AlertDialogCancel className="neu-button rounded-xl">Cancelar</AlertDialogCancel>
                                   <AlertDialogAction
-                                    onClick={() => handleDelete(contract.id)}
+                                    onClick={() => handleDelete(contract.contractId)}
                                     className="neu-button rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90"
                                   >
                                     Excluir
@@ -886,8 +886,8 @@ export default function ContractsEntries() {
 
                 {/* Charges Tab */}
                 <TabsContent value="charges" className="space-y-6">
-                  {selectedContract?.id ? (
-                    <ChargesTab contractId={selectedContract.id} />
+                  {selectedContract?.contractId ? (
+                    <ChargesTab contractId={selectedContract.contractId} />
                   ) : (
                     <div className="bg-muted/20 p-4 rounded-xl">
                       <h3 className="text-lg font-medium mb-2">Cobranças do Contrato</h3>

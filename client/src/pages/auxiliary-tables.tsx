@@ -14,7 +14,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useToast } from "@/hooks/use-toast";
-import { Database, Building, MapPin, FileType, Network, Link2, Plus, Edit, Trash2, Search } from "lucide-react";
+import { Building, MapPin, FileType, Network, Link2, Plus, Edit, Trash2, Search } from "lucide-react";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 import { apiRequest } from "@/lib/queryClient";
@@ -49,17 +49,17 @@ export default function AuxiliaryTables() {
   // Forms
   const partnerTypeForm = useForm<PartnerTypeFormData>({
     resolver: zodResolver(insertPartnerTypeSchema),
-    defaultValues: { name: "", description: "", active: true },
+    defaultValues: { typeName: "", description: "", active: true },
   });
 
   const documentTypeForm = useForm<DocumentTypeFormData>({
     resolver: zodResolver(insertDocumentTypeSchema),
-    defaultValues: { name: "", description: "", active: true },
+    defaultValues: { description: "" },
   });
 
   const addressTypeForm = useForm<AddressTypeFormData>({
     resolver: zodResolver(insertAddressTypeSchema),
-    defaultValues: { typeName: "", description: "", active: true },
+    defaultValues: { name: "" },
   });
 
   // API Queries
@@ -78,7 +78,10 @@ export default function AuxiliaryTables() {
   // Mutations for Partner Types
   const createPartnerTypeMutation = useMutation({
     mutationFn: (data: InsertPartnerType) =>
-      apiRequest('POST', '/api/partner-types', data),
+      apiRequest('/api/partner-types', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
     onSuccess: () => {
       toast({ title: "Sucesso", description: "Tipo de parceiro criado com sucesso" });
       setIsCreateDialogOpen(false);
@@ -92,7 +95,10 @@ export default function AuxiliaryTables() {
 
   const updatePartnerTypeMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: Partial<InsertPartnerType> }) =>
-      apiRequest('PUT', `/api/partner-types/${id}`, data),
+      apiRequest(`/api/partner-types/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }),
     onSuccess: () => {
       toast({ title: "Sucesso", description: "Tipo de parceiro atualizado com sucesso" });
       setIsEditDialogOpen(false);
@@ -106,7 +112,7 @@ export default function AuxiliaryTables() {
 
   const deletePartnerTypeMutation = useMutation({
     mutationFn: (id: number) =>
-      apiRequest('DELETE', `/api/partner-types/${id}`),
+      apiRequest(`/api/partner-types/${id}`, { method: 'DELETE' }),
     onSuccess: () => {
       toast({ title: "Sucesso", description: "Tipo de parceiro excluído com sucesso" });
       queryClient.invalidateQueries({ queryKey: ['/api/partner-types'] });
@@ -119,7 +125,10 @@ export default function AuxiliaryTables() {
   // Mutations for Document Types  
   const createDocumentTypeMutation = useMutation({
     mutationFn: (data: InsertDocumentType) =>
-      apiRequest('POST', '/api/document-types', data),
+      apiRequest('/api/document-types', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
     onSuccess: () => {
       toast({ title: "Sucesso", description: "Tipo de documento criado com sucesso" });
       setIsCreateDialogOpen(false);
@@ -133,7 +142,10 @@ export default function AuxiliaryTables() {
 
   const updateDocumentTypeMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: Partial<InsertDocumentType> }) =>
-      apiRequest('PUT', `/api/document-types/${id}`, data),
+      apiRequest(`/api/document-types/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }),
     onSuccess: () => {
       toast({ title: "Sucesso", description: "Tipo de documento atualizado com sucesso" });
       setIsEditDialogOpen(false);
@@ -147,7 +159,7 @@ export default function AuxiliaryTables() {
 
   const deleteDocumentTypeMutation = useMutation({
     mutationFn: (id: number) =>
-      apiRequest('DELETE', `/api/document-types/${id}`),
+      apiRequest(`/api/document-types/${id}`, { method: 'DELETE' }),
     onSuccess: () => {
       toast({ title: "Sucesso", description: "Tipo de documento excluído com sucesso" });
       queryClient.invalidateQueries({ queryKey: ['/api/document-types'] });
@@ -160,7 +172,10 @@ export default function AuxiliaryTables() {
   // Mutations for Address Types
   const createAddressTypeMutation = useMutation({
     mutationFn: (data: InsertAddressType) =>
-      apiRequest('POST', '/api/address-types', data),
+      apiRequest('/api/address-types', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
     onSuccess: () => {
       toast({ title: "Sucesso", description: "Tipo de endereço criado com sucesso" });
       setIsCreateDialogOpen(false);
@@ -174,7 +189,10 @@ export default function AuxiliaryTables() {
 
   const updateAddressTypeMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: Partial<InsertAddressType> }) =>
-      apiRequest('PUT', `/api/address-types/${id}`, data),
+      apiRequest(`/api/address-types/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }),
     onSuccess: () => {
       toast({ title: "Sucesso", description: "Tipo de endereço atualizado com sucesso" });
       setIsEditDialogOpen(false);
@@ -188,7 +206,7 @@ export default function AuxiliaryTables() {
 
   const deleteAddressTypeMutation = useMutation({
     mutationFn: (id: number) =>
-      apiRequest('DELETE', `/api/address-types/${id}`),
+      apiRequest(`/api/address-types/${id}`, { method: 'DELETE' }),
     onSuccess: () => {
       toast({ title: "Sucesso", description: "Tipo de endereço excluído com sucesso" });
       queryClient.invalidateQueries({ queryKey: ['/api/address-types'] });
@@ -216,26 +234,26 @@ export default function AuxiliaryTables() {
   const handleSave = (data: any) => {
     if (activeTab === "partner-types") {
       if (selectedEntity) {
-        updatePartnerTypeMutation.mutate({ id: selectedEntity.id, data });
+        updatePartnerTypeMutation.mutate({ id: selectedEntity.partnerTypeId, data });
       } else {
         createPartnerTypeMutation.mutate(data);
       }
     } else if (activeTab === "document-types") {
       if (selectedEntity) {
-        updateDocumentTypeMutation.mutate({ id: selectedEntity.id, data });
+        updateDocumentTypeMutation.mutate({ id: selectedEntity.documentTypeId, data });
       } else {
         createDocumentTypeMutation.mutate(data);
       }
     } else if (activeTab === "address-types") {
       if (selectedEntity) {
-        updateAddressTypeMutation.mutate({ id: selectedEntity.id, data });
+        updateAddressTypeMutation.mutate({ id: selectedEntity.addressTypeId, data });
       } else {
         createAddressTypeMutation.mutate(data);
       }
     }
   };
 
-  const handleDelete = (id: number, type: string) => {
+  const handleDelete = (id: number) => {
     if (activeTab === "partner-types") {
       deletePartnerTypeMutation.mutate(id);
     } else if (activeTab === "document-types") {
@@ -255,13 +273,26 @@ export default function AuxiliaryTables() {
 
   const populateForm = (entity: any, tab: string) => {
     switch (tab) {
-      case "partner-types": partnerTypeForm.reset(entity); break;
-      case "document-types": documentTypeForm.reset(entity); break;
-      case "address-types": addressTypeForm.reset(entity); break;
+      case "partner-types":
+        partnerTypeForm.reset({
+          typeName: entity.typeName,
+          description: entity.description || "",
+          active: entity.active
+        });
+        break;
+      case "document-types":
+        documentTypeForm.reset({
+          description: entity.description
+        });
+        break;
+      case "address-types":
+        addressTypeForm.reset({
+          name: entity.name
+        });
+        break;
     }
   };
 
-  // Filter functions
   const getFilteredPartnerTypes = () => {
     if (!searchTerm) return partnerTypes;
     return partnerTypes.filter(pt => 
@@ -284,64 +315,36 @@ export default function AuxiliaryTables() {
     );
   };
 
-  const getFilteredData = (data: any[], searchFields: string[]) => {
-    if (!searchTerm) return data;
-    return data.filter(item =>
-      searchFields.some(field =>
-        item[field]?.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    );
-  };
-
   const tabsConfig = [
     {
       id: "partner-types",
       label: t("section.partner_types"),
-      description: "Gerencie os tipos de parceiros do sistema",
       icon: Building
     },
     {
       id: "address-types", 
       label: t("section.address_types"),
-      description: "Configure os tipos de endereço disponíveis",
       icon: MapPin
     },
     {
       id: "document-types",
       label: t("section.document_types"),
-      description: "Defina os tipos de documentos aceitos",
       icon: FileType
     },
     {
       id: "entity-addresses",
       label: t("section.entity_addresses"),
-      description: "Gerencie vínculos entre entidades e endereços",
       icon: Network
     },
     {
       id: "entity-documents",
       label: t("section.entity_documents"),
-      description: "Gerencie vínculos entre entidades e documentos",
       icon: Link2
     }
   ];
 
   const renderPartnerTypesTab = () => {
     const filteredData = getFilteredPartnerTypes();
-    
-    if (isLoadingPartnerTypes) {
-      return (
-        <Card className="neu-card">
-          <CardContent className="flex items-center justify-center h-64">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-              <p className="mt-4 text-muted-foreground">Carregando tipos de parceiros...</p>
-            </div>
-          </CardContent>
-        </Card>
-      );
-    }
-    
     return (
       <Card className="neu-card">
         <CardHeader className="border-b border-border">
@@ -368,7 +371,7 @@ export default function AuxiliaryTables() {
             </TableHeader>
             <TableBody>
               {filteredData.map((item) => (
-                <TableRow key={item.id} className="border-border hover:bg-muted/50">
+                <TableRow key={item.partnerTypeId} className="border-border hover:bg-muted/50">
                   <TableCell className="font-medium">{item.typeName}</TableCell>
                   <TableCell>{item.description || "-"}</TableCell>
                   <TableCell>
@@ -396,12 +399,12 @@ export default function AuxiliaryTables() {
                           <AlertDialogHeader>
                             <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
                             <AlertDialogDescription>
-                              Tem certeza que deseja excluir o tipo "{item.name}"?
+                              Tem certeza que deseja excluir o tipo "{item.typeName}"?
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel className="neu-button neu-button-secondary">Cancelar</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDelete(item.id, "Tipo de Parceiro")} className="neu-button neu-button-danger">
+                            <AlertDialogAction onClick={() => handleDelete(item.partnerTypeId)} className="neu-button neu-button-danger">
                               Excluir
                             </AlertDialogAction>
                           </AlertDialogFooter>
@@ -418,24 +421,8 @@ export default function AuxiliaryTables() {
     );
   };
 
-
-
   const renderDocumentTypesTab = () => {
     const filteredData = getFilteredDocumentTypes();
-    
-    if (isLoadingDocumentTypes) {
-      return (
-        <Card className="neu-card">
-          <CardContent className="flex items-center justify-center h-64">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-              <p className="mt-4 text-muted-foreground">Carregando tipos de documentos...</p>
-            </div>
-          </CardContent>
-        </Card>
-      );
-    }
-    
     return (
       <Card className="neu-card">
         <CardHeader className="border-b border-border">
@@ -454,27 +441,19 @@ export default function AuxiliaryTables() {
           <Table>
             <TableHeader>
               <TableRow className="border-border">
-                <TableHead>Nome</TableHead>
                 <TableHead>Descrição</TableHead>
-                <TableHead>Obrigatório</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead>Criado em</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredData.map((item) => (
-                <TableRow key={item.id} className="border-border hover:bg-muted/50">
+                <TableRow key={item.documentTypeId} className="border-border hover:bg-muted/50">
                   <TableCell className="font-medium">{item.description}</TableCell>
-                  <TableCell>{item.description || "-"}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline">Não</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="default">Ativo</Badge>
-                  </TableCell>
+                  <TableCell>{item.createdAt ? new Date(item.createdAt).toLocaleDateString('pt-BR') : "-"}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end space-x-2">
-                      <Button variant="outline" size="sm" className="neu-button neu-button-secondary">
+                      <Button variant="outline" size="sm" className="neu-button neu-button-secondary" onClick={() => handleEdit(item, "document-types")}>
                         <Edit className="w-4 h-4" />
                       </Button>
                       <AlertDialog>
@@ -487,12 +466,12 @@ export default function AuxiliaryTables() {
                           <AlertDialogHeader>
                             <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
                             <AlertDialogDescription>
-                              Tem certeza que deseja excluir o tipo "{item.name}"?
+                              Tem certeza que deseja excluir o tipo "{item.description}"?
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel className="neu-button neu-button-secondary">Cancelar</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDelete(item.id, "Tipo de Documento")} className="neu-button neu-button-danger">
+                            <AlertDialogAction onClick={() => handleDelete(item.documentTypeId)} className="neu-button neu-button-danger">
                               Excluir
                             </AlertDialogAction>
                           </AlertDialogFooter>
@@ -511,20 +490,6 @@ export default function AuxiliaryTables() {
 
   const renderAddressTypesTab = () => {
     const filteredData = getFilteredAddressTypes();
-    
-    if (isLoadingAddressTypes) {
-      return (
-        <Card className="neu-card">
-          <CardContent className="flex items-center justify-center h-64">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-              <p className="mt-4 text-muted-foreground">Carregando tipos de endereço...</p>
-            </div>
-          </CardContent>
-        </Card>
-      );
-    }
-    
     return (
       <Card className="neu-card">
         <CardHeader className="border-b border-border">
@@ -544,29 +509,18 @@ export default function AuxiliaryTables() {
             <TableHeader>
               <TableRow className="border-border">
                 <TableHead>Nome</TableHead>
-                <TableHead>Descrição</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead>Criado em</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredData.map((item) => (
-                <TableRow key={item.id} className="border-border hover:bg-muted/50">
-                  <TableCell className="font-medium">{item.typeName}</TableCell>
-                  <TableCell>{item.description || "Sem descrição"}</TableCell>
-                  <TableCell>
-                    <Badge variant={item.active ? "default" : "secondary"}>
-                      {item.active ? "Ativo" : "Inativo"}
-                    </Badge>
-                  </TableCell>
+                <TableRow key={item.addressTypeId} className="border-border hover:bg-muted/50">
+                  <TableCell className="font-medium">{item.name}</TableCell>
+                  <TableCell>{item.createdAt ? new Date(item.createdAt).toLocaleDateString('pt-BR') : "-"}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end space-x-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => handleEdit(item, "address-types")}
-                        className="neu-button neu-button-secondary"
-                      >
+                      <Button variant="outline" size="sm" onClick={() => handleEdit(item, "address-types")} className="neu-button neu-button-secondary">
                         <Edit className="w-4 h-4" />
                       </Button>
                       <AlertDialog>
@@ -579,12 +533,12 @@ export default function AuxiliaryTables() {
                           <AlertDialogHeader>
                             <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
                             <AlertDialogDescription>
-                              Tem certeza que deseja excluir o tipo "{item.typeName}"?
+                              Tem certeza que deseja excluir o tipo "{item.name}"?
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel className="neu-button neu-button-secondary">Cancelar</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDelete(item.id, "Tipo de Endereço")} className="neu-button neu-button-danger">
+                            <AlertDialogAction onClick={() => handleDelete(item.addressTypeId)} className="neu-button neu-button-danger">
                               Excluir
                             </AlertDialogAction>
                           </AlertDialogFooter>
@@ -602,8 +556,6 @@ export default function AuxiliaryTables() {
   };
 
   const renderEntityAddressesTab = () => {
-    const filteredData: any[] = [];
-    
     return (
       <Card className="neu-card">
         <CardHeader className="border-b border-border">
@@ -612,76 +564,16 @@ export default function AuxiliaryTables() {
               <Network className="h-5 w-5" />
               Vínculos de Endereço
             </CardTitle>
-            <Button className="neu-button neu-button-primary">
-              <Plus className="w-4 h-4 mr-2" />
-              Novo Vínculo
-            </Button>
           </div>
         </CardHeader>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow className="border-border">
-                <TableHead>Entidade</TableHead>
-                <TableHead>Tipo</TableHead>
-                <TableHead>Tipo de Endereço</TableHead>
-                <TableHead>Endereço</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredData.map((item) => (
-                <TableRow key={item.id} className="border-border hover:bg-muted/50">
-                  <TableCell className="font-medium">{item.entityName}</TableCell>
-                  <TableCell>{item.entityType}</TableCell>
-                  <TableCell>{item.addressType}</TableCell>
-                  <TableCell>{item.address}</TableCell>
-                  <TableCell>
-                    <Badge variant={item.active ? "default" : "secondary"}>
-                      {item.active ? "Ativo" : "Inativo"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end space-x-2">
-                      <Button variant="outline" size="sm" className="neu-button neu-button-secondary">
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="outline" size="sm" className="neu-button neu-button-danger">
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent className="neu-card">
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Tem certeza que deseja excluir este vínculo?
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel className="neu-button neu-button-secondary">Cancelar</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDelete(item.id, "Vínculo de Endereço")} className="neu-button neu-button-danger">
-                              Excluir
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+        <CardContent className="py-12 text-center text-muted-foreground">
+          <p>Funcionalidade em desenvolvimento.</p>
         </CardContent>
       </Card>
     );
   };
 
   const renderEntityDocumentsTab = () => {
-    const filteredData: any[] = [];
-    
     return (
       <Card className="neu-card">
         <CardHeader className="border-b border-border">
@@ -690,68 +582,10 @@ export default function AuxiliaryTables() {
               <Link2 className="h-5 w-5" />
               Vínculos de Documento
             </CardTitle>
-            <Button className="neu-button neu-button-primary">
-              <Plus className="w-4 h-4 mr-2" />
-              Novo Vínculo
-            </Button>
           </div>
         </CardHeader>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow className="border-border">
-                <TableHead>Entidade</TableHead>
-                <TableHead>Tipo</TableHead>
-                <TableHead>Tipo de Documento</TableHead>
-                <TableHead>Arquivo</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredData.map((item) => (
-                <TableRow key={item.id} className="border-border hover:bg-muted/50">
-                  <TableCell className="font-medium">{item.entityName}</TableCell>
-                  <TableCell>{item.entityType}</TableCell>
-                  <TableCell>{item.documentType}</TableCell>
-                  <TableCell>{item.fileName}</TableCell>
-                  <TableCell>
-                    <Badge variant={item.active ? "default" : "secondary"}>
-                      {item.active ? "Ativo" : "Inativo"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end space-x-2">
-                      <Button variant="outline" size="sm" className="neu-button neu-button-secondary">
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="outline" size="sm" className="neu-button neu-button-danger">
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent className="neu-card">
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Tem certeza que deseja excluir este vínculo?
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel className="neu-button neu-button-secondary">Cancelar</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDelete(item.id, "Vínculo de Documento")} className="neu-button neu-button-danger">
-                              Excluir
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+        <CardContent className="py-12 text-center text-muted-foreground">
+          <p>Funcionalidade em desenvolvimento.</p>
         </CardContent>
       </Card>
     );
@@ -760,409 +594,109 @@ export default function AuxiliaryTables() {
   return (
     <div className="flex h-screen bg-background">
       <Sidebar />
-      
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header />
-        
         <main className="flex-1 p-6 overflow-y-auto">
-          {/* Header */}
-          <div className="neu-card rounded-3xl p-8 mb-8">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h1 className="text-3xl font-bold text-foreground mb-2">
-                  Tabelas Auxiliares
-                </h1>
-                <p className="text-muted-foreground text-lg">
-                  Gerencie as tabelas de apoio e configuração do sistema
-                </p>
-              </div>
-              <div className="flex items-center space-x-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                  <Input
-                    placeholder="Buscar registros..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="neu-flat pl-10 w-64"
-                  />
-                </div>
-                <Badge variant="outline" className="neu-flat text-lg px-4 py-2">
-                  Configuração
-                </Badge>
-              </div>
-            </div>
-          </div>
-
-          {/* Main Content */}
           <Card className="neu-card rounded-3xl">
-            <CardHeader className="pb-8">
-              <CardTitle className="text-2xl font-bold flex items-center justify-between">
-                <span>Tabelas Auxiliares</span>
-                <Badge variant="outline" className="neu-flat">
-                  {tabsConfig.length} tabelas
-                </Badge>
-              </CardTitle>
+            <CardHeader>
+              <CardTitle>Tabelas Auxiliares</CardTitle>
             </CardHeader>
             <CardContent>
               <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
                 <TabsList className="grid w-full grid-cols-5 neu-flat rounded-xl p-1">
                   {tabsConfig.map((tab) => (
-                    <TabsTrigger
-                      key={tab.id}
-                      value={tab.id}
-                      className="neu-button data-[state=active]:neu-pressed rounded-lg transition-all duration-200"
-                    >
+                    <TabsTrigger key={tab.id} value={tab.id} className="neu-button">
                       <div className="flex items-center space-x-2">
                         <tab.icon className="w-4 h-4" />
-                        <span className="font-medium">{tab.label}</span>
+                        <span>{tab.label}</span>
                       </div>
                     </TabsTrigger>
                   ))}
                 </TabsList>
-
-                <TabsContent value="partner-types">
-                  <div className="neu-flat rounded-2xl p-6">
-                    <div className="flex items-center justify-between mb-6">
-                      <div>
-                        <h3 className="text-xl font-semibold flex items-center space-x-3">
-                          <Building className="text-2xl" />
-                          <span>Tipos de Parceiros</span>
-                        </h3>
-                        <p className="text-muted-foreground mt-2">Gerencie os tipos de parceiros do sistema</p>
-                      </div>
-                    </div>
-                  </div>
-                  {renderPartnerTypesTab()}
-                </TabsContent>
-
-                <TabsContent value="address-types">
-                  <div className="neu-flat rounded-2xl p-6">
-                    <div className="flex items-center justify-between mb-6">
-                      <div>
-                        <h3 className="text-xl font-semibold flex items-center space-x-3">
-                          <MapPin className="text-2xl" />
-                          <span>Tipos de Endereço</span>
-                        </h3>
-                        <p className="text-muted-foreground mt-2">Configure os tipos de endereço disponíveis</p>
-                      </div>
-                    </div>
-                  </div>
-                  {renderAddressTypesTab()}
-                </TabsContent>
-
-                <TabsContent value="document-types">
-                  <div className="neu-flat rounded-2xl p-6">
-                    <div className="flex items-center justify-between mb-6">
-                      <div>
-                        <h3 className="text-xl font-semibold flex items-center space-x-3">
-                          <FileType className="text-2xl" />
-                          <span>Tipos de Documento</span>
-                        </h3>
-                        <p className="text-muted-foreground mt-2">Defina os tipos de documentos aceitos</p>
-                      </div>
-                    </div>
-                  </div>
-                  {renderDocumentTypesTab()}
-                </TabsContent>
-
-                <TabsContent value="entity-addresses">
-                  <div className="neu-flat rounded-2xl p-6">
-                    <div className="flex items-center justify-between mb-6">
-                      <div>
-                        <h3 className="text-xl font-semibold flex items-center space-x-3">
-                          <Network className="text-2xl" />
-                          <span>Vínculos de Endereço</span>
-                        </h3>
-                        <p className="text-muted-foreground mt-2">Gerencie vínculos entre entidades e endereços</p>
-                      </div>
-                    </div>
-                  </div>
-                  {renderEntityAddressesTab()}
-                </TabsContent>
-
-                <TabsContent value="entity-documents">
-                  <div className="neu-flat rounded-2xl p-6">
-                    <div className="flex items-center justify-between mb-6">
-                      <div>
-                        <h3 className="text-xl font-semibold flex items-center space-x-3">
-                          <Link2 className="text-2xl" />
-                          <span>Vínculos de Documento</span>
-                        </h3>
-                        <p className="text-muted-foreground mt-2">Gerencie vínculos entre entidades e documentos</p>
-                      </div>
-                    </div>
-                  </div>
-                  {renderEntityDocumentsTab()}
-                </TabsContent>
+                <TabsContent value="partner-types">{renderPartnerTypesTab()}</TabsContent>
+                <TabsContent value="address-types">{renderAddressTypesTab()}</TabsContent>
+                <TabsContent value="document-types">{renderDocumentTypesTab()}</TabsContent>
+                <TabsContent value="entity-addresses">{renderEntityAddressesTab()}</TabsContent>
+                <TabsContent value="entity-documents">{renderEntityDocumentsTab()}</TabsContent>
               </Tabs>
             </CardContent>
           </Card>
 
-          {/* Create Dialog */}
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogContent className="neu-card max-w-md">
-              <DialogHeader>
-                <DialogTitle>Criar Novo Registro</DialogTitle>
-                <DialogDescription>
-                  Preencha os campos abaixo para criar um novo registro
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4">
-                {activeTab === "partner-types" && (
-                  <Form {...partnerTypeForm}>
-                    <form onSubmit={partnerTypeForm.handleSubmit(handleSave)} className="space-y-4">
-                      <FormField
-                        control={partnerTypeForm.control}
-                        name="name"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Nome</FormLabel>
-                            <FormControl>
-                              <Input {...field} className="neu-input" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={partnerTypeForm.control}
-                        name="description"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Descrição</FormLabel>
-                            <FormControl>
-                              <Input {...field} className="neu-input" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <div className="flex justify-end space-x-2 pt-4">
-                        <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)} className="neu-button neu-button-secondary">
-                          Cancelar
-                        </Button>
-                        <Button type="submit" className="neu-button neu-button-primary">
-                          Criar
-                        </Button>
-                      </div>
-                    </form>
-                  </Form>
-                )}
-                {activeTab === "address-types" && (
-                  <Form {...addressTypeForm}>
-                    <form onSubmit={addressTypeForm.handleSubmit(handleSave)} className="space-y-4">
-                      <FormField
-                        control={addressTypeForm.control}
-                        name="typeName"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Nome</FormLabel>
-                            <FormControl>
-                              <Input {...field} className="neu-input" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={addressTypeForm.control}
-                        name="description"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Descrição</FormLabel>
-                            <FormControl>
-                              <Input {...field} className="neu-input" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <div className="flex justify-end space-x-2 pt-4">
-                        <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)} className="neu-button neu-button-secondary">
-                          Cancelar
-                        </Button>
-                        <Button type="submit" className="neu-button neu-button-primary">
-                          Criar
-                        </Button>
-                      </div>
-                    </form>
-                  </Form>
-                )}
-                {activeTab === "document-types" && (
-                  <Form {...documentTypeForm}>
-                    <form onSubmit={documentTypeForm.handleSubmit(handleSave)} className="space-y-4">
-                      <FormField
-                        control={documentTypeForm.control}
-                        name="name"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Nome</FormLabel>
-                            <FormControl>
-                              <Input {...field} className="neu-input" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={documentTypeForm.control}
-                        name="description"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Descrição</FormLabel>
-                            <FormControl>
-                              <Input {...field} className="neu-input" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <div className="flex justify-end space-x-2 pt-4">
-                        <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)} className="neu-button neu-button-secondary">
-                          Cancelar
-                        </Button>
-                        <Button type="submit" className="neu-button neu-button-primary">
-                          Criar
-                        </Button>
-                      </div>
-                    </form>
-                  </Form>
-                )}
-              </div>
+              <DialogHeader><DialogTitle>Criar Novo Registro</DialogTitle></DialogHeader>
+              {activeTab === "partner-types" && (
+                <Form {...partnerTypeForm}>
+                  <form onSubmit={partnerTypeForm.handleSubmit(handleSave)} className="space-y-4">
+                    <FormField control={partnerTypeForm.control} name="typeName" render={({ field }) => (
+                      <FormItem><FormLabel>Nome</FormLabel><FormControl><Input {...field} value={field.value ?? ""} className="neu-input" /></FormControl><FormMessage /></FormItem>
+                    )} />
+                    <FormField control={partnerTypeForm.control} name="description" render={({ field }) => (
+                      <FormItem><FormLabel>Descrição</FormLabel><FormControl><Input {...field} value={field.value ?? ""} className="neu-input" /></FormControl><FormMessage /></FormItem>
+                    )} />
+                    <Button type="submit">Criar</Button>
+                  </form>
+                </Form>
+              )}
+              {activeTab === "address-types" && (
+                <Form {...addressTypeForm}>
+                  <form onSubmit={addressTypeForm.handleSubmit(handleSave)} className="space-y-4">
+                    <FormField control={addressTypeForm.control} name="name" render={({ field }) => (
+                      <FormItem><FormLabel>Nome</FormLabel><FormControl><Input {...field} value={field.value ?? ""} className="neu-input" /></FormControl><FormMessage /></FormItem>
+                    )} />
+                    <Button type="submit">Criar</Button>
+                  </form>
+                </Form>
+              )}
+              {activeTab === "document-types" && (
+                <Form {...documentTypeForm}>
+                  <form onSubmit={documentTypeForm.handleSubmit(handleSave)} className="space-y-4">
+                    <FormField control={documentTypeForm.control} name="description" render={({ field }) => (
+                      <FormItem><FormLabel>Descrição</FormLabel><FormControl><Input {...field} value={field.value ?? ""} className="neu-input" /></FormControl><FormMessage /></FormItem>
+                    )} />
+                    <Button type="submit">Criar</Button>
+                  </form>
+                </Form>
+              )}
             </DialogContent>
           </Dialog>
 
-          {/* Edit Dialog */}
           <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
             <DialogContent className="neu-card max-w-md">
-              <DialogHeader>
-                <DialogTitle>Editar Registro</DialogTitle>
-                <DialogDescription>
-                  Modifique os campos abaixo para atualizar o registro
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4">
-                {activeTab === "partner-types" && (
-                  <Form {...partnerTypeForm}>
-                    <form onSubmit={partnerTypeForm.handleSubmit(handleSave)} className="space-y-4">
-                      <FormField
-                        control={partnerTypeForm.control}
-                        name="name"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Nome</FormLabel>
-                            <FormControl>
-                              <Input {...field} className="neu-input" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={partnerTypeForm.control}
-                        name="description"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Descrição</FormLabel>
-                            <FormControl>
-                              <Input {...field} className="neu-input" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <div className="flex justify-end space-x-2 pt-4">
-                        <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)} className="neu-button neu-button-secondary">
-                          Cancelar
-                        </Button>
-                        <Button type="submit" className="neu-button neu-button-primary">
-                          Salvar
-                        </Button>
-                      </div>
-                    </form>
-                  </Form>
-                )}
-                {activeTab === "address-types" && (
-                  <Form {...addressTypeForm}>
-                    <form onSubmit={addressTypeForm.handleSubmit(handleSave)} className="space-y-4">
-                      <FormField
-                        control={addressTypeForm.control}
-                        name="typeName"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Nome</FormLabel>
-                            <FormControl>
-                              <Input {...field} className="neu-input" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={addressTypeForm.control}
-                        name="description"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Descrição</FormLabel>
-                            <FormControl>
-                              <Input {...field} className="neu-input" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <div className="flex justify-end space-x-2 pt-4">
-                        <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)} className="neu-button neu-button-secondary">
-                          Cancelar
-                        </Button>
-                        <Button type="submit" className="neu-button neu-button-primary">
-                          Salvar
-                        </Button>
-                      </div>
-                    </form>
-                  </Form>
-                )}
-                {activeTab === "document-types" && (
-                  <Form {...documentTypeForm}>
-                    <form onSubmit={documentTypeForm.handleSubmit(handleSave)} className="space-y-4">
-                      <FormField
-                        control={documentTypeForm.control}
-                        name="name"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Nome</FormLabel>
-                            <FormControl>
-                              <Input {...field} className="neu-input" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={documentTypeForm.control}
-                        name="description"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Descrição</FormLabel>
-                            <FormControl>
-                              <Input {...field} className="neu-input" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <div className="flex justify-end space-x-2 pt-4">
-                        <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)} className="neu-button neu-button-secondary">
-                          Cancelar
-                        </Button>
-                        <Button type="submit" className="neu-button neu-button-primary">
-                          Salvar
-                        </Button>
-                      </div>
-                    </form>
-                  </Form>
-                )}
-              </div>
+              <DialogHeader><DialogTitle>Editar Registro</DialogTitle></DialogHeader>
+              {activeTab === "partner-types" && (
+                <Form {...partnerTypeForm}>
+                  <form onSubmit={partnerTypeForm.handleSubmit(handleSave)} className="space-y-4">
+                    <FormField control={partnerTypeForm.control} name="typeName" render={({ field }) => (
+                      <FormItem><FormLabel>Nome</FormLabel><FormControl><Input {...field} value={field.value ?? ""} className="neu-input" /></FormControl><FormMessage /></FormItem>
+                    )} />
+                    <FormField control={partnerTypeForm.control} name="description" render={({ field }) => (
+                      <FormItem><FormLabel>Descrição</FormLabel><FormControl><Input {...field} value={field.value ?? ""} className="neu-input" /></FormControl><FormMessage /></FormItem>
+                    )} />
+                    <Button type="submit">Salvar</Button>
+                  </form>
+                </Form>
+              )}
+              {activeTab === "address-types" && (
+                <Form {...addressTypeForm}>
+                  <form onSubmit={addressTypeForm.handleSubmit(handleSave)} className="space-y-4">
+                    <FormField control={addressTypeForm.control} name="name" render={({ field }) => (
+                      <FormItem><FormLabel>Nome</FormLabel><FormControl><Input {...field} value={field.value ?? ""} className="neu-input" /></FormControl><FormMessage /></FormItem>
+                    )} />
+                    <Button type="submit">Salvar</Button>
+                  </form>
+                </Form>
+              )}
+              {activeTab === "document-types" && (
+                <Form {...documentTypeForm}>
+                  <form onSubmit={documentTypeForm.handleSubmit(handleSave)} className="space-y-4">
+                    <FormField control={documentTypeForm.control} name="description" render={({ field }) => (
+                      <FormItem><FormLabel>Descrição</FormLabel><FormControl><Input {...field} value={field.value ?? ""} className="neu-input" /></FormControl><FormMessage /></FormItem>
+                    )} />
+                    <Button type="submit">Salvar</Button>
+                  </form>
+                </Form>
+              )}
             </DialogContent>
           </Dialog>
         </main>

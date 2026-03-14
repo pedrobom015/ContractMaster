@@ -1,0 +1,2 @@
+shared/schema.ts(152,49): error TS1127: Invalid character.
+shared/schema.ts(1555,1): error TS1160: Unterminated template literal.

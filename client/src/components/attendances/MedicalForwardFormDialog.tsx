@@ -32,44 +32,18 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import {
-  insertMedicalFowardSchema,
-  MedicalFowardSql,
-  SysUnitSql,
-  PerformedServiceSql, // Assuming this is the select type for PerformedService
-} from "@/lib/contracts-schema";
-import { SysUser, Partner } from "../../../../shared/schema"; // Using existing SysUser and Partner types
-
-// Mock data for dropdowns - replace with actual data fetching
-const mockSysUnits: SysUnitSql[] = [
-  { sys_unit_id: 1, name: "Unidade Principal", connection_name: "main", code: "U001" },
-  { sys_unit_id: 2, name: "Filial Sul", connection_name: "south", code: "U002" },
-];
-
-const mockSysUsers: SysUser[] = [
-  { id: 1, name: "Dr. Alice Atendente", login: "alice.atend", email: "alice.atend@example.com", passwordHash: "", active: true, isAdmin: false, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-  { id: 2, name: "Enf. Bob Cuidador", login: "bob.cuid", email: "bob.cuid@example.com", passwordHash: "", active: true, isAdmin: false, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-];
-
-const mockPartners: Partner[] = [
-  { id: 1, partnerName: "Clínica Saúde Total", partnerCode: "P001", companyId:1, sysUnitId:1, sysUserId:1, partnerTypeId:1, specialtyId:1, billingAddressId:1, shippingAddressId:1, active:true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()},
-  { id: 2, partnerName: "Laboratório Vida & Imagem", partnerCode: "P002", companyId:1, sysUnitId:1, sysUserId:1, partnerTypeId:1, specialtyId:1, billingAddressId:1, shippingAddressId:1, active:true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-];
-
-const mockPerformedServices: PerformedServiceSql[] = [ // This needs to align with actual service catalog
-  { performed_service_id: 1, service_type_id: 1 /*, name: "Consulta Clínica Geral"*/ },
-  { performed_service_id: 2, service_type_id: 2 /*, name: "Exame de Sangue Completo"*/ },
-  { performed_service_id: 3, service_type_id: 3 /*, name: "Raio-X Tórax"*/ },
-];
+  insertMedicalForwardSchema as insertMedicalFowardSchema,
+} from "@shared/schema";
+import { SysUser, Partner, MedicalForward, SysUnit, PerformedService } from "@shared/schema";
 
 const paymentMethods = ["Dinheiro", "Cartão Débito", "Cartão Crédito", "PIX", "Gratuito/Cortesia"];
-
 
 type MedicalFowardFormData = z.infer<typeof insertMedicalFowardSchema>;
 
 interface MedicalForwardFormDialogProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  medicalForward?: MedicalFowardSql | null; // For editing
+  medicalForward?: MedicalForward | null; // For editing
   onSubmit: (data: MedicalFowardFormData) => void;
 }
 
@@ -85,18 +59,18 @@ export function MedicalForwardFormDialog({
   const form = useForm<MedicalFowardFormData>({
     resolver: zodResolver(insertMedicalFowardSchema),
     defaultValues: {
-      sys_unit_id: 1, // Default or from context
-      sys_user_id: 1, // Default or from logged-in user context
-      partner_id: undefined,
-      performed_service_id: undefined,
+      sysUnitId: 1,
+      sysUserId: 1,
+      partnerId: undefined,
+      performedServiceId: undefined,
       observation: "",
-      val_payment: null, // Explicitly null for optional number
-      val_aux: null,
-      due_date: today,
-      cashier_number: null,
-      method_pay: null,
-      obs_pay: null,
-      ordpgrc_id: 0, // This will be set by backend or higher logic
+      valPayment: null,
+      valAux: null,
+      dueDate: new Date(today),
+      cashierNumber: null,
+      methodPay: null,
+      obsPay: null,
+      ordpgrcId: 0,
     },
   });
 
@@ -104,21 +78,20 @@ export function MedicalForwardFormDialog({
     if (medicalForward) {
       form.reset({
         ...medicalForward,
-        due_date: medicalForward.due_date ? new Date(medicalForward.due_date).toISOString().split('T')[0] : today,
-        val_payment: medicalForward.val_payment ? parseFloat(medicalForward.val_payment) : null,
-        val_aux: medicalForward.val_aux ? parseFloat(medicalForward.val_aux) : null,
-      });
+        dueDate: medicalForward.dueDate ? new Date(medicalForward.dueDate) : new Date(today),
+        valPayment: medicalForward.valPayment ? parseFloat(medicalForward.valPayment) : null,
+        valAux: medicalForward.valAux ? parseFloat(medicalForward.valAux) : null,
+      } as any);
     } else {
       form.reset({
-        sys_unit_id: 1, sys_user_id: 1, partner_id: undefined, performed_service_id: undefined,
-        observation: "", val_payment: null, val_aux: null, due_date: today,
-        cashier_number: null, method_pay: null, obs_pay: null, ordpgrc_id: 0,
-      });
+        sysUnitId: 1, sysUserId: 1, partnerId: undefined, performedServiceId: undefined,
+        observation: "", valPayment: null, valAux: null, dueDate: new Date(today),
+        cashierNumber: null, methodPay: null, obsPay: null, ordpgrcId: 0,
+      } as any);
     }
   }, [medicalForward, form, today]);
 
   const handleFormSubmit = (data: MedicalFowardFormData) => {
-    console.log("Medical Forward form data:", data);
     onSubmit(data);
     toast({ title: "Sucesso", description: `Guia ${medicalForward ? "atualizada" : "criada"} com sucesso.` });
   };
@@ -128,8 +101,8 @@ export function MedicalForwardFormDialog({
     field.onChange(isNaN(numValue) ? undefined : numValue);
   };
 
-  const valPayment = form.watch("val_payment");
-  const valAux = form.watch("val_aux");
+  const valPayment = form.watch("valPayment");
+  const valAux = form.watch("valAux");
 
   const changeAmount = useMemo(() => {
     const paid = typeof valPayment === 'number' ? valPayment : 0;
@@ -156,19 +129,15 @@ export function MedicalForwardFormDialog({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6 mt-4">
-            {/* Core Guide Information */}
             <FormField
               control={form.control}
-              name="partner_id"
+              name="partnerId"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Credenciado/Médico *</FormLabel>
                   <Select onValueChange={(value) => handleSelectNumberChange(field, value)} value={field.value?.toString()}>
                     <FormControl><SelectTrigger className="neu-input"><SelectValue placeholder="Selecione o credenciado" /></SelectTrigger></FormControl>
                     <SelectContent className="neu-flat">
-                      {mockPartners.map((partner) => (
-                        <SelectItem key={partner.id} value={partner.id.toString()}>{partner.partnerName}</SelectItem>
-                      ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -177,19 +146,13 @@ export function MedicalForwardFormDialog({
             />
             <FormField
               control={form.control}
-              name="performed_service_id"
+              name="performedServiceId"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Serviço Realizado *</FormLabel>
                   <Select onValueChange={(value) => handleSelectNumberChange(field, value)} value={field.value?.toString()}>
                     <FormControl><SelectTrigger className="neu-input"><SelectValue placeholder="Selecione o serviço" /></SelectTrigger></FormControl>
                     <SelectContent className="neu-flat">
-                      {mockPerformedServices.map((service) => (
-                        <SelectItem key={service.performed_service_id} value={service.performed_service_id.toString()}>
-                          {/* Ideally, service would have a name property */}
-                          Serviço ID: {service.performed_service_id} (Tipo: {service.service_type_id})
-                        </SelectItem>
-                      ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -209,23 +172,22 @@ export function MedicalForwardFormDialog({
             />
              <FormField
                 control={form.control}
-                name="due_date" // This is the guide's date, or payment date if applicable
+                name="dueDate"
                 render={({ field }) => (
                     <FormItem>
                         <FormLabel>Data da Guia/Pagamento *</FormLabel>
-                        <FormControl><Input type="date" className="neu-input" {...field} /></FormControl>
+                        <FormControl><Input type="date" className="neu-input" {...field} value={field.value instanceof Date ? field.value.toISOString().split("T")[0] : (field.value ?? "")} /></FormControl>
                         <FormMessage />
                     </FormItem>
                 )}
             />
 
-            {/* Payment Section (Conditional or always visible if guides can have associated fees) */}
             <div className="pt-4 mt-4 border-t neu-inset p-4 rounded-lg">
               <h3 className="text-md font-semibold mb-3">Detalhes do Pagamento (se aplicável)</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <FormField
                   control={form.control}
-                  name="val_payment"
+                  name="valPayment"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Valor Pago R$</FormLabel>
@@ -236,7 +198,7 @@ export function MedicalForwardFormDialog({
                 />
                 <FormField
                   control={form.control}
-                  name="val_aux"
+                  name="valAux"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Valor Entregue R$</FormLabel>
@@ -252,7 +214,7 @@ export function MedicalForwardFormDialog({
               </div>
               <FormField
                 control={form.control}
-                name="method_pay"
+                name="methodPay"
                 render={({ field }) => (
                   <FormItem className="mt-4">
                     <FormLabel>Método de Pagamento</FormLabel>
@@ -270,7 +232,7 @@ export function MedicalForwardFormDialog({
               />
               <FormField
                 control={form.control}
-                name="obs_pay"
+                name="obsPay"
                 render={({ field }) => (
                   <FormItem className="mt-4">
                     <FormLabel>Observações do Pagamento</FormLabel>
@@ -293,6 +255,5 @@ export function MedicalForwardFormDialog({
         </Form>
       </DialogContent>
     </Dialog>
-    </>
   );
 }

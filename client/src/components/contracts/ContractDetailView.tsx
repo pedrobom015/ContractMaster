@@ -22,7 +22,7 @@ import {
   ContractStatusSql,
   PaymentStatusSql,
 } from "@/lib/contracts-schema";
-import { Document, Address } from "../../../../shared/schema";
+import { Document, Address } from "@shared/schema";
 
 // Mock data for status mapping (replace with actual data or props)
 const mockContractStatuses: ContractStatusSql[] = [

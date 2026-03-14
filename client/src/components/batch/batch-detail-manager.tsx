@@ -190,10 +190,10 @@ export function BatchDetailManager({ batchId, showCreateButton = false }: BatchD
                 </TableRow>
               ) : (
                 batchDetails.map((detail: BatchDetail) => (
-                  <TableRow key={detail.id} className="hover:bg-muted/50">
+                  <TableRow key={detail.batchDetailId} className="hover:bg-muted/50">
                     <TableCell className="font-mono">{detail.seqNumber}</TableCell>
                     <TableCell>{detail.billingNumber || "-"}</TableCell>
-                    <TableCell className="font-mono">{detail.fullNumber}</TableCell>
+                    <TableCell className="font-mono">{detail.billingNumber}</TableCell>
                     <TableCell className="font-bold text-green-600">
                       {formatCurrency(detail.amountReceived)}
                     </TableCell>
@@ -211,7 +211,7 @@ export function BatchDetailManager({ batchId, showCreateButton = false }: BatchD
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleDelete(detail.id)}
+                          onClick={() => handleDelete(detail.batchDetailId)}
                           className="h-8 w-8 p-0 text-destructive hover:text-destructive"
                         >
                           <Trash2 className="w-3 h-3" />

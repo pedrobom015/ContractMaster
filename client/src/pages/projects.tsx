@@ -36,7 +36,7 @@ const projectSchema = z.object({
 type ProjectFormData = z.infer<typeof projectSchema>;
 
 interface Project {
-  id: number;
+  projectId: number;
   companyId: number;
   costCenterId?: number;
   departmentId?: number;
@@ -70,7 +70,7 @@ export default function ProjectsPage() {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
 
-  const { data: projects = [], isLoading } = useQuery({
+  const { data: projects = [], isLoading } = useQuery<Project[]>({
     queryKey: ['/api/financial/projects'],
   });
 
@@ -150,7 +150,7 @@ export default function ProjectsPage() {
 
   const handleUpdateProject = (data: ProjectFormData) => {
     if (!selectedProject) return;
-    updateMutation.mutate({ ...data, id: selectedProject.id });
+    updateMutation.mutate({ ...data, id: selectedProject.projectId });
   };
 
   const handleEditProject = (project: Project) => {
@@ -425,7 +425,7 @@ export default function ProjectsPage() {
                       </TableRow>
                     ) : (
                       filteredProjects.map((project: Project) => (
-                        <TableRow key={project.id} className="border-gray-200">
+                        <TableRow key={project.projectId} className="border-gray-200">
                           <TableCell className="font-medium">{project.projectCode}</TableCell>
                           <TableCell>
                             <div>
@@ -477,7 +477,7 @@ export default function ProjectsPage() {
                                   <AlertDialogFooter>
                                     <AlertDialogCancel className="neu-button">Cancelar</AlertDialogCancel>
                                     <AlertDialogAction
-                                      onClick={() => deleteMutation.mutate(project.id)}
+                                      onClick={() => deleteMutation.mutate(project.projectId)}
                                       className="neu-button"
                                     >
                                       Excluir

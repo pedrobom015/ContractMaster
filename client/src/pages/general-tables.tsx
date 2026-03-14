@@ -92,7 +92,7 @@ type PaymentBoxFormData = z.infer<typeof paymentBoxSchema>;
 
 // Interfaces
 interface Company {
-  id: number;
+  companyId: number;
   name: string;
   legalName?: string;
   taxId?: string;
@@ -104,7 +104,7 @@ interface Company {
 }
 
 interface Subsidiary {
-  id: number;
+  subsidiaryId: number;
   name: string;
   companyId: number;
   company: Company;
@@ -116,7 +116,7 @@ interface Subsidiary {
 }
 
 interface State {
-  id: number;
+  stateId: number;
   name: string;
   abbreviation: string;
   ibgeCode?: string;
@@ -125,7 +125,7 @@ interface State {
 }
 
 interface City {
-  id: number;
+  cityId: number;
   name: string;
   stateId: number;
   state: State;
@@ -135,7 +135,7 @@ interface City {
 }
 
 interface Gender {
-  id: number;
+  genderId: number;
   name: string;
   abbreviation?: string;
   active: boolean;
@@ -143,7 +143,7 @@ interface Gender {
 }
 
 interface Currency {
-  id: number;
+  currencyId: number;
   name: string;
   code: string;
   symbol?: string;
@@ -152,7 +152,7 @@ interface Currency {
 }
 
 interface Speciality {
-  id: number;
+  specialtyId: number;
   name: string;
   description?: string;
   code?: string;
@@ -161,7 +161,7 @@ interface Speciality {
 }
 
 interface PaymentBox {
-  id: number;
+  ordpgrcId: number;
   sysUserId: number;
   sysUserName: string;
   orderNumber: string;
@@ -236,14 +236,14 @@ export default function GeneralTablesPage() {
 
   // Sample data
   const mockStates: State[] = [
-    { id: 1, name: "São Paulo", abbreviation: "SP", ibgeCode: "35", active: true, createdAt: new Date().toISOString() },
-    { id: 2, name: "Rio de Janeiro", abbreviation: "RJ", ibgeCode: "33", active: true, createdAt: new Date().toISOString() },
-    { id: 3, name: "Minas Gerais", abbreviation: "MG", ibgeCode: "31", active: true, createdAt: new Date().toISOString() },
+    { stateId: 1, name: "São Paulo", abbreviation: "SP", ibgeCode: "35", active: true, createdAt: new Date().toISOString() },
+    { stateId: 2, name: "Rio de Janeiro", abbreviation: "RJ", ibgeCode: "33", active: true, createdAt: new Date().toISOString() },
+    { stateId: 3, name: "Minas Gerais", abbreviation: "MG", ibgeCode: "31", active: true, createdAt: new Date().toISOString() },
   ];
 
   const mockCompanies: Company[] = [
     {
-      id: 1,
+      companyId: 1,
       name: "ContractMaster Ltda",
       legalName: "ContractMaster Soluções Empresariais Ltda",
       taxId: "12.345.678/0001-99",
@@ -254,7 +254,7 @@ export default function GeneralTablesPage() {
       createdAt: new Date().toISOString(),
     },
     {
-      id: 2,
+      companyId: 2,
       name: "TechSolutions S.A.",
       legalName: "TechSolutions Tecnologia e Inovação S.A.",
       taxId: "98.765.432/0001-11",
@@ -268,7 +268,7 @@ export default function GeneralTablesPage() {
 
   const mockSubsidiaries: Subsidiary[] = [
     {
-      id: 1,
+      subsidiaryId: 1,
       name: "Filial São Paulo",
       companyId: 1,
       company: mockCompanies[0],
@@ -279,7 +279,7 @@ export default function GeneralTablesPage() {
       createdAt: new Date().toISOString(),
     },
     {
-      id: 2,
+      subsidiaryId: 2,
       name: "Filial Rio de Janeiro",
       companyId: 1,
       company: mockCompanies[0],
@@ -292,33 +292,33 @@ export default function GeneralTablesPage() {
   ];
 
   const mockCities: City[] = [
-    { id: 1, name: "São Paulo", stateId: 1, state: mockStates[0], ibgeCode: "3550308", active: true, createdAt: new Date().toISOString() },
-    { id: 2, name: "Campinas", stateId: 1, state: mockStates[0], ibgeCode: "3509502", active: true, createdAt: new Date().toISOString() },
-    { id: 3, name: "Rio de Janeiro", stateId: 2, state: mockStates[1], ibgeCode: "3304557", active: true, createdAt: new Date().toISOString() },
+    { cityId: 1, name: "São Paulo", stateId: 1, state: mockStates[0], ibgeCode: "3550308", active: true, createdAt: new Date().toISOString() },
+    { cityId: 2, name: "Campinas", stateId: 1, state: mockStates[0], ibgeCode: "3509502", active: true, createdAt: new Date().toISOString() },
+    { cityId: 3, name: "Rio de Janeiro", stateId: 2, state: mockStates[1], ibgeCode: "3304557", active: true, createdAt: new Date().toISOString() },
   ];
 
   const mockGenders: Gender[] = [
-    { id: 1, name: "Masculino", abbreviation: "M", active: true, createdAt: new Date().toISOString() },
-    { id: 2, name: "Feminino", abbreviation: "F", active: true, createdAt: new Date().toISOString() },
-    { id: 3, name: "Não Binário", abbreviation: "NB", active: true, createdAt: new Date().toISOString() },
+    { genderId: 1, name: "Masculino", abbreviation: "M", active: true, createdAt: new Date().toISOString() },
+    { genderId: 2, name: "Feminino", abbreviation: "F", active: true, createdAt: new Date().toISOString() },
+    { genderId: 3, name: "Não Binário", abbreviation: "NB", active: true, createdAt: new Date().toISOString() },
   ];
 
   const mockCurrencies: Currency[] = [
-    { id: 1, name: "Real Brasileiro", code: "BRL", symbol: "R$", active: true, createdAt: new Date().toISOString() },
-    { id: 2, name: "Dólar Americano", code: "USD", symbol: "$", active: true, createdAt: new Date().toISOString() },
-    { id: 3, name: "Euro", code: "EUR", symbol: "€", active: true, createdAt: new Date().toISOString() },
+    { currencyId: 1, name: "Real Brasileiro", code: "BRL", symbol: "R$", active: true, createdAt: new Date().toISOString() },
+    { currencyId: 2, name: "Dólar Americano", code: "USD", symbol: "$", active: true, createdAt: new Date().toISOString() },
+    { currencyId: 3, name: "Euro", code: "EUR", symbol: "€", active: true, createdAt: new Date().toISOString() },
   ];
 
   const mockSpecialities: Speciality[] = [
-    { id: 1, name: "Cardiologia", description: "Especialidade médica cardiovascular", code: "CARD", active: true, createdAt: new Date().toISOString() },
-    { id: 2, name: "Dermatologia", description: "Especialidade médica dermatológica", code: "DERM", active: true, createdAt: new Date().toISOString() },
-    { id: 3, name: "Pediatria", description: "Especialidade médica pediátrica", code: "PEDI", active: true, createdAt: new Date().toISOString() },
-    { id: 4, name: "Ortopedia", description: "Especialidade médica ortopédica", code: "ORTO", active: true, createdAt: new Date().toISOString() },
+    { specialtyId: 1, name: "Cardiologia", description: "Especialidade médica cardiovascular", code: "CARD", active: true, createdAt: new Date().toISOString() },
+    { specialtyId: 2, name: "Dermatologia", description: "Especialidade médica dermatológica", code: "DERM", active: true, createdAt: new Date().toISOString() },
+    { specialtyId: 3, name: "Pediatria", description: "Especialidade médica pediátrica", code: "PEDI", active: true, createdAt: new Date().toISOString() },
+    { specialtyId: 4, name: "Ortopedia", description: "Especialidade médica ortopédica", code: "ORTO", active: true, createdAt: new Date().toISOString() },
   ];
 
   const mockPaymentBoxes: PaymentBox[] = [
     {
-      id: 1,
+      ordpgrcId: 1,
       sysUserId: 1,
       sysUserName: "João Silva",
       orderNumber: "ORD-2024-001",
@@ -330,7 +330,7 @@ export default function GeneralTablesPage() {
       createdAt: new Date().toISOString(),
     },
     {
-      id: 2,
+      ordpgrcId: 2,
       sysUserId: 2,
       sysUserName: "Maria Santos",
       orderNumber: "ORD-2024-002",
@@ -342,7 +342,7 @@ export default function GeneralTablesPage() {
       createdAt: new Date().toISOString(),
     },
     {
-      id: 3,
+      ordpgrcId: 3,
       sysUserId: 1,
       sysUserName: "João Silva",
       orderNumber: "ORD-2024-003",
@@ -453,7 +453,7 @@ export default function GeneralTablesPage() {
             </TableHeader>
             <TableBody>
               {filteredCompanies.map((company) => (
-                <TableRow key={company.id} className="border-border hover:bg-muted/50">
+                <TableRow key={company.companyId} className="border-border hover:bg-muted/50">
                   <TableCell className="font-medium">{company.name}</TableCell>
                   <TableCell>{company.legalName || "-"}</TableCell>
                   <TableCell>{company.taxId || "-"}</TableCell>
@@ -488,7 +488,7 @@ export default function GeneralTablesPage() {
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel className="neu-button neu-button-secondary">Cancelar</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDelete(company.id)} className="neu-button neu-button-danger">
+                            <AlertDialogAction onClick={() => handleDelete(company.companyId)} className="neu-button neu-button-danger">
                               Excluir
                             </AlertDialogAction>
                           </AlertDialogFooter>
@@ -535,7 +535,7 @@ export default function GeneralTablesPage() {
             </TableHeader>
             <TableBody>
               {filteredStates.map((state) => (
-                <TableRow key={state.id} className="border-border hover:bg-muted/50">
+                <TableRow key={state.stateId} className="border-border hover:bg-muted/50">
                   <TableCell className="font-medium">{state.name}</TableCell>
                   <TableCell>{state.abbreviation}</TableCell>
                   <TableCell>{state.ibgeCode || "-"}</TableCell>
@@ -569,7 +569,7 @@ export default function GeneralTablesPage() {
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel className="neu-button neu-button-secondary">Cancelar</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDelete(state.id)} className="neu-button neu-button-danger">
+                            <AlertDialogAction onClick={() => handleDelete(state.stateId)} className="neu-button neu-button-danger">
                               Excluir
                             </AlertDialogAction>
                           </AlertDialogFooter>
@@ -617,7 +617,7 @@ export default function GeneralTablesPage() {
             </TableHeader>
             <TableBody>
               {filteredSubsidiaries.map((subsidiary) => (
-                <TableRow key={subsidiary.id} className="border-border hover:bg-muted/50">
+                <TableRow key={subsidiary.subsidiaryId} className="border-border hover:bg-muted/50">
                   <TableCell className="font-medium">{subsidiary.name}</TableCell>
                   <TableCell>{subsidiary.company.name}</TableCell>
                   <TableCell>{subsidiary.code}</TableCell>
@@ -652,7 +652,7 @@ export default function GeneralTablesPage() {
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel className="neu-button neu-button-secondary">Cancelar</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDelete(subsidiary.id)} className="neu-button neu-button-danger">
+                            <AlertDialogAction onClick={() => handleDelete(subsidiary.subsidiaryId)} className="neu-button neu-button-danger">
                               Excluir
                             </AlertDialogAction>
                           </AlertDialogFooter>
@@ -699,7 +699,7 @@ export default function GeneralTablesPage() {
             </TableHeader>
             <TableBody>
               {filteredCities.map((city) => (
-                <TableRow key={city.id} className="border-border hover:bg-muted/50">
+                <TableRow key={city.cityId} className="border-border hover:bg-muted/50">
                   <TableCell className="font-medium">{city.name}</TableCell>
                   <TableCell>{city.state.name} ({city.state.abbreviation})</TableCell>
                   <TableCell>{city.ibgeCode || "-"}</TableCell>
@@ -733,7 +733,7 @@ export default function GeneralTablesPage() {
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel className="neu-button neu-button-secondary">Cancelar</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDelete(city.id)} className="neu-button neu-button-danger">
+                            <AlertDialogAction onClick={() => handleDelete(city.cityId)} className="neu-button neu-button-danger">
                               Excluir
                             </AlertDialogAction>
                           </AlertDialogFooter>
@@ -779,7 +779,7 @@ export default function GeneralTablesPage() {
             </TableHeader>
             <TableBody>
               {filteredGenders.map((gender) => (
-                <TableRow key={gender.id} className="border-border hover:bg-muted/50">
+                <TableRow key={gender.genderId} className="border-border hover:bg-muted/50">
                   <TableCell className="font-medium">{gender.name}</TableCell>
                   <TableCell>{gender.abbreviation || "-"}</TableCell>
                   <TableCell>
@@ -812,7 +812,7 @@ export default function GeneralTablesPage() {
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel className="neu-button neu-button-secondary">Cancelar</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDelete(gender.id)} className="neu-button neu-button-danger">
+                            <AlertDialogAction onClick={() => handleDelete(gender.genderId)} className="neu-button neu-button-danger">
                               Excluir
                             </AlertDialogAction>
                           </AlertDialogFooter>
@@ -859,7 +859,7 @@ export default function GeneralTablesPage() {
             </TableHeader>
             <TableBody>
               {filteredCurrencies.map((currency) => (
-                <TableRow key={currency.id} className="border-border hover:bg-muted/50">
+                <TableRow key={currency.currencyId} className="border-border hover:bg-muted/50">
                   <TableCell className="font-medium">{currency.name}</TableCell>
                   <TableCell>{currency.code}</TableCell>
                   <TableCell>{currency.symbol || "-"}</TableCell>
@@ -893,7 +893,7 @@ export default function GeneralTablesPage() {
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel className="neu-button neu-button-secondary">Cancelar</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDelete(currency.id)} className="neu-button neu-button-danger">
+                            <AlertDialogAction onClick={() => handleDelete(currency.currencyId)} className="neu-button neu-button-danger">
                               Excluir
                             </AlertDialogAction>
                           </AlertDialogFooter>
@@ -940,7 +940,7 @@ export default function GeneralTablesPage() {
             </TableHeader>
             <TableBody>
               {filteredSpecialities.map((speciality: Speciality) => (
-                <TableRow key={speciality.id} className="border-border hover:bg-muted/50">
+                <TableRow key={speciality.specialtyId} className="border-border hover:bg-muted/50">
                   <TableCell className="font-medium">{speciality.name}</TableCell>
                   <TableCell>{speciality.code || "-"}</TableCell>
                   <TableCell>{speciality.description || "-"}</TableCell>
@@ -974,7 +974,7 @@ export default function GeneralTablesPage() {
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel className="neu-button neu-button-secondary">Cancelar</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDelete(speciality.id)} className="neu-button neu-button-danger">
+                            <AlertDialogAction onClick={() => handleDelete(speciality.specialtyId)} className="neu-button neu-button-danger">
                               Excluir
                             </AlertDialogAction>
                           </AlertDialogFooter>
@@ -1024,7 +1024,7 @@ export default function GeneralTablesPage() {
             </TableHeader>
             <TableBody>
               {filteredPaymentBoxes.map((paymentBox: PaymentBox) => (
-                <TableRow key={paymentBox.id} className="border-border hover:bg-muted/50">
+                <TableRow key={paymentBox.ordpgrcId} className="border-border hover:bg-muted/50">
                   <TableCell className="font-medium">{paymentBox.sysUserName}</TableCell>
                   <TableCell>{paymentBox.orderNumber}</TableCell>
                   <TableCell>{new Date(paymentBox.orderDate).toLocaleDateString('pt-BR')}</TableCell>
@@ -1063,7 +1063,7 @@ export default function GeneralTablesPage() {
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel className="neu-button neu-button-secondary">Cancelar</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDelete(paymentBox.id)} className="neu-button neu-button-danger">
+                            <AlertDialogAction onClick={() => handleDelete(paymentBox.ordpgrcId)} className="neu-button neu-button-danger">
                               Excluir
                             </AlertDialogAction>
                           </AlertDialogFooter>

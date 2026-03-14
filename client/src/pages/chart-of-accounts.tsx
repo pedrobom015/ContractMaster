@@ -40,7 +40,7 @@ const accountSchema = z.object({
 type AccountFormData = z.infer<typeof accountSchema>;
 
 interface Account {
-  id: number;
+  accountId: number;
   companyId: number;
   accountTypeId: number;
   parentAccountId?: number;
@@ -58,13 +58,13 @@ interface Account {
   createdAt: string;
   updatedAt: string;
   accountType?: {
-    id: number;
+    accountTypeId: number;
     typeName: string;
   };
 }
 
 interface AccountType {
-  id: number;
+  accountTypeId: number;
   companyId: number;
   typeName: string;
   description?: string;
@@ -81,7 +81,7 @@ export default function ChartOfAccountsPage() {
   const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
 
-  const { data: accounts = [], isLoading } = useQuery({
+  const { data: accounts = [], isLoading } = useQuery<Account[]>({
     queryKey: ['/api/financial/accounts'],
   });
 
@@ -168,7 +168,7 @@ export default function ChartOfAccountsPage() {
 
   const handleUpdateAccount = (data: AccountFormData) => {
     if (!selectedAccount) return;
-    updateMutation.mutate({ ...data, id: selectedAccount.id });
+    updateMutation.mutate({ ...data, id: selectedAccount.accountId });
   };
 
   const handleEditAccount = (account: Account) => {
@@ -191,7 +191,7 @@ export default function ChartOfAccountsPage() {
   };
 
   const getAccountTypeName = (accountTypeId: number) => {
-    const accountType = accountTypes.find(type => type.id === accountTypeId);
+    const accountType = accountTypes.find(type => type.accountTypeId === accountTypeId);
     return accountType?.typeName || "—";
   };
 
@@ -275,7 +275,7 @@ export default function ChartOfAccountsPage() {
                     </FormControl>
                     <SelectContent>
                       {accountTypes.map((type) => (
-                        <SelectItem key={type.id} value={type.id.toString()}>
+                        <SelectItem key={type.accountTypeId} value={type.accountTypeId.toString()}>
                           {type.typeName}
                         </SelectItem>
                       ))}
@@ -534,7 +534,7 @@ export default function ChartOfAccountsPage() {
                       </TableRow>
                     ) : (
                       filteredAccounts.map((account: Account) => (
-                        <TableRow key={account.id} className="border-gray-200">
+                        <TableRow key={account.accountId} className="border-gray-200">
                           <TableCell className="font-mono font-medium">{account.accountCode}</TableCell>
                           <TableCell>
                             <div className="flex items-center">
@@ -608,7 +608,7 @@ export default function ChartOfAccountsPage() {
                                   <AlertDialogFooter>
                                     <AlertDialogCancel className="neu-button">Cancelar</AlertDialogCancel>
                                     <AlertDialogAction
-                                      onClick={() => deleteMutation.mutate(account.id)}
+                                        onClick={() => deleteMutation.mutate(account.accountId)}
                                       className="neu-button"
                                     >
                                       Excluir

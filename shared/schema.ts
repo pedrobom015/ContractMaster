@@ -1,1104 +1,1525 @@
-import { pgTable, text, integer, boolean, timestamp, decimal, char } from "drizzle-orm/pg-core";
+import { mysqlTable, text, varchar, int, boolean, timestamp, decimal, char, date, mysqlEnum, json, bigint } from "drizzle-orm/mysql-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import { sql } from "drizzle-orm";
 
-// Core System Tables
+// -----------------------------------------------------------------------------
+// PARTE 1: CONTROLE DE VERSÃO DO SCHEMA
+// -----------------------------------------------------------------------------
 
-// Gender table
-export const genderTable = pgTable("gender", {
-  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  name: text("name").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-  deletedAt: timestamp("deleted_at"),
-  createdBy: integer("created_by"),
-  updatedBy: integer("updated_by"),
-  deletedBy: integer("deleted_by"),
-});
-
-// Document Types table
-export const documentTypesTable = pgTable("document_types", {
-  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  description: text("description").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-  deletedAt: timestamp("deleted_at"),
-  createdBy: integer("created_by"),
-  updatedBy: integer("updated_by"),
-  deletedBy: integer("deleted_by"),
-});
-
-// Address Types table
-export const addressTypesTable = pgTable("address_types", {
-  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  name: text("name").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-  deletedAt: timestamp("deleted_at"),
-  createdBy: integer("created_by"),
-  updatedBy: integer("updated_by"),
-  deletedBy: integer("deleted_by"),
-});
-
-// Payment Status table
-export const paymentStatusTable = pgTable("payment_status", {
-  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  name: text("name").notNull(),
-  code: char("code", { length: 2 }).notNull(),
-  kanban: boolean("kanban"),
-  color: text("color"),
-  kanbanOrder: integer("kanban_order"),
-  finalState: boolean("final_state"),
-  initialState: boolean("initial_state"),
-  allowEdition: boolean("allow_edition"),
-  allowDeletion: boolean("allow_deletion"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-  deletedAt: timestamp("deleted_at"),
-  createdBy: integer("created_by"),
-  updatedBy: integer("updated_by"),
-  deletedBy: integer("deleted_by"),
-});
-
-// Estado (State) table
-export const estadoTable = pgTable("estado", {
-  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  name: text("name").notNull(),
-  uf: char("uf", { length: 2 }).notNull(),
-  codigoIbge: text("codigo_ibge"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-  deletedAt: timestamp("deleted_at"),
-  createdBy: integer("created_by"),
-  updatedBy: integer("updated_by"),
-  deletedBy: integer("deleted_by"),
-});
-
-// Cidade (City) table
-export const cidadeTable = pgTable("cidade", {
-  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  estadoId: integer("estado_id").references(() => estadoTable.id),
-  name: text("name").notNull(),
-  codigoIbge: text("codigo_ibge"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-  deletedAt: timestamp("deleted_at"),
-  createdBy: integer("created_by"),
-  updatedBy: integer("updated_by"),
-  deletedBy: integer("deleted_by"),
-});
-
-// Currency table
-export const currencyTable = pgTable("currency", {
-  code: char("code", { length: 3 }).primaryKey(),
-  name: text("name").notNull(),
-  symbol: text("symbol"),
-  decimalPlaces: integer("decimal_places").default(2),
-  roundingMethod: text("rounding_method").default("HALF_UP"),
-  active: boolean("active").default(true),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-  deletedAt: timestamp("deleted_at"),
-  createdBy: integer("created_by"),
-  updatedBy: integer("updated_by"),
-  deletedBy: integer("deleted_by"),
-});
-
-// General Status table
-export const generalStatusTable = pgTable("general_status", {
-  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  statusCode: text("status_code").notNull(),
-  statusName: text("status_name").notNull(),
+export const schemaVersionTable = mysqlTable("schema_version", {
+  schemaVersionId: int("schema_version_id").primaryKey().autoincrement(),
+  version: varchar("version", { length: 20 }).notNull(),
+  appliedAt: timestamp("applied_at").default(sql`CURRENT_TIMESTAMP`),
   description: text("description"),
-  generateCharge: boolean("generate_charge"),
-  allowsService: boolean("allows_service"),
-  chargeAfter: integer("charge_after"),
-  kanban: boolean("kanban"),
-  color: text("color"),
-  kanbanOrder: integer("kanban_order"),
-  finalState: boolean("final_state"),
-  initialState: boolean("initial_state"),
-  allowEdition: boolean("allow_edition"),
-  allowDeletion: boolean("allow_deletion"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-  deletedAt: timestamp("deleted_at"),
-  createdBy: integer("created_by"),
-  updatedBy: integer("updated_by"),
-  deletedBy: integer("deleted_by"),
 });
 
-// Company table
-export const companyTable = pgTable("company", {
-  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  companyName: text("company_name").notNull(),
-  legalName: text("legal_name").notNull(),
-  taxId: text("tax_id").notNull(),
-  logoUrl: text("logo_url"),
-  country: text("country"),
-  phone: text("phone"),
-  email: text("email"),
-  website: text("website"),
+// -----------------------------------------------------------------------------
+// PARTE 2: TABELAS BASE (sem dependências)
+// -----------------------------------------------------------------------------
+
+export const genderTable = mysqlTable("gender", {
+  genderId: int("gender_id").primaryKey().autoincrement(),
+  name: varchar("name", { length: 100 }).notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
+  deletedAt: timestamp("deleted_at"),
+  createdBy: int("created_by"),
+  updatedBy: int("updated_by"),
+  deletedBy: int("deleted_by"),
+});
+
+export const documentTypesTable = mysqlTable("document_type", {
+  documentTypeId: int("document_type_id").primaryKey().autoincrement(),
+  description: varchar("description", { length: 100 }).notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
+  deletedAt: timestamp("deleted_at"),
+  createdBy: int("created_by"),
+  updatedBy: int("updated_by"),
+  deletedBy: int("deleted_by"),
+});
+
+export const addressTypesTable = mysqlTable("address_type", {
+  addressTypeId: int("address_type_id").primaryKey().autoincrement(),
+  name: varchar("name", { length: 100 }).notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
+  deletedAt: timestamp("deleted_at"),
+  createdBy: int("created_by"),
+  updatedBy: int("updated_by"),
+  deletedBy: int("deleted_by"),
+});
+
+export const paymentStatusTable = mysqlTable("payment_status", {
+  paymentStatusId: int("payment_status_id").primaryKey().autoincrement(),
+  name: varchar("name", { length: 100 }).notNull(),
+  code: char("code", { length: 2 }).notNull(),
+  kanban: boolean("kanban").default(false),
+  color: varchar("color", { length: 100 }),
+  kanbanOrder: int("kanban_order"),
+  finalState: boolean("final_state").default(false),
+  initialState: boolean("initial_state").default(false),
+  allowEdition: boolean("allow_edition").default(true),
+  allowDeletion: boolean("allow_deletion").default(true),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
+  deletedAt: timestamp("deleted_at"),
+  createdBy: int("created_by"),
+  updatedBy: int("updated_by"),
+  deletedBy: int("deleted_by"),
+});
+
+export const estadoTable = mysqlTable("state", {
+  stateId: int("state_id").primaryKey().autoincrement(),
+  name: varchar("name", { length: 100 }).notNull(),
+  uf: char("uf", { length: 2 }).notNull(),
+  codigoIbge: varchar("codigo_ibge", { length: 10 }),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
+  deletedAt: timestamp("deleted_at"),
+  createdBy: int("created_by"),
+  updatedBy: int("updated_by"),
+  deletedBy: int("deleted_by"),
+});
+
+export const cidadeTable = mysqlTable("city", {
+  cityId: int("city_id").primaryKey().autoincrement(),
+  stateId: int("state_id").references(() => estadoTable.stateId),
+  name: varchar("name", { length: 100 }).notNull(),
+  codigoIbge: varchar("codigo_ibge", { length: 10 }),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
+  deletedAt: timestamp("deleted_at"),
+  createdBy: int("created_by"),
+  updatedBy: int("updated_by"),
+  deletedBy: int("deleted_by"),
+});
+
+export const currencyTable = mysqlTable("currency", {
+  currencyId: int("currency_id").primaryKey().autoincrement(),
+  currencyCode: char("currency_code", { length: 3 }).notNull(),
+  currencyName: varchar("currency_name", { length: 50 }).notNull(),
+  currencySymbol: varchar("currency_symbol", { length: 10 }),
+  decimalPlaces: int("decimal_places").default(2),
+  roundingMethod: varchar("rounding_method", { length: 20 }).default("HALF_UP"),
   active: boolean("active").default(true),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
   deletedAt: timestamp("deleted_at"),
-  createdBy: integer("created_by"),
-  updatedBy: integer("updated_by"),
-  deletedBy: integer("deleted_by"),
+  createdBy: int("created_by"),
+  updatedBy: int("updated_by"),
+  deletedBy: int("deleted_by"),
 });
 
-// Subsidiary table
-export const subsidiaryTable = pgTable("subsidiary", {
-  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+export const generalStatusTable = mysqlTable("general_status", {
+  generalStatusId: int("general_status_id").primaryKey().autoincrement(),
+  statusCode: varchar("status_code", { length: 20 }).notNull(),
+  statusName: varchar("status_name", { length: 50 }).notNull(),
+  description: text("description"),
+  generateCharge: boolean("generate_charge").default(false),
+  allowsService: boolean("allows_service").default(false),
+  chargeAfter: int("charge_after"),
+  kanban: boolean("kanban").default(false),
+  color: varchar("color", { length: 100 }),
+  kanbanOrder: int("kanban_order"),
+  finalState: boolean("final_state").default(false),
+  initialState: boolean("initial_state").default(false),
+  allowEdition: boolean("allow_edition").default(true),
+  allowDeletion: boolean("allow_deletion").default(true),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
+  deletedAt: timestamp("deleted_at"),
+  createdBy: int("created_by"),
+  updatedBy: int("updated_by"),
+  deletedBy: int("deleted_by"),
+});
+
+export const contractStatusTable = mysqlTable("contract_status", {
+  contractStatusId: int("contract_status_id").primaryKey().autoincrement(),
+  name: varchar("name", { length: 100 }).notNull(),
+  code: char("code", { length: 2 }).notNull(),
+  generateCharge: boolean("generate_charge").default(false),
+  allowsService: boolean("allows_service").default(false),
+  chargeAfter: int("charge_after"),
+  kanban: boolean("kanban").default(false),
+  color: varchar("color", { length: 100 }),
+  kanbanOrder: int("kanban_order"),
+  isFinalState: boolean("is_final_state").default(false),
+  isInitialState: boolean("is_initial_state").default(false),
+  allowEdition: boolean("allow_edition").default(true),
+  allowDeletion: boolean("allow_deletion").default(true),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
+  deletedAt: timestamp("deleted_at"),
+  createdBy: int("created_by"),
+  updatedBy: int("updated_by"),
+  deletedBy: int("deleted_by"),
+  unitId: int("unit_id"),
+});
+
+export const stateMachineTransitionsTable = mysqlTable("state_machine_transitions", {
+  stateMachineTransitionsId: int("state_machine_transitions_id").primaryKey().autoincrement(),
+  contractStatusIdFrom: int("contract_status_id_from").references(() => contractStatusTable.contractStatusId),
+  contractStatusIdTo: int("contract_status_id_to").references(() => contractStatusTable.contractStatusId),
+  generateCharge: boolean("generate_charge").default(false),
+  allowsService: boolean("allows_service").default(false),
+  chargeAfter: int("charge_after"),
+  kanban: boolean("kanban").default(false),
+  color: varchar("color", { length: 100 }),
+  kanbanOrder: int("kanban_order"),
+  finalState: boolean("final_state").default(false),
+  initialState: boolean("initial_state").default(false),
+  allowEdition: boolean("allow_edition").default(true),
+  allowDeletion: boolean("allow_deletion").default(true),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
+  deletedAt: timestamp("deleted_at"),
+  createdBy: int("created_by"),
+  updatedBy: int("updated_by"),
+  deletedBy: int("deleted_by"),
+  unitId: int("unit_id"),
+});
+
+export const statusReasonTable = mysqlTable("status_reason", {
+  statusReasonId: int("status_reason_id").primaryKey().autoincrement(),
+  reason: varchar("reason", { length: 200 }).notNull(),
+  description: varchar("description", { length: 250 }),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
+  deletedAt: timestamp("deleted_at"),
+  createdBy: int("created_by"),
+  updatedBy: int("updated_by"),
+  deletedBy: int("deleted_by"),
+  unitId: int("unit_id"),
+});
+
+// -----------------------------------------------------------------------------
+// PARTE 3: TABELAS DE SISTEMA
+// -----------------------------------------------------------------------------
+
+export const sysGroupTable = mysqlTable("sys_group", {
+  sysGroupId: int("sys_group_id").primaryKey().autoincrement(),
   name: text("name").notNull(),
-  code: text("code").notNull(),
-  status: text("status").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-  deletedAt: timestamp("deleted_at"),
-  createdBy: integer("created_by"),
-  updatedBy: integer("updated_by"),
-  deletedBy: integer("deleted_by"),
+  uuid: varchar("uuid", { length: 36 }),
 });
 
-// System Unit table
-export const sysUnitTable = pgTable("sys_unit", {
-  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+export const sysProgramTable = mysqlTable("sys_program", {
+  sysProgramId: int("sys_program_id").primaryKey().autoincrement(),
+  name: text("name").notNull(),
+  controller: text("controller").notNull(),
+  actions: text("actions"),
+});
+
+export const sysGroupProgramTable = mysqlTable("sys_group_program", {
+  sysGroupProgramId: int("sys_group_program_id").primaryKey().autoincrement(),
+  sysGroupId: int("sys_group_id").references(() => sysGroupTable.sysGroupId),
+  sysProgramId: int("sys_program_id").references(() => sysProgramTable.sysProgramId),
+  actions: text("actions"),
+});
+
+export const sysPreferenceTable = mysqlTable("sys_preference", {
+  sysPreferenceId: varchar("sys_preference_id", { length: 200 }).primaryKey(),
+  preference: text("preference"),
+});
+
+export const subsidiaryTable = mysqlTable("subsidiary", {
+  subsidiaryId: int("subsidiary_id").primaryKey().autoincrement(),
+  name: varchar("name", { length: 100 }).notNull(),
+  code: varchar("code", { length: 20 }).notNull(),
+  status: varchar("status", { length: 50 }).notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
+  deletedAt: timestamp("deleted_at"),
+  createdBy: int("created_by"),
+  updatedBy: int("updated_by"),
+  deletedBy: int("deleted_by"),
+});
+
+export const sysUnitTable = mysqlTable("sys_unit", {
+  sysUnitId: int("sys_unit_id").primaryKey().autoincrement(),
+  subsidiaryId: int("subsidiary_id").references(() => subsidiaryTable.subsidiaryId),
+  generalStatusId: int("general_status_id").references(() => generalStatusTable.generalStatusId),
   name: text("name").notNull(),
   connectionName: text("connection_name"),
-  code: text("code").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  code: varchar("code", { length: 20 }).notNull(),
 });
 
-// System Users table
-export const sysUsersTable = pgTable("sys_users", {
-  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  name: text("name").notNull(),
-  login: text("login").notNull(),
-  email: text("email").notNull(),
-  passwordHash: text("password_hash").notNull(),
-  passwordSalt: text("password_salt"),
-  firstName: text("first_name"),
-  lastName: text("last_name"),
+export const sysUsersTable = mysqlTable("sys_user", {
+  sysUserId: int("sys_user_id").primaryKey().autoincrement(),
+  name: varchar("name", { length: 50 }).notNull(),
+  login: varchar("login", { length: 200 }).notNull(),
+  email: varchar("email", { length: 100 }).notNull(),
+  passwordHash: varchar("password_hash", { length: 255 }).notNull(),
+  passwordSalt: varchar("password_salt", { length: 100 }),
+  firstName: varchar("first_name", { length: 50 }),
+  lastName: varchar("last_name", { length: 50 }),
+  frontpageId: int("frontpage_id").references(() => sysProgramTable.sysProgramId),
+  sysUnitId: int("sys_unit_id").references(() => sysUnitTable.sysUnitId),
   active: boolean("active").default(true),
-  genderId: integer("gender_id"),
-  companyId: integer("company_id"),
-  subsidiaryId: integer("subsidiary_id"),
-  sysUnitId: integer("sys_unit_id"),
-  twoFactorEnabled: boolean("two_factor_enabled"),
-  twoFactorType: text("two_factor_type"),
-  twoFactorSecret: text("two_factor_secret"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  acceptedTermPolicyAt: timestamp("accepted_term_policy_at"),
+  acceptedTermPolicy: boolean("accepted_term_policy"),
+  twoFactorEnabled: boolean("two_factor_enabled").default(false),
+  twoFactorType: varchar("two_factor_type", { length: 100 }),
+  twoFactorSecret: varchar("two_factor_secret", { length: 255 }),
+  isAdmin: boolean("is_admin").default(false),
+  lastLogin: timestamp("last_login"),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
   deletedAt: timestamp("deleted_at"),
-  createdBy: integer("created_by"),
-  updatedBy: integer("updated_by"),
-  deletedBy: integer("deleted_by"),
+  createdBy: int("created_by"),
+  updatedBy: int("updated_by"),
+  deletedBy: int("deleted_by"),
 });
 
-// Addresses table
-export const addressesTable = pgTable("addresses", {
-  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  zipCode: text("zip_code").notNull(),
-  address: text("address").notNull(),
-  addressNumber: text("address_number"),
-  addressLine1: text("address_line1"),
-  addressLine2: text("address_line2"),
-  city: text("city").notNull(),
-  state: text("state"),
-  country: text("country"),
+export const sysUserGroupTable = mysqlTable("sys_user_group", {
+  sysUserGroupId: int("sys_user_group_id").primaryKey().autoincrement(),
+  sysUserId: int("sys_user_id").references(() => sysUsersTable.sysUserId),
+  sysGroupId: int("sys_group_id").references(() => sysGroupTable.sysGroupId),
+});
+
+export const sysUserProgramTable = mysqlTable("sys_user_program", {
+  sysUserProgramId: int("sys_user_program_id").primaryKey().autoincrement(),
+  sysUserId: int("sys_user_id").references(() => sysUsersTable.sysUserId),
+  sysProgramId: int("sys_program_id").references(() => sysProgramTable.sysProgramId),
+});
+
+export const sysUserUnitTable = mysqlTable("sys_user_unit", {
+  sysUserUnitId: int("sys_user_unit_id").primaryKey().autoincrement(),
+  sysUserId: int("sys_user_id").references(() => sysUsersTable.sysUserId),
+  sysUnitId: int("sys_unit_id").references(() => sysUnitTable.sysUnitId),
+});
+
+// -----------------------------------------------------------------------------
+// PARTE 4: ENDEREÇOS E DOCUMENTOS
+// -----------------------------------------------------------------------------
+
+export const addressesTable = mysqlTable("address", {
+  addressId: int("address_id").primaryKey().autoincrement(),
+  sysUserId: int("sys_user_id").references(() => sysUsersTable.sysUserId),
+  addressTypeId: int("address_type_id").references(() => addressTypesTable.addressTypeId),
+  isMain: boolean("is_main").default(true),
+  zipCode: varchar("zip_code", { length: 50 }).notNull(),
+  address: varchar("address", { length: 200 }).notNull(),
+  addressNumber: varchar("address_number", { length: 100 }),
+  addressLine1: varchar("address_line1", { length: 250 }),
+  addressLine2: varchar("address_line2", { length: 250 }),
+  city: varchar("city", { length: 200 }).notNull(),
+  state: varchar("state", { length: 100 }),
+  country: varchar("country", { length: 50 }),
   observacao: text("observacao"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
   deletedAt: timestamp("deleted_at"),
-  createdBy: integer("created_by"),
-  updatedBy: integer("updated_by"),
-  deletedBy: integer("deleted_by"),
+  createdBy: int("created_by"),
+  updatedBy: int("updated_by"),
+  deletedBy: int("deleted_by"),
 });
 
-// Entity Addresses table (many-to-many)
-export const entityAddressesTable = pgTable("entity_addresses", {
-  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  entityId: integer("entity_id").notNull(),
-  entityType: text("entity_type").notNull(), // 'client', 'partner'
-  addressId: integer("address_id").references(() => addressesTable.id),
-  addressTypeId: integer("address_type_id").references(() => addressTypesTable.id),
+export const entityAddressesTable = mysqlTable("entity_address", {
+  entityAddressId: int("entity_address_id").primaryKey().autoincrement(),
+  entityType: mysqlEnum("entity_type", ['client', 'partner']).notNull(),
+  entityId: int("entity_id").notNull(),
+  addressId: int("address_id").references(() => addressesTable.addressId),
   isPrimary: boolean("is_primary").default(false),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Partner Types table
-export const partnerTypesTable = pgTable("partner_types", {
-  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  typeName: text("type_name").notNull(),
-  description: text("description"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+export const documentsTable = mysqlTable("document", {
+  documentId: int("document_id").primaryKey().autoincrement(),
+  sysUserId: int("sys_user_id").references(() => sysUsersTable.sysUserId),
+  documentTypeId: int("document_type_id").references(() => documentTypesTable.documentTypeId),
+  documentNumber: varchar("document_number", { length: 50 }).notNull(),
+  filename: varchar("filename", { length: 255 }).notNull(),
+  filePath: varchar("file_path", { length: 500 }).notNull(),
+  fileSize: int("file_size"),
+  mimeType: varchar("mime_type", { length: 100 }),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
   deletedAt: timestamp("deleted_at"),
-  createdBy: integer("created_by"),
-  updatedBy: integer("updated_by"),
-  deletedBy: integer("deleted_by"),
+  createdBy: int("created_by"),
+  updatedBy: int("updated_by"),
+  deletedBy: int("deleted_by"),
 });
 
-// Documents table
-export const documentsTable = pgTable("documents", {
-  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  documentTypeId: integer("document_type_id").references(() => documentTypesTable.id),
-  documentNumber: text("document_number").notNull(),
-  filename: text("filename").notNull(),
-  filePath: text("file_path").notNull(),
-  fileSize: integer("file_size"),
-  mimeType: text("mime_type"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+export const entityDocumentsTable = mysqlTable("entity_document", {
+  entityDocumentId: int("entity_document_id").primaryKey().autoincrement(),
+  entityType: mysqlEnum("entity_type", ['client', 'partner']).notNull(),
+  entityId: int("entity_id").notNull(),
+  documentId: int("document_id").references(() => documentsTable.documentId),
+  isActive: boolean("is_active").default(true),
+});
+
+// -----------------------------------------------------------------------------
+// PARTE 5: EMPRESA E PARCEIROS
+// -----------------------------------------------------------------------------
+
+export const companyTable = mysqlTable("company", {
+  companyId: int("company_id").primaryKey().autoincrement(),
+  parentCompanyId: int("parent_company_id").references((): any => companyTable.companyId),
+  companyName: varchar("company_name", { length: 100 }).notNull(),
+  legalName: varchar("legal_name", { length: 150 }).notNull(),
+  taxId: varchar("tax_id", { length: 50 }).notNull(),
+  addressId: int("address_id").references(() => addressesTable.addressId),
+  country: varchar("country", { length: 50 }),
+  phone: varchar("phone", { length: 30 }),
+  email: varchar("email", { length: 100 }),
+  website: varchar("website", { length: 100 }),
+  logoUrl: varchar("logo_url", { length: 255 }),
+  fiscalYearStart: date("fiscal_year_start"),
+  defaultCurrency: char("default_currency", { length: 3 }).default("BRL").notNull(),
+  isConsolidated: boolean("is_consolidated").default(false),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
   deletedAt: timestamp("deleted_at"),
-  createdBy: integer("created_by"),
-  updatedBy: integer("updated_by"),
-  deletedBy: integer("deleted_by"),
+  createdBy: int("created_by"),
+  updatedBy: int("updated_by"),
+  deletedBy: int("deleted_by"),
 });
 
-// Entity Documents table (many-to-many)
-export const entityDocumentsTable = pgTable("entity_documents", {
-  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  entityId: integer("entity_id").notNull(),
-  entityType: text("entity_type").notNull(), // 'client', 'partner'
-  documentId: integer("document_id").references(() => documentsTable.id),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+export const userCompanyAccessTable = mysqlTable("user_company_access", {
+  userCompanyAccessId: int("user_company_access_id").primaryKey().autoincrement(),
+  companyId: int("company_id").references(() => companyTable.companyId),
+  sysUserId: int("sys_user_id").references(() => sysUsersTable.sysUserId),
+  canView: boolean("can_view").default(true),
+  canEdit: boolean("can_edit").default(false),
+  canApprove: boolean("can_approve").default(false),
+  canAdmin: boolean("can_admin").default(false),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
 });
 
-// Partners table
-export const partnersTable = pgTable("partners", {
-  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  partnerCode: text("partner_code").notNull(),
-  partnerName: text("partner_name").notNull(),
-  legalName: text("legal_name"),
-  taxId: text("tax_id"),
-  partnerTypeId: integer("partner_type_id").references(() => partnerTypesTable.id),
-  statusId: integer("status_id"),
-  genderId: integer("gender_id"),
-  birthDate: timestamp("birth_date"),
-  grantedLimit: decimal("granted_limit", { precision: 19, scale: 4 }),
-  advantages: text("advantages"),
-  observation: text("observation"),
-  currencyCode: char("currency_code", { length: 3 }),
-  companyId: integer("company_id"),
-  subsidiaryId: integer("subsidiary_id"),
-  sysUnitId: integer("sys_unit_id"),
-  phone: text("phone"),
-  email: text("email"),
-  website: text("website"),
-  primaryPartnerPerson: text("primary_partner_person"),
-  notes: text("notes"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-  deletedAt: timestamp("deleted_at"),
-  createdBy: integer("created_by"),
-  updatedBy: integer("updated_by"),
-  deletedBy: integer("deleted_by"),
+export const entitySysUserTable = mysqlTable("entity_sys_user", {
+  entitySysUserId: int("entity_sys_user_id").primaryKey().autoincrement(),
+  entityType: mysqlEnum("entity_type", ['client', 'partner']).notNull(),
+  entityId: int("entity_id").notNull(),
+  sysUserId: int("sys_user_id").references(() => sysUsersTable.sysUserId),
+  isActive: boolean("is_active").default(true),
 });
 
-// Clients table
-export const clientsTable = pgTable("clients", {
-  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  name: text("name").notNull(),
-  email: text("email"),
-  phone: text("phone"),
-  document: text("document"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-  deletedAt: timestamp("deleted_at"),
-  createdBy: integer("created_by"),
-  updatedBy: integer("updated_by"),
-  deletedBy: integer("deleted_by"),
-});
-
-// Classe table
-export const classeTable = pgTable("classe", {
-  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  name: text("name").notNull(),
-  description: text("description").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-  deletedAt: timestamp("deleted_at"),
-  createdBy: integer("created_by"),
-  updatedBy: integer("updated_by"),
-  deletedBy: integer("deleted_by"),
-});
-
-// Messages table
-export const messagesTable = pgTable("messages", {
-  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  message1: text("message1"),
-  message2: text("message2"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-  deletedAt: timestamp("deleted_at"),
-  createdBy: integer("created_by"),
-  updatedBy: integer("updated_by"),
-  deletedBy: integer("deleted_by"),
-});
-
-// Group table
-export const groupTable = pgTable("group", {
-  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  name: text("name").notNull(),
-  groupCode: text("group_code").notNull(),
-  priority: integer("priority"),
-  beginCode: text("begin_code").notNull(),
-  finalCode: text("final_code").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-  deletedAt: timestamp("deleted_at"),
-  createdBy: integer("created_by"),
-  updatedBy: integer("updated_by"),
-  deletedBy: integer("deleted_by"),
-});
-
-// Billing Control table
-export const billingControlTable = pgTable("billing_control", {
-  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  lastBillingNumber: text("last_billing_number").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-  deletedAt: timestamp("deleted_at"),
-  createdBy: integer("created_by"),
-  updatedBy: integer("updated_by"),
-  deletedBy: integer("deleted_by"),
-  nextBillingNumber: text("next_billing_number").notNull(),
-});
-
-// Contracts table
-export const contractsTable = pgTable("contracts", {
-  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  sysUnitId: integer("sys_unit_id"),
-  sysUserId: integer("sys_user_id"),
-  groupBatchId: integer("group_batch_id"),
-  ownerId: integer("owner_id"),
-  contractName: text("contract_name").notNull(),
-  classId: integer("class_id"),
-  statusId: integer("status_id"),
-  contractNumber: text("contract_number").notNull(),
-  originalContractNumber: text("original_contract_number"),
-  currentStatus: text("current_status").default("active"), // active, canceled, redeemed, transferred
-  contractType: text("contract_type").notNull(),
-  startDate: timestamp("start_date").notNull(),
-  endDate: timestamp("end_date"),
-  billingFrequency: integer("billing_frequency").default(1),
-  admission: timestamp("admission").notNull(),
-  finalGrace: timestamp("final_grace"),
-  monthInitialBilling: char("month_initial_billing", { length: 2 }).notNull(),
-  yearInitialBilling: char("year_initial_billing", { length: 4 }).notNull(),
-  optPayday: integer("opt_payday"),
-  collectorId: integer("collector_id"),
-  sellerId: integer("seller_id"),
-  regionId: integer("region_id"),
-  obs: text("obs"),
-  servicesAmount: integer("services_amount"),
-  renewAt: timestamp("renew_at"),
-  firstCharge: integer("first_charge"),
-  lastCharge: integer("last_charge"),
-  chargesAmount: integer("charges_amount"),
-  chargesPaid: integer("charges_paid"),
-  alives: integer("alives"),
-  deceaseds: integer("deceaseds"),
-  dependents: integer("dependents"),
-  serviceOption1: text("service_option1"),
-  serviceOption2: text("service_option2"),
-  indicatedBy: integer("indicated_by"),
-  gracePeriodDays: text("grace_period_days"),
-  lateFeePercentage: decimal("late_fee_percentage", { precision: 8, scale: 5 }),
-  isPartialPaymentsAllowed: boolean("is_partial_payments_allowed"),
-  defaultPlanInstallments: text("default_plan_installments"),
-  defaultPlanFrequency: text("default_plan_frequency").default("MONTHLY"),
-  industry: text("industry").default("FUNERAL"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-  deletedAt: timestamp("deleted_at"),
-  createdBy: integer("created_by"),
-  updatedBy: integer("updated_by"),
-  deletedBy: integer("deleted_by"),
-});
-
-// Contract Number Registry table - Enhanced contract numbering system
-export const contractNumberRegistryTable = pgTable("contract_number_registry", {
-  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  groupBatchId: integer("group_batch_id").references(() => groupBatchTable.id).notNull(),
-  contractNumber: text("contract_number").notNull().unique(), // e.g., "000001"
-  currentContractId: integer("current_contract_id").references(() => contractsTable.id),
-  status: text("status").notNull().default("available"), // available, assigned, reserved
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-  deletedAt: timestamp("deleted_at"),
-  createdBy: integer("created_by"),
-  updatedBy: integer("updated_by"),
-  deletedBy: integer("deleted_by"),
-});
-
-// Contract Status History table - Tracks all contract status changes and number transfers
-export const contractStatusHistoryTable = pgTable("contract_status_history", {
-  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  contractId: integer("contract_id").references(() => contractsTable.id).notNull(),
-  oldStatus: text("old_status"),
-  newStatus: text("new_status").notNull(),
-  oldContractNumber: text("old_contract_number"),
-  newContractNumber: text("new_contract_number"),
-  oldGroupBatchId: integer("old_group_batch_id").references(() => groupBatchTable.id),
-  newGroupBatchId: integer("new_group_batch_id").references(() => groupBatchTable.id),
-  reason: text("reason").notNull(), // canceled, redeemed, transferred, new_sale, group_transfer
-  reasonDescription: text("reason_description"), // Additional details
-  effectiveDate: timestamp("effective_date").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-  deletedAt: timestamp("deleted_at"),
-  createdBy: integer("created_by"),
-  updatedBy: integer("updated_by"),
-  deletedBy: integer("deleted_by"),
-});
-
-// Beneficiaries table
-export const beneficiariesTable = pgTable("beneficiaries", {
-  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  contractId: integer("contract_id").references(() => contractsTable.id),
-  name: text("name").notNull(),
-  relationship: text("relationship"),
-  birthDate: timestamp("birth_date"),
-  document: text("document"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
-
-// Contract Charges table (based on contract_charge SQL structure)
-export const contractChargesTable = pgTable("contract_charges", {
-  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  contractId: integer("contract_id").references(() => contractsTable.id).notNull(),
-  sysUnitId: integer("sys_unit_id"),
-  paymentStatusId: integer("payment_status_id"),
-  chargeCode: text("charge_code").notNull(),
-  dueDate: timestamp("due_date").notNull(),
-  amount: decimal("amount", { precision: 19, scale: 4 }).notNull(),
-  paymentDate: timestamp("payment_date"),
-  amountPaid: decimal("amount_paid", { precision: 19, scale: 4 }),
-  convenio: text("convenio"),
-  dueMonth: char("due_month", { length: 2 }),
-  dueYear: char("due_year", { length: 4 }),
-  paidMonth: char("paid_month", { length: 2 }),
-  paidYear: char("paid_year", { length: 4 }),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-  deletedAt: timestamp("deleted_at"),
-  createdBy: integer("created_by"),
-  updatedBy: integer("updated_by"),
-  deletedBy: integer("deleted_by"),
-});
-
-// Legacy Charges table (kept for compatibility)
-export const chargesTable = pgTable("charges", {
-  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  contractId: integer("contract_id").references(() => contractsTable.id),
-  reference: text("reference").notNull(),
-  amount: decimal("amount", { precision: 19, scale: 4 }).notNull(),
-  dueDate: timestamp("due_date"),
-  paidDate: timestamp("paid_date"),
-  status: text("status").default("pending"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
-
-// Addendums table
-export const addendumsTable = pgTable("addendums", {
-  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  contractId: integer("contract_id").references(() => contractsTable.id),
-  type: text("type").notNull(),
-  description: text("description"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
-
-// Batch Detail table
-export const batchDetailTable = pgTable("batch_detail", {
-  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  batchNumber: text("batch_number").notNull(),
-  contractId: integer("contract_id").references(() => contractsTable.id),
-  status: text("status").default("pending"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
-
-// Group Batch table  
-export const groupBatchTable = pgTable("group_batch", {
-  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  batchName: text("batch_name").notNull(),
-  status: text("status").default("pending"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
-
-// Batch CHK table  
-export const batchChkTable = pgTable("batch_chk", {
-  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  batchNumber: text("batch_number").notNull(),
-  processDate: timestamp("process_date"),
-  status: text("status").default("pending"),
-  totalAmount: decimal("total_amount", { precision: 19, scale: 4 }),
-  recordCount: integer("record_count"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
-
-// =========================================================================
-// FINANCIAL MODULE TABLES
-// =========================================================================
-
-// Account Types table
-export const accountTypesTable = pgTable("account_types", {
-  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  companyId: integer("company_id").references(() => companyTable.id).notNull(),
-  typeName: text("type_name").notNull(),
-  nature: text("nature").notNull(), // ASSET, LIABILITY, EQUITY, REVENUE, EXPENSE
+export const partnerTypesTable = mysqlTable("partner_type", {
+  partnerTypeId: int("partner_type_id").primaryKey().autoincrement(),
+  companyId: int("company_id").references(() => companyTable.companyId),
+  typeName: varchar("type_name", { length: 50 }).notNull(),
   description: text("description"),
   isSystem: boolean("is_system").default(false),
   active: boolean("active").default(true),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-  createdBy: integer("created_by"),
-  updatedBy: integer("updated_by"),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
 });
 
-// Chart of Accounts table
-export const accountsTable = pgTable("accounts", {
-  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  companyId: integer("company_id").references(() => companyTable.id).notNull(),
-  accountTypeId: integer("account_type_id").references(() => accountTypesTable.id).notNull(),
-  parentAccountId: integer("parent_account_id").references(() => accountsTable.id),
-  accountCode: text("account_code").notNull(),
-  accountName: text("account_name").notNull(),
+export const accountTypesTable = mysqlTable("account_type", {
+  accountTypeId: int("account_type_id").primaryKey().autoincrement(),
+  companyId: int("company_id").references(() => companyTable.companyId),
+  typeName: varchar("type_name", { length: 50 }).notNull(),
+  nature: varchar("nature", { length: 20 }).notNull(), // ASSET, LIABILITY, etc.
+  description: text("description"),
+  isSystem: boolean("is_system").default(false),
+  active: boolean("active").default(true),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
+});
+
+export const regionTable = mysqlTable("region", {
+  regionId: int("region_id").primaryKey().autoincrement(),
+  name: varchar("name", { length: 100 }).notNull(),
+  code: varchar("code", { length: 20 }),
+  sysUnitId: int("sys_unit_id").references(() => sysUnitTable.sysUnitId),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
+  deletedAt: timestamp("deleted_at"),
+  createdBy: int("created_by"),
+  updatedBy: int("updated_by"),
+  deletedBy: int("deleted_by"),
+});
+
+export const specialtyTable = mysqlTable("specialty", {
+  specialtyId: int("specialty_id").primaryKey().autoincrement(),
+  sysUnitId: int("sys_unit_id").references(() => sysUnitTable.sysUnitId),
+  sysUserId: int("sys_user_id").references(() => sysUsersTable.sysUserId),
+  name: varchar("name", { length: 100 }).notNull(),
+  description: varchar("description", { length: 250 }).notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
+  deletedAt: timestamp("deleted_at"),
+  createdBy: int("created_by"),
+  updatedBy: int("updated_by"),
+  deletedBy: int("deleted_by"),
+});
+
+export const partnersTable = mysqlTable("partner", {
+  partnerId: int("partner_id").primaryKey().autoincrement(),
+  companyId: int("company_id").references(() => companyTable.companyId),
+  sysUnitId: int("sys_unit_id").references(() => sysUnitTable.sysUnitId),
+  sysUserId: int("sys_user_id").references(() => sysUsersTable.sysUserId),
+  ownerId: int("owner_id").references(() => sysUsersTable.sysUserId),
+  partnerCode: varchar("partner_code", { length: 30 }).notNull(),
+  partnerName: varchar("partner_name", { length: 100 }).notNull(),
+  legalName: varchar("legal_name", { length: 150 }),
+  taxId: varchar("tax_id", { length: 30 }),
+  partnerTypeId: int("partner_type_id").references(() => partnerTypesTable.partnerTypeId),
+  isCustomer: boolean("is_customer").default(false),
+  isVendor: boolean("is_vendor").default(false),
+  isCollector: boolean("is_collector").default(false),
+  isEmployee: boolean("is_employee").default(false),
+  isAccredited: boolean("is_accredited").default(false),
+  specialtyId: int("specialty_id").references(() => specialtyTable.specialtyId),
+  advantages: text("advantages"),
+  observation: text("observation"),
+  creditLimit: decimal("credit_limit", { precision: 19, scale: 4 }),
+  paymentTerms: int("payment_terms"),
+  billingAddressId: int("billing_address_id").references(() => addressesTable.addressId),
+  shippingAddressId: int("shipping_address_id").references(() => addressesTable.addressId),
+  document1Id: int("document1_id").references(() => documentsTable.documentId),
+  document2Id: int("document2_id").references(() => documentsTable.documentId),
+  phone: varchar("phone", { length: 30 }),
+  email: varchar("email", { length: 100 }),
+  website: varchar("website", { length: 100 }),
+  primaryPartnerPerson: varchar("primary_partner_person", { length: 100 }),
+  notes: text("notes"),
+  receivableAccountId: int("receivable_account_id"),
+  payableAccountId: int("payable_account_id"),
+  currency: char("currency", { length: 3 }).default("BRL"),
+  taxCodeId: int("tax_code_id"),
+  active: boolean("active").default(true),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
+  deletedAt: timestamp("deleted_at"),
+  createdBy: int("created_by"),
+  updatedBy: int("updated_by"),
+  deletedBy: int("deleted_by"),
+});
+
+export const partnerBankAccountTable = mysqlTable("partner_bank_account", {
+  partnerBankAccountId: int("partner_bank_account_id").primaryKey().autoincrement(),
+  partnerId: int("partner_id").references(() => partnersTable.partnerId),
+  bankName: varchar("bank_name", { length: 100 }).notNull(),
+  accountNumber: varchar("account_number", { length: 50 }),
+  routingNumber: varchar("routing_number", { length: 50 }),
+  iban: varchar("iban", { length: 50 }),
+  swiftCode: varchar("swift_code", { length: 20 }),
+  bankAddress: text("bank_address"),
+  accountHolder: varchar("account_holder", { length: 100 }),
+  accountType: varchar("account_type", { length: 30 }),
+  isDefault: boolean("is_default").default(false),
+  active: boolean("active").default(true),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
+  deletedAt: timestamp("deleted_at"),
+  createdBy: int("created_by"),
+  updatedBy: int("updated_by"),
+  deletedBy: int("deleted_by"),
+});
+
+// -----------------------------------------------------------------------------
+// PARTE 6: CLASSES E GRUPOS
+// -----------------------------------------------------------------------------
+
+export const categoryTable = mysqlTable("category", {
+  categoryId: int("category_id").primaryKey().autoincrement(),
+  sysUnitId: int("sys_unit_id").references(() => sysUnitTable.sysUnitId),
+  sysUserId: int("sys_user_id").references(() => sysUsersTable.sysUserId),
+  name: varchar("name", { length: 100 }).notNull(),
+  description: varchar("description", { length: 200 }).notNull(),
+  amountContracts: int("amount_contracts"),
+  isPeriodic: boolean("is_periodic").default(true).notNull(),
+  purchaseValue: decimal("purchase_value", { precision: 19, scale: 4 }).notNull(),
+  numberOfParcels: int("number_of_parcels").notNull(),
+  generatedParcels: int("generated_parcels").notNull(),
+  monthValue: decimal("month_value", { precision: 19, scale: 4 }).notNull(),
+  dependValue: decimal("depend_value", { precision: 19, scale: 4 }),
+  numberOfMonthValid: int("number_of_month_valid"),
+  isRenewable: boolean("is_renewable").default(false),
+  isRenewableUsed: boolean("is_renewable_used").default(false),
+  totalValue: decimal("total_value", { precision: 19, scale: 4 }),
+  message1: varchar("message1", { length: 30 }),
+  message2: varchar("message2", { length: 30 }),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
+  deletedAt: timestamp("deleted_at"),
+  createdBy: int("created_by"),
+  updatedBy: int("updated_by"),
+  deletedBy: int("deleted_by"),
+});
+
+export const groupBatchTable = mysqlTable("group_batch", {
+  groupBatchId: int("group_batch_id").primaryKey().autoincrement(),
+  sysUnitId: int("sys_unit_id").references(() => sysUnitTable.sysUnitId),
+  sysUserId: int("sys_user_id").references(() => sysUsersTable.sysUserId),
+  classId: int("class_id").references(() => categoryTable.categoryId),
+  name: varchar("name", { length: 100 }).notNull(),
+  groupCode: varchar("group_code", { length: 5 }).notNull(),
+  beginCode: varchar("begin_code", { length: 9 }).notNull(),
+  finalCode: varchar("final_code", { length: 9 }).notNull(),
+  isPeriodic: boolean("is_periodic").notNull(),
+  amountProcess: int("amount_process").notNull(),
+  minProc: int("min_proc").notNull(),
+  maxProc: int("max_proc").notNull(),
+  compareAdmission: boolean("compare_admission").default(false).notNull(),
+  amountRedeem: int("amount_redeem").notNull(),
+  byService: boolean("by_service").default(true).notNull(),
+  deathCount: int("death_count").default(0),
+  currentDeathCount: int("current_death_count").default(0),
+  deathThreshold: int("death_threshold").default(10).notNull(),
+  lastBillingNumber: varchar("last_billing_number", { length: 3 }).notNull(),
+  nextBillingNumber: varchar("next_billing_number", { length: 3 }).notNull(),
+  lastIssueDate: date("last_issue_date"),
+  lastDeathChargeDate: timestamp("last_death_charge_date"),
+  pendingProcess: int("pending_process"),
+  numberContracts: int("number_contracts"),
+  numberLifes: int("number_lifes").notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
+  deletedAt: timestamp("deleted_at"),
+  createdBy: int("created_by"),
+  updatedBy: int("updated_by"),
+  deletedBy: int("deleted_by"),
+});
+
+export const groupClassTable = mysqlTable("group_class", {
+  groupClassId: int("group_class_id").primaryKey().autoincrement(),
+  sysUnitId: int("sys_unit_id").references(() => sysUnitTable.sysUnitId),
+  sysUserId: int("sys_user_id").references(() => sysUsersTable.sysUserId),
+  groupBatchId: int("group_batch_id").references(() => groupBatchTable.groupBatchId),
+  classId: int("class_id").references(() => categoryTable.categoryId),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
+  deletedAt: timestamp("deleted_at"),
+  createdBy: int("created_by"),
+  updatedBy: int("updated_by"),
+  deletedBy: int("deleted_by"),
+});
+
+// -----------------------------------------------------------------------------
+// PARTE 7: CONTRATOS E VERSIONAMENTO
+// -----------------------------------------------------------------------------
+
+export const contractsTable = mysqlTable("contract", {
+  contractId: int("contract_id").primaryKey().autoincrement(),
+  currentVersionId: int("current_version_id"), // FK set after contract_version creation
+  sysUnitId: int("sys_unit_id").references(() => sysUnitTable.sysUnitId),
+  sysUserId: int("sys_user_id").references(() => sysUsersTable.sysUserId),
+  ownerId: int("owner_id").references(() => sysUsersTable.sysUserId),
+  partnerId: int("partner_id").references(() => partnersTable.partnerId),
+  indicatedBy: int("indicated_by").references(() => sysUsersTable.sysUserId),
+  contractName: varchar("contract_name", { length: 100 }).notNull(),
+  contractNumber: varchar("contract_number", { length: 20 }).notNull(),
+  originalContractNumber: varchar("original_contract_number", { length: 100 }),
+  currentStatus: varchar("current_status", { length: 50 }).default("active"),
+  statusId: int("status_id").references(() => contractStatusTable.contractStatusId),
+  classId: int("class_id").references(() => categoryTable.categoryId),
+  collectorId: int("collector_id").references(() => sysUsersTable.sysUserId),
+  sellerId: int("seller_id").references(() => sysUsersTable.sysUserId),
+  regionId: int("region_id").references(() => regionTable.regionId),
+  groupBatchId: int("group_batch_id").references(() => groupBatchTable.groupBatchId),
+  obs: text("obs"),
+  servicesAmount: int("services_amount"),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
+  deletedAt: timestamp("deleted_at"),
+  createdBy: int("created_by"),
+  updatedBy: int("updated_by"),
+  deletedBy: int("deleted_by"),
+});
+
+export const contractVersionTable = mysqlTable("contract_version", {
+  contractVersionId: int("contract_version_id").primaryKey().autoincrement(),
+  contractId: int("contract_id").references(() => contractsTable.contractId),
+  groupBatchId: int("group_batch_id").references(() => groupBatchTable.groupBatchId),
+  versionNumber: int("version_number").default(1).notNull(),
+  validFrom: date("valid_from").notNull(),
+  validTo: date("valid_to"),
+  isCurrent: boolean("is_current").default(true),
+  changeReason: varchar("change_reason", { length: 255 }),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
+  deletedAt: timestamp("deleted_at"),
+  createdBy: int("created_by").references(() => sysUsersTable.sysUserId),
+  updatedBy: int("updated_by").references(() => sysUsersTable.sysUserId),
+  deletedBy: int("deleted_by").references(() => sysUsersTable.sysUserId),
+});
+
+export const contractCoversTable = mysqlTable("contract_covers", {
+  contractCoversId: int("contract_covers_id").primaryKey().autoincrement(),
+  contractVersionId: int("contract_version_id").references(() => contractVersionTable.contractVersionId),
+  groupBatchId: int("group_batch_id").references(() => groupBatchTable.groupBatchId),
+  classId: int("class_id").references(() => categoryTable.categoryId),
+  statusId: int("status_id").references(() => generalStatusTable.generalStatusId),
+  contractType: varchar("contract_type", { length: 50 }).notNull(),
+  industry: varchar("industry", { length: 50 }).default("FUNERAL"),
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date"),
+  admission: timestamp("admission").notNull(),
+  finalGrace: timestamp("final_grace"),
+  gracePeriodDays: varchar("grace_period_days", { length: 50 }),
+  renewAt: timestamp("renew_at"),
+  servicesAmount: int("services_amount"),
+  serviceOption1: varchar("service_option1", { length: 100 }),
+  serviceOption2: varchar("service_option2", { length: 100 }),
+  alives: int("alives"),
+  deceaseds: int("deceaseds"),
+  dependents: int("dependents"),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
+  deletedAt: timestamp("deleted_at"),
+  createdBy: int("created_by"),
+  updatedBy: int("updated_by"),
+  deletedBy: int("deleted_by"),
+});
+
+export const contractConfigBillingTable = mysqlTable("contract_config_billing", {
+  contractConfigBillingId: int("contract_config_billing_id").primaryKey().autoincrement(),
+  contractVersionId: int("contract_version_id").references(() => contractVersionTable.contractVersionId),
+  sellerId: int("seller_id").references(() => sysUsersTable.sysUserId),
+  collectorId: int("collector_id").references(() => sysUsersTable.sysUserId),
+  regionId: int("region_id").references(() => regionTable.regionId),
+  billingFrequency: int("billing_frequency").default(1).notNull(),
+  monthInitialBilling: char("month_initial_billing", { length: 2 }).notNull(),
+  yearInitialBilling: char("year_initial_billing", { length: 4 }).notNull(),
+  optPayday: int("opt_payday"),
+  firstCharge: int("first_charge"),
+  lastCharge: int("last_charge"),
+  chargesAmount: int("charges_amount"),
+  chargesPaid: int("charges_paid"),
+  lateFeePercentage: decimal("late_fee_percentage", { precision: 8, scale: 5 }),
+  isPartialPaymentsAllowed: boolean("is_partial_payments_allowed").default(false),
+  defaultPlanInstallments: varchar("default_plan_installments", { length: 50 }),
+  defaultPlanFrequency: varchar("default_plan_frequency", { length: 20 }).default("MONTHLY"),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
+  deletedAt: timestamp("deleted_at"),
+  createdBy: int("created_by"),
+  updatedBy: int("updated_by"),
+  deletedBy: int("deleted_by"),
+});
+
+export const contractEventsTable = mysqlTable("contract_events", {
+  contractEventsId: int("contract_events_id").primaryKey().autoincrement(),
+  contractId: int("contract_id").references(() => contractsTable.contractId),
+  contractVersionId: int("contract_version_id").references(() => contractVersionTable.contractVersionId),
+  eventType: varchar("event_type", { length: 50 }).notNull(),
+  eventDate: timestamp("event_date").notNull(),
+  payload: json("payload"),
+  createdBy: int("created_by").references(() => sysUsersTable.sysUserId),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const contractStatusHistoryTable = mysqlTable("contract_status_history", {
+  contractStatusHistoryId: int("contract_status_history_id").primaryKey().autoincrement(),
+  stateMachineTransitionId: int("state_machine_transition_id").references(() => stateMachineTransitionsTable.stateMachineTransitionsId),
+  statusReasonId: int("status_reason_id").references(() => statusReasonTable.statusReasonId),
+  contractVersionId: int("contract_version_id").references(() => contractVersionTable.contractVersionId),
+  contractNumber: varchar("contract_number", { length: 20 }).notNull(),
+  detailStatus: varchar("detail_status", { length: 250 }),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
+  deletedAt: timestamp("deleted_at"),
+  createdBy: int("created_by"),
+  updatedBy: int("updated_by"),
+  deletedBy: int("deleted_by"),
+});
+
+export const contractActiveTable = mysqlTable("contract_active", {
+  contractActiveId: int("contract_active_id").primaryKey().autoincrement(),
+  sysUnitId: int("sys_unit_id").references(() => sysUnitTable.sysUnitId),
+  sysUserId: int("sys_user_id").references(() => sysUsersTable.sysUserId),
+  contractNumber: varchar("contract_number", { length: 20 }).notNull(),
+  contractVersionId: int("contract_version_id").references(() => contractVersionTable.contractVersionId),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
+  deletedAt: timestamp("deleted_at"),
+  createdBy: int("created_by"),
+  updatedBy: int("updated_by"),
+  deletedBy: int("deleted_by"),
+});
+
+// -----------------------------------------------------------------------------
+// PARTE 8: BENEFICIÁRIOS
+// -----------------------------------------------------------------------------
+
+export const beneficiariesTable = mysqlTable("beneficiary", {
+  beneficiaryId: int("beneficiary_id").primaryKey().autoincrement(),
+  contractVersionId: int("contract_version_id").references(() => contractVersionTable.contractVersionId),
+  sysUnitId: int("sys_unit_id").references(() => sysUnitTable.sysUnitId),
+  name: varchar("name", { length: 100 }).notNull(),
+  relationship: varchar("relationship", { length: 50 }).notNull(),
+  isPrimary: boolean("is_primary").default(false),
+  birthAt: date("birth_at"),
+  genderId: int("gender_id").references(() => genderTable.genderId),
+  documentId: int("document_id").references(() => documentsTable.documentId),
+  graceAt: date("grace_at"),
+  isAlive: boolean("is_alive").default(true),
+  isForbidden: boolean("is_forbidden").default(false),
+  serviceFuneralId: int("service_funeral_id"),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
+  deletedAt: timestamp("deleted_at"),
+  createdBy: int("created_by"),
+  updatedBy: int("updated_by"),
+  deletedBy: int("deleted_by"),
+});
+
+// -----------------------------------------------------------------------------
+// PARTE 9: SERVIÇOS E ATENDIMENTOS
+// -----------------------------------------------------------------------------
+
+export const serviceTypeTable = mysqlTable("service_type", {
+  serviceTypeId: int("service_type_id").primaryKey().autoincrement(),
+  sysUnitId: int("sys_unit_id").references(() => sysUnitTable.sysUnitId),
+  name: varchar("name", { length: 100 }).notNull(),
+  route: varchar("route", { length: 200 }),
+  industry: varchar("industry", { length: 50 }).default("FUNERAL"),
+  isBillable: boolean("is_billable").default(true),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
+  deletedAt: timestamp("deleted_at"),
+  createdBy: int("created_by"),
+  updatedBy: int("updated_by"),
+  deletedBy: int("deleted_by"),
+});
+
+export const performedServiceTable = mysqlTable("performed_service", {
+  performedServiceId: int("performed_service_id").primaryKey().autoincrement(),
+  sysUnitId: int("sys_unit_id").references(() => sysUnitTable.sysUnitId),
+  contractVersionId: int("contract_version_id").references(() => contractVersionTable.contractVersionId),
+  beneficiaryId: int("beneficiary_id").references(() => beneficiariesTable.beneficiaryId),
+  serviceTypeId: int("service_type_id").references(() => serviceTypeTable.serviceTypeId),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
+  deletedAt: timestamp("deleted_at"),
+  createdBy: int("created_by"),
+  updatedBy: int("updated_by"),
+  deletedBy: int("deleted_by"),
+});
+
+export const serviceFuneralTable = mysqlTable("service_funeral", {
+  serviceFuneralId: int("service_funeral_id").primaryKey().autoincrement(),
+  contractVersionId: int("contract_version_id").references(() => contractVersionTable.contractVersionId),
+  sysUnitId: int("sys_unit_id").references(() => sysUnitTable.sysUnitId),
+  sysUserId: int("sys_user_id").references(() => sysUsersTable.sysUserId),
+  performedServiceId: int("performed_service_id").references(() => performedServiceTable.performedServiceId),
+  declarantId: int("declarant_id").references(() => sysUsersTable.sysUserId),
+  deceasedId: int("deceased_id").references(() => beneficiariesTable.beneficiaryId),
+  officeUsersId: int("office_users_id").references(() => sysUsersTable.sysUserId),
+  processNumber: varchar("process_number", { length: 25 }).notNull(),
+  occurrAt: date("occurr_at").notNull(),
+  category: varchar("category", { length: 25 }).default("PL").notNull(),
+  kinship: varchar("kinship", { length: 25 }).notNull(),
+  deathAt: date("death_at"),
+  deathTime: char("death_time", { length: 5 }),
+  deathAddressId: int("death_address_id").references(() => addressesTable.addressId),
+  paymentAt: date("payment_at"),
+  burialDate: date("burial_date"),
+  burialTime: char("burial_time", { length: 5 }),
+  cemetery: varchar("cemetery", { length: 200 }),
+  paidAmount: decimal("paid_amount", { precision: 19, scale: 4 }),
+  paidInDate: date("paid_in_date"),
+  groupBatchId: int("group_batch_id").references(() => groupBatchTable.groupBatchId),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
+  deletedAt: timestamp("deleted_at"),
+  createdBy: int("created_by"),
+  updatedBy: int("updated_by"),
+  deletedBy: int("deleted_by"),
+});
+
+export const deathEventTable = mysqlTable("death_event", {
+  deathEventId: int("death_event_id").primaryKey().autoincrement(),
+  groupBatchId: int("group_batch_id").references(() => groupBatchTable.groupBatchId),
+  beneficiaryId: int("beneficiary_id").references(() => beneficiariesTable.beneficiaryId),
+  serviceFuneralId: int("service_funeral_id").references(() => serviceFuneralTable.serviceFuneralId),
+  eventDate: timestamp("event_date").default(sql`CURRENT_TIMESTAMP`),
+  processedForBilling: boolean("processed_for_billing").default(false),
+});
+
+export const membershipCardTable = mysqlTable("membership_card", {
+  membershipCardId: int("membership_card_id").primaryKey().autoincrement(),
+  performedServiceId: int("performed_service_id").references(() => performedServiceTable.performedServiceId),
+  sysUnitId: int("sys_unit_id").references(() => sysUnitTable.sysUnitId),
+  sysUserId: int("sys_user_id").references(() => sysUsersTable.sysUserId),
+  contractVersionId: int("contract_version_id").references(() => contractVersionTable.contractVersionId),
+  beneficiaryId: int("beneficiary_id").references(() => beneficiariesTable.beneficiaryId),
+  cardCod: varchar("card_cod", { length: 100 }),
+  vencimento: varchar("vencimento", { length: 100 }),
+  observacao: text("observacao"),
+  importadoAt: timestamp("importado_at"),
+  exportadoAt: timestamp("exportado_at"),
+  retornoAt: timestamp("retorno_at"),
+  entregueAt: timestamp("entregue_at"),
+  valor: decimal("valor", { precision: 19, scale: 4 }),
+  pagoAt: timestamp("pago_at"),
+  numop: varchar("numop", { length: 10 }),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
+  deletedAt: timestamp("deleted_at"),
+  createdBy: int("created_by"),
+  updatedBy: int("updated_by"),
+});
+
+export const equipmentRentalTable = mysqlTable("equipament_rental", {
+  equipmentRentalId: int("equipament_rental_id").primaryKey().autoincrement(),
+  performedServiceId: int("performed_service_id").references(() => performedServiceTable.performedServiceId),
+  sysUnitId: int("sys_unit_id").references(() => sysUnitTable.sysUnitId),
+  sysUserId: int("sys_user_id").references(() => sysUsersTable.sysUserId),
+  contractVersionId: int("contract_version_id").references(() => contractVersionTable.contractVersionId),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
+  deletedAt: timestamp("deleted_at"),
+  createdBy: int("created_by"),
+  updatedBy: int("updated_by"),
+  deletedBy: int("deleted_by"),
+});
+
+// -----------------------------------------------------------------------------
+// PARTE 10: ADENDOS
+// -----------------------------------------------------------------------------
+
+export const addendumTable = mysqlTable("addendum", {
+  addendumId: int("addendum_id").primaryKey().autoincrement(),
+  sysUnitId: int("sys_unit_id").references(() => sysUnitTable.sysUnitId),
+  generalStatusId: int("general_status_id").references(() => generalStatusTable.generalStatusId),
+  name: varchar("name", { length: 100 }).notNull(),
+  description: varchar("description", { length: 200 }).notNull(),
+  amount: decimal("amount", { precision: 19, scale: 4 }).notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
+  deletedAt: timestamp("deleted_at"),
+  createdBy: int("created_by"),
+  updatedBy: int("updated_by"),
+  deletedBy: int("deleted_by"),
+});
+
+export const ageAddendumTable = mysqlTable("age_addendum", {
+  ageAddendumId: int("age_addendum_id").primaryKey().autoincrement(),
+  sysUnitId: int("sys_unit_id").references(() => sysUnitTable.sysUnitId),
+  sysUserId: int("sys_user_id").references(() => sysUsersTable.sysUserId),
+  addendumId: int("addendum_id").references(() => addendumTable.addendumId),
+  classId: int("class_id").references(() => categoryTable.categoryId),
+  name: varchar("name", { length: 100 }).notNull(),
+  description: varchar("description", { length: 250 }),
+  minAge: int("min_age"),
+  maxAge: int("max_age"),
+  additionalValue: decimal("additional_value", { precision: 19, scale: 4 }),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
+  deletedAt: timestamp("deleted_at"),
+  createdBy: int("created_by"),
+  updatedBy: int("updated_by"),
+  deletedBy: int("deleted_by"),
+});
+
+export const contractAddendumTable = mysqlTable("contract_addendum", {
+  contractAddendumId: int("contract_addendum_id").primaryKey().autoincrement(),
+  sysUnitId: int("sys_unit_id").references(() => sysUnitTable.sysUnitId),
+  contractVersionId: int("contract_version_id").references(() => contractVersionTable.contractVersionId),
+  addendumId: int("addendum_id").references(() => addendumTable.addendumId),
+  name: varchar("name", { length: 100 }).notNull(),
+  productCode: varchar("product_code", { length: 100 }).notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
+  deletedAt: timestamp("deleted_at"),
+  createdBy: int("created_by"),
+  updatedBy: int("updated_by"),
+  deletedBy: int("deleted_by"),
+});
+
+// -----------------------------------------------------------------------------
+// PARTE 11: COBRANÇAS E PAGAMENTOS
+// -----------------------------------------------------------------------------
+
+export const contractChargeTable = mysqlTable("contract_charge", {
+  contractChargeId: int("contract_charge_id").primaryKey().autoincrement(),
+  contractVersionId: int("contract_version_id").references(() => contractVersionTable.contractVersionId),
+  sysUnitId: int("sys_unit_id").references(() => sysUnitTable.sysUnitId),
+  paymentStatusId: int("payment_status_id").references(() => paymentStatusTable.paymentStatusId),
+  chargeCode: varchar("charge_code", { length: 100 }).notNull(),
+  dueDate: date("due_date").notNull(),
+  amount: decimal("amount", { precision: 19, scale: 4 }).notNull(),
+  paymentDate: date("payment_date"),
+  paidAmount: decimal("paid_amount", { precision: 19, scale: 4 }),
+  dueMonth: char("due_month", { length: 2 }),
+  dueYear: char("due_year", { length: 4 }),
+  convenio: varchar("convenio", { length: 20 }),
+  paydMonth: char("payd_month", { length: 2 }),
+  paydYear: char("payd_year", { length: 4 }),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
+  deletedAt: timestamp("deleted_at"),
+  createdBy: int("created_by"),
+  updatedBy: int("updated_by"),
+  deletedBy: int("deleted_by"),
+});
+
+export const chargeTable = mysqlTable("charge", {
+  chargeId: int("charge_id").primaryKey().autoincrement(),
+  sysUnitId: int("sys_unit_id").references(() => sysUnitTable.sysUnitId),
+  sysUserId: int("sys_user_id").references(() => sysUsersTable.sysUserId),
+  groupBatchId: int("group_batch_id").references(() => groupBatchTable.groupBatchId),
+  chargeNumber: varchar("charge_number", { length: 7 }).notNull(),
+  pendingCasesNumber: int("pending_cases_number"),
+  issueDate: timestamp("issue_date"),
+  dueDate: timestamp("due_date"),
+  monthRef: varchar("month_ref", { length: 100 }),
+  amount: decimal("amount", { precision: 19, scale: 4 }),
+  message: varchar("message", { length: 100 }),
+  message1: varchar("message1", { length: 100 }),
+  message2: varchar("message2", { length: 100 }),
+  amountIssued: int("amount_issued"),
+  amountPaid: int("amount_paid"),
+  canceled: int("canceled"),
+  releaseDate: timestamp("release_date"),
+  printingDate: timestamp("printing_date"),
+  status: varchar("status", { length: 20 }).default("PENDING"),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
+  deletedAt: timestamp("deleted_at"),
+  createdBy: int("created_by"),
+  updatedBy: int("updated_by"),
+  deletedBy: int("deleted_by"),
+});
+
+export const proratedServiceTable = mysqlTable("prorated_service", {
+  proratedServiceId: int("prorated_service_id").primaryKey().autoincrement(),
+  chargeId: int("charge_id").references(() => chargeTable.chargeId),
+  serviceFuneralId: int("service_funeral_id").references(() => serviceFuneralTable.serviceFuneralId),
+  sysUnitId: int("sys_unit_id").references(() => sysUnitTable.sysUnitId),
+  sysUserId: int("sys_user_id").references(() => sysUsersTable.sysUserId),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
+  deletedAt: timestamp("deleted_at"),
+  createdBy: int("created_by"),
+  updatedBy: int("updated_by"),
+  deletedBy: int("deleted_by"),
+});
+
+export const bankSlipTable = mysqlTable("bank_slip", {
+  bankSlipId: int("bank_slip_id").primaryKey().autoincrement(),
+  sysUnitId: int("sys_unit_id").references(() => sysUnitTable.sysUnitId),
+  sysUserId: int("sys_user_id").references(() => sysUsersTable.sysUserId),
+  contractChargeId: int("contract_charge_id").references(() => contractChargeTable.contractChargeId),
+  seq: varchar("seq", { length: 7 }).notNull(),
+  nnumber: varchar("nnumber", { length: 50 }).notNull(),
+  chargeCode: varchar("charge_code", { length: 100 }).notNull(),
+  status: varchar("status", { length: 100 }),
+  sendAt: timestamp("send_at"),
+  sendBatch: char("send_batch", { length: 7 }),
+  responseAt: timestamp("response_at"),
+  responseBatch: char("response_batch", { length: 7 }),
+  response: varchar("response", { length: 100 }),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
+  deletedAt: timestamp("deleted_at"),
+  createdBy: int("created_by"),
+  updatedBy: int("updated_by"),
+  deletedBy: int("deleted_by"),
+});
+
+export const ordpgrcTable = mysqlTable("ordpgrc", {
+  ordpgrcId: int("ordpgrc_id").primaryKey().autoincrement(),
+  sysUnitId: int("sys_unit_id").references(() => sysUnitTable.sysUnitId),
+  sysUserId: int("sys_user_id").references(() => sysUsersTable.sysUserId),
+  sysUserName: varchar("sys_user_name", { length: 50 }),
+  orderNumber: varchar("order_number", { length: 20 }).notNull(),
+  orderDate: timestamp("order_date").default(sql`CURRENT_TIMESTAMP`),
+  totalAmount: decimal("total_amount", { precision: 19, scale: 4 }).notNull(),
+  numberReceipt: int("number_receipt"),
+  closingDate: timestamp("closing_date"),
+  status: text("status").notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
+  deletedAt: timestamp("deleted_at"),
+  createdBy: int("created_by"),
+  updatedBy: int("updated_by"),
+  deletedBy: int("deleted_by"),
+});
+
+export const paymentReceiptTable = mysqlTable("payment_receipt", {
+  paymentReceiptId: int("payment_receipt_id").primaryKey().autoincrement(),
+  subsidiaryId: int("subsidiary_id").references(() => subsidiaryTable.subsidiaryId),
+  sysUnitId: int("sys_unit_id").references(() => sysUnitTable.sysUnitId),
+  sysUserId: int("sys_user_id").references(() => sysUsersTable.sysUserId),
+  contractVersionId: int("contract_version_id").references(() => contractVersionTable.contractVersionId),
+  status: char("status", { length: 2 }),
+  billingNumber: varchar("billing_number", { length: 100 }),
+  valPayment: decimal("val_payment", { precision: 19, scale: 4 }),
+  valAux: decimal("val_aux", { precision: 19, scale: 4 }),
+  dueDate: date("due_date"),
+  cashierNumber: char("cashier_number", { length: 8 }),
+  methodPay: varchar("method_pay", { length: 100 }),
+  obsPay: varchar("obs_pay", { length: 200 }),
+  ordpgrcId: int("ordpgrc_id").references(() => ordpgrcTable.ordpgrcId),
+  paymentStatusId: int("payment_status_id").references(() => paymentStatusTable.paymentStatusId),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
+  deletedAt: timestamp("deleted_at"),
+  createdBy: int("created_by"),
+  updatedBy: int("updated_by"),
+  deletedBy: int("deleted_by"),
+});
+
+export const batchChkTable = mysqlTable("batch_chk", {
+  batchChkId: int("batch_chk_id").primaryKey().autoincrement(),
+  subsidiaryId: int("subsidiary_id").references(() => subsidiaryTable.subsidiaryId),
+  sysUnitId: int("sys_unit_id").references(() => sysUnitTable.sysUnitId),
+  sysUserId: int("sys_user_id").references(() => sysUsersTable.sysUserId),
+  batchNumber: varchar("batch_number", { length: 10 }).notNull(),
+  detail: varchar("detail", { length: 100 }).notNull(),
+  expenses: decimal("expenses", { precision: 19, scale: 4 }).notNull(),
+  dischargeDate: date("discharge_date").notNull(),
+  commissBill: decimal("commiss_bill", { precision: 5, scale: 2 }).notNull(),
+  qtdOther: decimal("qtd_other", { precision: 5, scale: 2 }).notNull(),
+  vlOther: decimal("vl_other", { precision: 19, scale: 4 }).notNull(),
+  qtdBill: decimal("qtd_bill", { precision: 5, scale: 2 }).notNull(),
+  vlBill: decimal("vl_bill", { precision: 19, scale: 4 }).notNull(),
+  paymentValue: decimal("payment_value", { precision: 19, scale: 4 }).notNull(),
+  nrcctopay: varchar("nrcctopay", { length: 7 }).notNull(),
+  cashierNumber: varchar("cashier_number", { length: 7 }).notNull(),
+  ordpgrcId: int("ordpgrc_id").references(() => ordpgrcTable.ordpgrcId),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
+  deletedAt: timestamp("deleted_at"),
+  createdBy: int("created_by"),
+  updatedBy: int("updated_by"),
+  deletedBy: int("deleted_by"),
+});
+
+export const batchDetailTable = mysqlTable("batch_detail", {
+  batchDetailId: int("batch_detail_id").primaryKey().autoincrement(),
+  batchChkId: int("batch_chk_id").references(() => batchChkTable.batchChkId),
+  contractChargeId: int("contract_charge_id").references(() => contractChargeTable.contractChargeId),
+  seqNumber: varchar("seq_number", { length: 5 }).notNull(),
+  billingNumber: varchar("billing_number", { length: 100 }),
+  amountReceived: decimal("amount_received", { precision: 19, scale: 4 }).notNull(),
+  processStatus: char("process_status", { length: 1 }).notNull(),
+  paymentStatusId: int("payment_status_id").references(() => paymentStatusTable.paymentStatusId),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
+  deletedAt: timestamp("deleted_at"),
+  createdBy: int("created_by"),
+  updatedBy: int("updated_by"),
+  deletedBy: int("deleted_by"),
+});
+
+export const billingCycleTable = mysqlTable("billing_cycle", {
+  billingCycleId: int("billing_cycle_id").primaryKey().autoincrement(),
+  sysUnitId: int("sys_unit_id").references(() => sysUnitTable.sysUnitId),
+  sysUserId: int("sys_user_id").references(() => sysUsersTable.sysUserId),
+  groupBatchId: int("group_batch_id").references(() => groupBatchTable.groupBatchId),
+  deathEventCount: int("death_event_count").notNull(),
+  chargeDate: timestamp("charge_date").notNull(),
+  amountPerContract: decimal("amount_per_contract", { precision: 19, scale: 4 }).notNull(),
+  status: varchar("status", { length: 20 }).default("PENDING"),
+});
+
+export const contractBillingTable = mysqlTable("contract_billing", {
+  contractBillingId: int("contract_billing_id").primaryKey().autoincrement(),
+  sysUnitId: int("sys_unit_id").references(() => sysUnitTable.sysUnitId),
+  sysUserId: int("sys_user_id").references(() => sysUsersTable.sysUserId),
+  cycleId: int("cycle_id").references(() => billingCycleTable.billingCycleId),
+  contractVersionId: int("contract_version_id").references(() => contractVersionTable.contractVersionId),
+  chargeId: int("charge_id").references(() => contractChargeTable.contractChargeId),
+  amount: decimal("amount", { precision: 19, scale: 4 }).notNull(),
+  status: varchar("status", { length: 20 }).default("PENDING"),
+});
+
+export const paymentPlanTable = mysqlTable("payment_plan", {
+  paymentPlanId: int("payment_plan_id").primaryKey().autoincrement(),
+  sysUnitId: int("sys_unit_id").references(() => sysUnitTable.sysUnitId),
+  sysUserId: int("sys_user_id").references(() => sysUsersTable.sysUserId),
+  contractVersionId: int("contract_version_id").references(() => contractVersionTable.contractVersionId),
+  planName: varchar("plan_name", { length: 100 }).notNull(),
+  totalAmount: decimal("total_amount", { precision: 19, scale: 4 }).notNull(),
+  startDate: date("start_date").notNull(),
+  endDate: date("end_date"),
+  status: varchar("status", { length: 20 }).default("ACTIVE"),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
+  createdBy: int("created_by"),
+});
+
+export const paymentPlanInstallmentTable = mysqlTable("payment_plan_installment", {
+  paymentPlanInstallmentId: int("payment_plan_installment_id").primaryKey().autoincrement(),
+  sysUnitId: int("sys_unit_id").references(() => sysUnitTable.sysUnitId),
+  sysUserId: int("sys_user_id").references(() => sysUsersTable.sysUserId),
+  planId: int("plan_id").references(() => paymentPlanTable.paymentPlanId),
+  dueDate: date("due_date").notNull(),
+  amount: decimal("amount", { precision: 19, scale: 4 }).notNull(),
+  status: varchar("status", { length: 20 }).default("PENDING"),
+  paidAmount: decimal("paid_amount", { precision: 19, scale: 4 }).default("0"),
+  paidDate: date("paid_date"),
+  chargeId: int("charge_id").references(() => contractChargeTable.contractChargeId),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
+});
+
+export const paymentTransactionTable = mysqlTable("payment_transaction", {
+  paymentTransactionId: bigint("payment_transaction_id", { mode: "number" }).primaryKey().autoincrement(),
+  sysUnitId: int("sys_unit_id").references(() => sysUnitTable.sysUnitId),
+  sysUserId: int("sys_user_id").references(() => sysUsersTable.sysUserId),
+  contractVersionId: int("contract_version_id").references(() => contractVersionTable.contractVersionId),
+  chargeId: int("charge_id").references(() => contractChargeTable.contractChargeId),
+  installmentId: int("installment_id").references(() => paymentPlanInstallmentTable.paymentPlanInstallmentId),
+  amount: decimal("amount", { precision: 19, scale: 4 }).notNull(),
+  paymentDate: date("payment_date").notNull(),
+  paymentMethod: varchar("payment_method", { length: 50 }).notNull(),
+  referenceNumber: varchar("reference_number", { length: 100 }),
+  status: varchar("status", { length: 20 }).default("COMPLETED"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  createdBy: int("created_by"),
+});
+
+export const billingRuleTable = mysqlTable("billing_rule", {
+  billingRuleId: int("billing_rule_id").primaryKey().autoincrement(),
+  sysUnitId: int("sys_unit_id").references(() => sysUnitTable.sysUnitId),
+  sysUserId: int("sys_user_id").references(() => sysUsersTable.sysUserId),
+  ruleName: varchar("rule_name", { length: 100 }).notNull(),
+  industry: varchar("industry", { length: 50 }).notNull(),
+  description: text("description"),
+  conditionExpression: text("condition_expression"),
+  chargeExpression: text("charge_expression"),
+  isActive: boolean("is_active").default(true),
+});
+
+export const billingRuleApplicationTable = mysqlTable("billing_rule_application", {
+  billingRuleApplicationId: int("billing_rule_application_id").primaryKey().autoincrement(),
+  sysUnitId: int("sys_unit_id").references(() => sysUnitTable.sysUnitId),
+  sysUserId: int("sys_user_id").references(() => sysUsersTable.sysUserId),
+  ruleId: int("rule_id").references(() => billingRuleTable.billingRuleId),
+  entityType: varchar("entity_type", { length: 50 }).notNull(),
+  entityId: int("entity_id").notNull(),
+  appliedAt: timestamp("applied_at").default(sql`CURRENT_TIMESTAMP`),
+  appliedBy: int("applied_by"),
+});
+
+export const medicalForwardTable = mysqlTable("medical_foward", {
+  medicalForwardId: int("medical_foward_id").primaryKey().autoincrement(),
+  sysUnitId: int("sys_unit_id").references(() => sysUnitTable.sysUnitId),
+  sysUserId: int("sys_user_id").references(() => sysUsersTable.sysUserId),
+  partnerId: int("partner_id").references(() => partnersTable.partnerId),
+  performedServiceId: int("performed_service_id").references(() => performedServiceTable.performedServiceId),
+  observation: text("observation"),
+  valPayment: decimal("val_payment", { precision: 19, scale: 4 }),
+  valAux: decimal("val_aux", { precision: 19, scale: 4 }),
+  dueDate: date("due_date"),
+  cashierNumber: char("cashier_number", { length: 8 }),
+  methodPay: varchar("method_pay", { length: 100 }),
+  obsPay: varchar("obs_pay", { length: 200 }),
+  ordpgrcId: int("ordpgrc_id").references(() => ordpgrcTable.ordpgrcId),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
+  deletedAt: timestamp("deleted_at"),
+  createdBy: int("created_by"),
+  updatedBy: int("updated_by"),
+  deletedBy: int("deleted_by"),
+});
+
+export const accountsTable = mysqlTable("account", {
+  accountId: int("account_id").primaryKey().autoincrement(),
+  companyId: int("company_id").references(() => companyTable.companyId),
+  accountTypeId: int("account_type_id").references(() => accountTypesTable.accountTypeId),
+  parentAccountId: int("parent_account_id").references((): any => accountsTable.accountId),
+  accountCode: varchar("account_code", { length: 30 }).notNull(),
+  accountName: varchar("account_name", { length: 100 }).notNull(),
   description: text("description"),
   isBankAccount: boolean("is_bank_account").default(false),
   isControlAccount: boolean("is_control_account").default(false),
   isTaxRelevant: boolean("is_tax_relevant").default(false),
-  currency: char("currency", { length: 3 }).default("BRL"),
+  currency: char("currency", { length: 3 }).default("BRL").notNull(),
   openingBalance: decimal("opening_balance", { precision: 19, scale: 4 }).default("0"),
   currentBalance: decimal("current_balance", { precision: 19, scale: 4 }).default("0"),
-  level: integer("level").notNull(),
+  level: int("level").notNull(),
   active: boolean("active").default(true),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-  createdBy: integer("created_by"),
-  updatedBy: integer("updated_by"),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
+  deletedAt: timestamp("deleted_at"),
+  createdBy: int("created_by"),
+  updatedBy: int("updated_by"),
+  deletedBy: int("deleted_by"),
 });
 
-// Cost Centers table
-export const costCentersTable = pgTable("cost_centers", {
-  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  companyId: integer("company_id").references(() => companyTable.id).notNull(),
-  parentCostCenterId: integer("parent_cost_center_id").references(() => costCentersTable.id),
-  costCenterCode: text("cost_center_code").notNull(),
-  costCenterName: text("cost_center_name").notNull(),
+export const costCentersTable = mysqlTable("cost_center", {
+  costCenterId: int("cost_center_id").primaryKey().autoincrement(),
+  companyId: int("company_id").references(() => companyTable.companyId),
+  parentCostCenterId: int("parent_cost_center_id").references((): any => costCentersTable.costCenterId),
+  costCenterCode: varchar("cost_center_code", { length: 30 }).notNull(),
+  costCenterName: varchar("cost_center_name", { length: 100 }).notNull(),
   description: text("description"),
-  managerName: text("manager_name"),
+  managerName: varchar("manager_name", { length: 100 }),
   budget: decimal("budget", { precision: 19, scale: 4 }),
-  level: integer("level").notNull(),
+  level: int("level").notNull(),
   active: boolean("active").default(true),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-  createdBy: integer("created_by"),
-  updatedBy: integer("updated_by"),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
+  deletedAt: timestamp("deleted_at"),
+  createdBy: int("created_by"),
+  updatedBy: int("updated_by"),
+  deletedBy: int("deleted_by"),
 });
 
-// Departments table
-export const departmentsTable = pgTable("departments", {
-  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  companyId: integer("company_id").references(() => companyTable.id).notNull(),
-  parentDepartmentId: integer("parent_department_id").references(() => departmentsTable.id),
-  departmentCode: text("department_code").notNull(),
-  departmentName: text("department_name").notNull(),
+export const departmentsTable = mysqlTable("department", {
+  departmentId: int("department_id").primaryKey().autoincrement(),
+  companyId: int("company_id").references(() => companyTable.companyId),
+  parentDepartmentId: int("parent_department_id").references((): any => departmentsTable.departmentId),
+  departmentCode: varchar("department_code", { length: 30 }).notNull(),
+  departmentName: varchar("department_name", { length: 100 }).notNull(),
   description: text("description"),
-  managerName: text("manager_name"),
-  costCenterId: integer("cost_center_id").references(() => costCentersTable.id),
+  managerName: varchar("manager_name", { length: 100 }),
+  costCenterId: int("cost_center_id").references(() => costCentersTable.costCenterId),
   active: boolean("active").default(true),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-  createdBy: integer("created_by"),
-  updatedBy: integer("updated_by"),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
+  deletedAt: timestamp("deleted_at"),
+  createdBy: int("created_by"),
+  updatedBy: int("updated_by"),
+  deletedBy: int("deleted_by"),
 });
 
-// Projects table
-export const projectsTable = pgTable("projects", {
-  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  companyId: integer("company_id").references(() => companyTable.id).notNull(),
-  projectCode: text("project_code").notNull(),
-  projectName: text("project_name").notNull(),
+export const projectsTable = mysqlTable("project", {
+  projectId: int("project_id").primaryKey().autoincrement(),
+  companyId: int("company_id").references(() => companyTable.companyId),
+  projectCode: varchar("project_code", { length: 30 }).notNull(),
+  projectName: varchar("project_name", { length: 100 }).notNull(),
   description: text("description"),
-  managerName: text("manager_name"),
-  costCenterId: integer("cost_center_id").references(() => costCentersTable.id),
-  departmentId: integer("department_id").references(() => departmentsTable.id),
+  managerName: varchar("manager_name", { length: 100 }),
+  costCenterId: int("cost_center_id").references(() => costCentersTable.costCenterId),
+  departmentId: int("department_id").references(() => departmentsTable.departmentId),
   startDate: timestamp("start_date"),
   endDate: timestamp("end_date"),
   budget: decimal("budget", { precision: 19, scale: 4 }),
-  status: text("status").notNull().default("PLANNED"), // PLANNED, ACTIVE, ON_HOLD, COMPLETED, CANCELLED
+  status: varchar("status", { length: 20 }).notNull().default("PLANNED"),
   completionPercentage: decimal("completion_percentage", { precision: 5, scale: 2 }).default("0"),
   active: boolean("active").default(true),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-  createdBy: integer("created_by"),
-  updatedBy: integer("updated_by"),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
+  deletedAt: timestamp("deleted_at"),
+  createdBy: int("created_by"),
+  updatedBy: int("updated_by"),
+  deletedBy: int("deleted_by"),
 });
 
-// Fiscal Years table
-export const fiscalYearsTable = pgTable("fiscal_years", {
-  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  companyId: integer("company_id").references(() => companyTable.id).notNull(),
-  yearName: text("year_name").notNull(),
+export const fiscalYearsTable = mysqlTable("fiscal_year", {
+  fiscalYearId: int("fiscal_year_id").primaryKey().autoincrement(),
+  companyId: int("company_id").references(() => companyTable.companyId),
+  yearName: varchar("year_name", { length: 100 }).notNull(),
   startDate: timestamp("start_date").notNull(),
   endDate: timestamp("end_date").notNull(),
   isClosed: boolean("is_closed").default(false),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-  createdBy: integer("created_by"),
-  updatedBy: integer("updated_by"),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
+  deletedAt: timestamp("deleted_at"),
+  createdBy: int("created_by"),
+  updatedBy: int("updated_by"),
+  deletedBy: int("deleted_by"),
 });
 
-// Fiscal Periods table
-export const fiscalPeriodsTable = pgTable("fiscal_periods", {
-  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  fiscalYearId: integer("fiscal_year_id").references(() => fiscalYearsTable.id).notNull(),
-  periodName: text("period_name").notNull(),
-  periodNumber: integer("period_number").notNull(),
+export const fiscalPeriodsTable = mysqlTable("fiscal_period", {
+  fiscalPeriodId: int("fiscal_period_id").primaryKey().autoincrement(),
+  fiscalYearId: int("fiscal_year_id").references(() => fiscalYearsTable.fiscalYearId),
+  periodName: varchar("period_name", { length: 100 }).notNull(),
+  periodNumber: int("period_number").notNull(),
   startDate: timestamp("start_date").notNull(),
   endDate: timestamp("end_date").notNull(),
   isAdjustment: boolean("is_adjustment").default(false),
   isClosed: boolean("is_closed").default(false),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-  createdBy: integer("created_by"),
-  updatedBy: integer("updated_by"),
-});
-
-// Create insert schemas
-export const insertContractSchema = createInsertSchema(contractsTable).omit({ 
-  id: true, 
-  createdAt: true, 
-  updatedAt: true 
-}).extend({
-  startDate: z.string().transform((val) => new Date(val)),
-  endDate: z.string().optional().transform((val) => val ? new Date(val) : undefined),
-  admission: z.string().transform((val) => new Date(val)),
-});
-
-export const insertBeneficiarySchema = createInsertSchema(beneficiariesTable).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertContractChargeSchema = createInsertSchema(contractChargesTable).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-  deletedAt: true,
-  createdBy: true,
-  updatedBy: true,
-  deletedBy: true,
-});
-
-export const insertChargeSchema = createInsertSchema(chargesTable).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertAddendumSchema = createInsertSchema(addendumsTable).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-// Additional insert schemas
-export const insertAddressSchema = createInsertSchema(addressesTable).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertAddressTypeSchema = createInsertSchema(addressTypesTable).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertEntityAddressSchema = createInsertSchema(entityAddressesTable).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertPartnerTypeSchema = createInsertSchema(partnerTypesTable).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertPartnerSchema = createInsertSchema(partnersTable).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertDocumentTypeSchema = createInsertSchema(documentTypesTable).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertDocumentSchema = createInsertSchema(documentsTable).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertClientSchema = createInsertSchema(clientsTable).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertBatchDetailSchema = createInsertSchema(batchDetailTable).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertBatchChkSchema = createInsertSchema(batchChkTable).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertSysUserSchema = createInsertSchema(sysUsersTable).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertEstadoSchema = createInsertSchema(estadoTable).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertCidadeSchema = createInsertSchema(cidadeTable).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertGenderSchema = createInsertSchema(genderTable).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertPaymentStatusSchema = createInsertSchema(paymentStatusTable).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertGeneralStatusSchema = createInsertSchema(generalStatusTable).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertCompanySchema = createInsertSchema(companyTable).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertSubsidiarySchema = createInsertSchema(subsidiaryTable).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-// Financial module insert schemas
-export const insertAccountTypeSchema = createInsertSchema(accountTypesTable).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertAccountSchema = createInsertSchema(accountsTable).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertCostCenterSchema = createInsertSchema(costCentersTable).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertDepartmentSchema = createInsertSchema(departmentsTable).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertProjectSchema = createInsertSchema(projectsTable).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertFiscalYearSchema = createInsertSchema(fiscalYearsTable).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertFiscalPeriodSchema = createInsertSchema(fiscalPeriodsTable).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-// Financial module type definitions
-export type InsertAccountType = z.infer<typeof insertAccountTypeSchema>;
-export type SelectAccountType = typeof accountTypesTable.$inferSelect;
-
-export type InsertAccount = z.infer<typeof insertAccountSchema>;
-export type SelectAccount = typeof accountsTable.$inferSelect;
-
-export type InsertCostCenter = z.infer<typeof insertCostCenterSchema>;
-export type SelectCostCenter = typeof costCentersTable.$inferSelect;
-
-export type InsertDepartment = z.infer<typeof insertDepartmentSchema>;
-export type SelectDepartment = typeof departmentsTable.$inferSelect;
-
-export type InsertProject = z.infer<typeof insertProjectSchema>;
-export type SelectProject = typeof projectsTable.$inferSelect;
-
-export type InsertFiscalYear = z.infer<typeof insertFiscalYearSchema>;
-export type SelectFiscalYear = typeof fiscalYearsTable.$inferSelect;
-
-export type InsertFiscalPeriod = z.infer<typeof insertFiscalPeriodSchema>;
-export type SelectFiscalPeriod = typeof fiscalPeriodsTable.$inferSelect;
-
-export const insertSysUnitSchema = createInsertSchema(sysUnitTable).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertClasseSchema = createInsertSchema(classeTable).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertGroupBatchSchema = createInsertSchema(groupBatchTable).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertCurrencySchema = createInsertSchema(currencyTable).omit({
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertMessagesSchema = createInsertSchema(messagesTable).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertGroupSchema = createInsertSchema(groupTable).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertBillingControlSchema = createInsertSchema(billingControlTable).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertEntityDocumentSchema = createInsertSchema(entityDocumentsTable).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertContractNumberRegistrySchema = createInsertSchema(contractNumberRegistryTable).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertContractStatusHistorySchema = createInsertSchema(contractStatusHistoryTable).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-// Attendance/Service Management Tables
-
-// Payment Receipt table - Recibo de Pagamento
-export const paymentReceiptTable = pgTable("payment_receipt", {
-  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  subsidiaryId: integer("subsidiary_id"),
-  sysUnitId: integer("sys_unit_id"),
-  sysUserId: integer("sys_user_id"),
-  contractId: integer("contract_id").references(() => contractsTable.id),
-  status: char("status", { length: 2 }),
-  billingNumber: text("billing_number"),
-  valPayment: decimal("val_payment", { precision: 19, scale: 4 }),
-  valAux: decimal("val_aux", { precision: 19, scale: 4 }),
-  dueDate: timestamp("due_date"),
-  cashierNumber: char("cashier_number", { length: 8 }),
-  methodPay: text("method_pay"),
-  obsPay: text("obs_pay"),
-  ordpgrcId: integer("ordpgrc_id"),
-  paymentStatusId: integer("payment_status_id").references(() => paymentStatusTable.id),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).onUpdateNow(),
   deletedAt: timestamp("deleted_at"),
-  createdBy: integer("created_by"),
-  updatedBy: integer("updated_by"),
-  deletedBy: integer("deleted_by"),
+  createdBy: int("created_by"),
+  updatedBy: int("updated_by"),
+  deletedBy: int("deleted_by"),
 });
 
-// Member Card table - Carteirinha
-export const carteirinhaTable = pgTable("carteirinha", {
-  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  performedServiceId: integer("performed_service_id"),
-  sysUnitId: integer("sys_unit_id"),
-  sysUserId: integer("sys_user_id"),
-  contractId: integer("contract_id").references(() => contractsTable.id),
-  beneficiaryId: integer("beneficiary_id").references(() => beneficiariesTable.id),
-  cardCod: text("card_cod"), // código impresso no cartão
-  vencimento: text("vencimento"), // válido até... (VAL 06/2025 A 05/2026)
-  observacao: text("observacao"),
-  importadoAt: timestamp("importado_at"), // data que foi importado do contrato/beneficiário/cobrança
-  exportadoAt: timestamp("exportado_at"), // data que exportou para impressão do cartão
-  retornoAt: timestamp("retorno_at"), // data do recebimento do cartão impresso
-  entregueAt: timestamp("entregue_at"), // data da entrega ao beneficiário
-  valor: decimal("valor", { precision: 19, scale: 4 }),
-  pagoAt: timestamp("pago_at"), // data do pagamento
-  numop: char("numop", { length: 10 }), // número do caixa
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-  deletedAt: timestamp("deleted_at"),
-  createdBy: integer("created_by"),
-  updatedBy: integer("updated_by"),
-  deletedBy: integer("deleted_by"),
+// Zod schemas for validation
+export const insertSysUserSchema = createInsertSchema(sysUsersTable);
+export const insertContractSchema = createInsertSchema(contractsTable);
+export const insertContractVersionSchema = createInsertSchema(contractVersionTable);
+export const insertPartnerSchema = createInsertSchema(partnersTable);
+export const insertBeneficiarySchema = createInsertSchema(beneficiariesTable);
+export const insertContractChargeSchema = createInsertSchema(contractChargeTable);
+export const insertAddressTypeSchema = createInsertSchema(addressTypesTable);
+export const insertAddressSchema = createInsertSchema(addressesTable);
+export const insertEntityAddressSchema = createInsertSchema(entityAddressesTable);
+export const insertPartnerTypeSchema = createInsertSchema(partnerTypesTable);
+export const insertDocumentTypeSchema = createInsertSchema(documentTypesTable);
+export const insertDocumentSchema = createInsertSchema(documentsTable);
+export const insertEntityDocumentSchema = createInsertSchema(entityDocumentsTable);
+export const insertClientSchema = z.object({
+  name: z.string(),
+  email: z.string().email().optional(),
+  phone: z.string().optional(),
+  document: z.string().optional(),
 });
+export const insertCompanySchema = createInsertSchema(companyTable);
+export const insertSubsidiarySchema = createInsertSchema(subsidiaryTable);
+export const insertSysUnitSchema = createInsertSchema(sysUnitTable);
+export const insertClasseSchema = createInsertSchema(categoryTable);
+export const insertGroupBatchSchema = createInsertSchema(groupBatchTable);
+export const insertAccountTypeSchema = createInsertSchema(accountTypesTable);
+export const insertAccountSchema = createInsertSchema(accountsTable);
+export const insertCostCenterSchema = createInsertSchema(costCentersTable);
+export const insertDepartmentSchema = createInsertSchema(departmentsTable);
+export const insertProjectSchema = createInsertSchema(projectsTable);
+export const insertFiscalYearSchema = createInsertSchema(fiscalYearsTable);
+export const insertFiscalPeriodSchema = createInsertSchema(fiscalPeriodsTable);
+export const insertGenderSchema = createInsertSchema(genderTable);
+export const insertPaymentStatusSchema = createInsertSchema(paymentStatusTable);
+export const insertEstadoSchema = createInsertSchema(estadoTable);
+export const insertCidadeSchema = createInsertSchema(cidadeTable);
+export const insertCurrencySchema = createInsertSchema(currencyTable);
+export const insertGeneralStatusSchema = createInsertSchema(generalStatusTable);
+export const insertContractStatusHistorySchema = createInsertSchema(contractStatusHistoryTable);
+export const insertPaymentReceiptSchema = createInsertSchema(paymentReceiptTable);
+export const insertCarteirinhaSchema = createInsertSchema(membershipCardTable);
+export const insertMedicalForwardSchema = createInsertSchema(medicalForwardTable);
+export const insertAddendumSchema = createInsertSchema(addendumTable);
+export const insertChargeSchema = createInsertSchema(chargeTable);
+export const insertBatchChkSchema = createInsertSchema(batchChkTable);
+export const insertBatchDetailSchema = createInsertSchema(batchDetailTable);
+export const insertContractNumberRegistrySchema = createInsertSchema(contractActiveTable);
 
-// Medical Forward table - Encaminhamento Médico
-export const medicalForwardTable = pgTable("medical_forward", {
-  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  sysUnitId: integer("sys_unit_id"), 
-  sysUserId: integer("sys_user_id"),
-  partnerId: integer("partner_id").references(() => partnersTable.id), // qual parceiro/médico/credenciado
-  performedServiceId: integer("performed_service_id"), // qual serviço
-  observation: text("observation"),
-  valPayment: decimal("val_payment", { precision: 19, scale: 4 }), // valor pago
-  valAux: decimal("val_aux", { precision: 19, scale: 4 }), // pago com
-  dueDate: timestamp("due_date"), // data do pagamento
-  cashierNumber: char("cashier_number", { length: 8 }), // número do caixa
-  methodPay: text("method_pay"), // método (dinheiro, cartão, pix...)
-  obsPay: text("obs_pay"),
-  ordpgrcId: integer("ordpgrc_id"), // Caixa
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-  deletedAt: timestamp("deleted_at"),
-  createdBy: integer("created_by"),
-  updatedBy: integer("updated_by"),
-  deletedBy: integer("deleted_by"),
-});
-
-// Insert schemas for attendance tables
-export const insertPaymentReceiptSchema = createInsertSchema(paymentReceiptTable).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertCarteirinhaSchema = createInsertSchema(carteirinhaTable).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertMedicalForwardSchema = createInsertSchema(medicalForwardTable).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-// Type exports
-export type Contract = typeof contractsTable.$inferSelect;
-export type Beneficiary = typeof beneficiariesTable.$inferSelect;
-export type ContractCharge = typeof contractChargesTable.$inferSelect;
-export type Charge = typeof chargesTable.$inferSelect;
-export type Addendum = typeof addendumsTable.$inferSelect;
-export type BatchDetail = typeof batchDetailTable.$inferSelect;
-export type GroupBatch = typeof groupBatchTable.$inferSelect;
-export type BatchChk = typeof batchChkTable.$inferSelect;
-export type Address = typeof addressesTable.$inferSelect;
-export type AddressType = typeof addressTypesTable.$inferSelect;
-export type EntityAddress = typeof entityAddressesTable.$inferSelect;
-export type PartnerType = typeof partnerTypesTable.$inferSelect;
-export type Partner = typeof partnersTable.$inferSelect;
-export type DocumentType = typeof documentTypesTable.$inferSelect;
-export type Document = typeof documentsTable.$inferSelect;
-export type Client = typeof clientsTable.$inferSelect;
+// Export types
 export type SysUser = typeof sysUsersTable.$inferSelect;
-export type ContractNumberRegistry = typeof contractNumberRegistryTable.$inferSelect;
-export type ContractStatusHistory = typeof contractStatusHistoryTable.$inferSelect;
+export type InsertSysUser = typeof sysUsersTable.$inferInsert;
+export type Contract = typeof contractsTable.$inferSelect & {
+  contractType?: string;
+  startDate?: Date | string | null;
+  endDate?: Date | string | null;
+  admission?: Date | string | null;
+  billingFrequency?: number | null;
+  monthInitialBilling?: string | null;
+  yearInitialBilling?: string | null;
+  optPayday?: number | null;
+  finalGrace?: Date | string | null;
+  firstCharge?: number | null;
+  lastCharge?: number | null;
+  chargesAmount?: number | null;
+  chargesPaid?: number | null;
+  renewAt?: Date | string | null;
+  serviceOption1?: string | null;
+  serviceOption2?: string | null;
+  alives?: number | null;
+  deceaseds?: number | null;
+  dependents?: number | null;
+};
+export type InsertContract = typeof contractsTable.$inferInsert;
+export type ContractVersion = typeof contractVersionTable.$inferSelect;
+export type InsertContractVersion = typeof contractVersionTable.$inferInsert;
+export type Partner = typeof partnersTable.$inferSelect;
+export type InsertPartner = typeof partnersTable.$inferInsert;
+export type Beneficiary = typeof beneficiariesTable.$inferSelect;
+export type InsertBeneficiary = typeof beneficiariesTable.$inferInsert;
+export type ContractCharge = typeof contractChargeTable.$inferSelect;
+export type InsertContractCharge = typeof contractChargeTable.$inferInsert;
+export type Address = typeof addressesTable.$inferSelect;
+export type InsertAddress = typeof addressesTable.$inferInsert;
+export type Company = typeof companyTable.$inferSelect;
+export type InsertCompany = typeof companyTable.$inferInsert;
+export type Subsidiary = typeof subsidiaryTable.$inferSelect;
+export type InsertSubsidiary = typeof subsidiaryTable.$inferInsert;
+export type SysUnit = typeof sysUnitTable.$inferSelect;
+export type InsertSysUnit = typeof sysUnitTable.$inferInsert;
+export type Category = typeof categoryTable.$inferSelect;
+export type InsertCategory = typeof categoryTable.$inferInsert;
+export type GroupBatch = typeof groupBatchTable.$inferSelect;
+export type InsertGroupBatch = typeof groupBatchTable.$inferInsert;
+export type AccountType = typeof accountTypesTable.$inferSelect;
+export type InsertAccountType = typeof accountTypesTable.$inferInsert;
+export type Account = typeof accountsTable.$inferSelect;
+export type InsertAccount = typeof accountsTable.$inferInsert;
+export type CostCenter = typeof costCentersTable.$inferSelect;
+export type InsertCostCenter = typeof costCentersTable.$inferInsert;
+export type Department = typeof departmentsTable.$inferSelect;
+export type InsertDepartment = typeof departmentsTable.$inferInsert;
+export type Project = typeof projectsTable.$inferSelect;
+export type InsertProject = typeof projectsTable.$inferInsert;
+export type FiscalYear = typeof fiscalYearsTable.$inferSelect;
+export type InsertFiscalYear = typeof fiscalYearsTable.$inferInsert;
+export type FiscalPeriod = typeof fiscalPeriodsTable.$inferSelect;
+export type InsertFiscalPeriod = typeof fiscalPeriodsTable.$inferInsert;
+export type Region = typeof regionTable.$inferSelect;
+export type InsertRegion = typeof regionTable.$inferInsert;
+export type Specialty = typeof specialtyTable.$inferSelect;
+export type InsertSpecialty = typeof specialtyTable.$inferInsert;
+export type Gender = typeof genderTable.$inferSelect;
+export type InsertGender = typeof genderTable.$inferInsert;
+export type DocumentType = typeof documentTypesTable.$inferSelect;
+export type InsertDocumentType = typeof documentTypesTable.$inferInsert;
+export type PaymentStatus = typeof paymentStatusTable.$inferSelect;
+export type InsertPaymentStatus = typeof paymentStatusTable.$inferInsert;
+export type GeneralStatus = typeof generalStatusTable.$inferSelect;
+export type InsertGeneralStatus = typeof generalStatusTable.$inferInsert;
+export type AddressType = typeof addressTypesTable.$inferSelect;
+export type InsertAddressType = typeof addressTypesTable.$inferInsert;
+export type Estado = typeof estadoTable.$inferSelect;
+export type InsertEstado = typeof estadoTable.$inferInsert;
+export type Cidade = typeof cidadeTable.$inferSelect;
+export type InsertCidade = typeof cidadeTable.$inferInsert;
+export type Currency = typeof currencyTable.$inferSelect;
+export type InsertCurrency = typeof currencyTable.$inferInsert;
 export type PaymentReceipt = typeof paymentReceiptTable.$inferSelect;
-export type Carteirinha = typeof carteirinhaTable.$inferSelect;
+export type InsertPaymentReceipt = typeof paymentReceiptTable.$inferInsert;
 export type MedicalForward = typeof medicalForwardTable.$inferSelect;
+export type InsertMedicalForward = typeof medicalForwardTable.$inferInsert;
 
-export type InsertContract = z.infer<typeof insertContractSchema>;
-export type InsertBeneficiary = z.infer<typeof insertBeneficiarySchema>;
-export type InsertContractCharge = z.infer<typeof insertContractChargeSchema>;
-export type InsertCharge = z.infer<typeof insertChargeSchema>;
-export type InsertAddendum = z.infer<typeof insertAddendumSchema>;
-export type InsertAddress = z.infer<typeof insertAddressSchema>;
-export type InsertAddressType = z.infer<typeof insertAddressTypeSchema>;
-export type InsertEntityAddress = z.infer<typeof insertEntityAddressSchema>;
-export type InsertPartnerType = z.infer<typeof insertPartnerTypeSchema>;
-export type InsertPartner = z.infer<typeof insertPartnerSchema>;
-export type InsertDocumentType = z.infer<typeof insertDocumentTypeSchema>;
-export type InsertDocument = z.infer<typeof insertDocumentSchema>;
-export type InsertClient = z.infer<typeof insertClientSchema>;
-export type InsertBatchDetail = z.infer<typeof insertBatchDetailSchema>;
-export type InsertBatchChk = z.infer<typeof insertBatchChkSchema>;
-export type InsertSysUser = z.infer<typeof insertSysUserSchema>;
-export type InsertContractNumberRegistry = z.infer<typeof insertContractNumberRegistrySchema>;
-export type InsertContractStatusHistory = z.infer<typeof insertContractStatusHistorySchema>;
-export type InsertPaymentReceipt = z.infer<typeof insertPaymentReceiptSchema>;
-export type InsertCarteirinha = z.infer<typeof insertCarteirinhaSchema>;
-export type InsertMedicalForward = z.infer<typeof insertMedicalForwardSchema>;
+export type PerformedService = typeof performedServiceTable.$inferSelect;
+export type InsertPerformedService = typeof performedServiceTable.$inferInsert;
+export type Client = any;
+export type Plan = any;
+export type ContractHistory = any;
 
-// Legacy type aliases for compatibility
+// Temporary Compatibility Aliases (to be replaced)
 export type NewSysUser = InsertSysUser;
-export type NewAddressType = InsertAddressType;
-export type NewAddress = InsertAddress;
-export type NewEntityAddress = InsertEntityAddress;
-export type NewPartnerType = InsertPartnerType;
 export type NewPartner = InsertPartner;
-export type NewDocument = InsertDocument;
+export type NewContract = InsertContract;
+export type NewBeneficiary = InsertBeneficiary;
+export type NewAddress = InsertAddress;
+export type NewCompany = InsertCompany;
+export type NewSubsidiary = InsertSubsidiary;
+export type NewSysUnit = InsertSysUnit;
+export type NewClasse = InsertCategory;
+export type NewGroupBatch = InsertGroupBatch;
+export type SelectAccountType = AccountType;
+export type SelectAccount = Account;
+export type NewGender = InsertGender;
+export type NewPaymentStatus = InsertPaymentStatus;
+export type NewGeneralStatus = InsertGeneralStatus;
+export type NewAddressType = InsertAddressType;
+export type NewEstado = InsertEstado;
+export type NewCidade = InsertCidade;
+export type NewCurrency = InsertCurrency;
 export type NewDocumentType = InsertDocumentType;
-export type NewEntityDocument = typeof entityDocumentsTable.$inferInsert;
+export type Document = typeof documentsTable.$inferSelect;
+export type NewDocument = typeof documentsTable.$inferInsert;
+export type EntityAddress = typeof entityAddressesTable.$inferSelect;
+export type NewEntityAddress = typeof entityAddressesTable.$inferInsert;
 export type EntityDocument = typeof entityDocumentsTable.$inferSelect;
+export type NewEntityDocument = typeof entityDocumentsTable.$inferInsert;
+export type PartnerType = typeof partnerTypesTable.$inferSelect;
+export type NewPartnerType = typeof partnerTypesTable.$inferInsert;
+export type NewBatchChk = typeof batchChkTable.$inferInsert;
+export type BatchChk = typeof batchChkTable.$inferSelect & {
+  processDate?: Date | string | null;
+  status?: string | null;
+  totalAmount?: string | number | null;
+  recordCount?: number | null;
+};
+export type NewBatchDetail = typeof batchDetailTable.$inferInsert;
+export type BatchDetail = typeof batchDetailTable.$inferSelect;
+export type NewCharge = typeof chargeTable.$inferInsert;
+export type Charge = typeof chargeTable.$inferSelect;
+export type Addendum = typeof addendumTable.$inferSelect;
+export type InsertAddendum = typeof addendumTable.$inferInsert;
+export type NewAddendum = InsertAddendum;
+
+export type InsertEntityAddress = typeof entityAddressesTable.$inferInsert;
+export type InsertPartnerType = typeof partnerTypesTable.$inferInsert;
+export type InsertDocument = typeof documentsTable.$inferInsert;
+export type InsertEntityDocument = typeof entityDocumentsTable.$inferInsert;
+export type InsertCharge = typeof chargeTable.$inferInsert;
+export type InsertBatchChk = typeof batchChkTable.$inferInsert;
+export type InsertBatchDetail = typeof batchDetailTable.$inferInsert;
+export type ContractStatusHistory = typeof contractStatusHistoryTable.$inferSelect;
+export type InsertContractStatusHistory = typeof contractStatusHistoryTable.$inferInsert;
+export type Carteirinha = typeof membershipCardTable.$inferSelect;
+export type InsertCarteirinha = typeof membershipCardTable.$inferInsert;

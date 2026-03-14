@@ -13,7 +13,7 @@ import {
   PerformedServiceSql,
   OrdpgrcSql, // Added for ordpgrc logic
 } from "@/lib/contracts-schema";
-import { Partner, SysUser } from "../../../../shared/schema";
+import { Partner, SysUser } from "@shared/schema";
 import {
   Table,
   TableBody,
