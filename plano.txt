@@ -1,0 +1,147 @@
+CREATE TABLE contract( 
+CREATE TABLE beneficiary( 
+CREATE TABLE contract_charge( 
+CREATE TABLE bank_slip( 
+CREATE TABLE contract_addendum( 
+CREATE TABLE contract_status( 
+CREATE TABLE contract_status_history( 
+CREATE TABLE payment_receipt( 
+CREATE TABLE medical_foward( 
+CREATE TABLE ordpgrc( 
+CREATE TABLE service_funeral ( 
+CREATE TABLE carteirinha( 
+CREATE TABLE equipament_rental( 
+CREATE TABLE batch_chk( 
+CREATE TABLE batch_detail( 
+-- TABLES (MAIN ADM TABLES)  
+CREATE TABLE performed_service( 
+CREATE TABLE group_batch( 
+CREATE TABLE charge( 
+CREATE TABLE prorated_service(
+CREATE TABLE classe( 
+-- TABLES (GENERAL TABLES)  
+CREATE TABLE service_type( 
+CREATE TABLE specialty( 
+CREATE TABLE status_possible( 
+CREATE TABLE status_reason( 
+CREATE TABLE death_event (
+CREATE TABLE payment_status( 
+CREATE TABLE contract_active( 
+CREATE TABLE group_class( 
+CREATE TABLE addendum( 
+CREATE TABLE age_addendum( 
+CREATE TABLE billing_cycle (
+CREATE TABLE contract_billing (
+CREATE TABLE payment_plan (
+CREATE TABLE payment_plan_installment (
+CREATE TABLE payment_transaction (
+CREATE TABLE billing_rule (
+CREATE TABLE billing_rule_application (
+ALTER TABLE partner ADD CONSTRAINT fk_partner_users FOREIGN KEY (sys_user_id) REFERENCES sys_user(sys_user_id); 
+ALTER TABLE partner ADD CONSTRAINT fk_partner_unit FOREIGN KEY (sys_unit_id) REFERENCES sys_unit(sys_unit_id); 
+ALTER TABLE partner ADD CONSTRAINT fk_partner_specialty FOREIGN KEY (specialty_id) REFERENCES specialty(specialty_id); 
+ALTER TABLE addendum ADD CONSTRAINT fk_addendum_unit FOREIGN KEY (sys_unit_id) REFERENCES sys_unit(sys_unit_id); 
+ALTER TABLE addendum ADD CONSTRAINT fk_addendum_gstat FOREIGN KEY (general_status_id) REFERENCES general_status(general_status_id); 
+ALTER TABLE address ADD CONSTRAINT fk_address_users FOREIGN KEY (sys_user_id) REFERENCES sys_user(sys_user_id); 
+ALTER TABLE address ADD CONSTRAINT fk_address_addtype FOREIGN KEY (address_type_id) REFERENCES address_type(address_type_id); 
+ALTER TABLE age_addendum ADD CONSTRAINT fk_age_addendum_class FOREIGN KEY (class_id) REFERENCES classe(class_id); 
+ALTER TABLE age_addendum ADD CONSTRAINT fk_age_addendum_addendum FOREIGN KEY (addendum_id) REFERENCES addendum(addendum_id); 
+ALTER TABLE bank_slip ADD CONSTRAINT fk_bank_slip_unit FOREIGN KEY (sys_unit_id) REFERENCES sys_unit(sys_unit_id); 
+ALTER TABLE bank_slip ADD CONSTRAINT fk_bank_slip_users FOREIGN KEY (sys_user_id) REFERENCES sys_user(sys_user_id); 
+ALTER TABLE bank_slip ADD CONSTRAINT fk_bank_slip_charge FOREIGN KEY (contract_charge_id) REFERENCES contract_charge(contract_charge_id); 
+ALTER TABLE batch_chk ADD CONSTRAINT fk_batch_chk_unit FOREIGN KEY (sys_unit_id) REFERENCES sys_unit(sys_unit_id); 
+ALTER TABLE batch_chk ADD CONSTRAINT fk_batch_chk_users FOREIGN KEY (sys_user_id) REFERENCES sys_user(sys_user_id); 
+ALTER TABLE batch_chk ADD CONSTRAINT fk_batch_chk_subsidiary FOREIGN KEY (subsidiary_id) REFERENCES subsidiary(subsidiary_id); 
+ALTER TABLE batch_chk ADD CONSTRAINT fk_batch_chk_ordpgrc FOREIGN KEY (ordpgrc_id) REFERENCES ordpgrc(ordpgrc_id); 
+ALTER TABLE batch_detail ADD CONSTRAINT fk_batch_detail_batch FOREIGN KEY (batch_chk_id) REFERENCES batch_chk(batch_chk_id); 
+ALTER TABLE batch_detail ADD CONSTRAINT fk_batch_detail_contcharge FOREIGN KEY (contract_charge_id) REFERENCES contract_charge(contract_charge_id); 
+ALTER TABLE batch_detail ADD CONSTRAINT fk_batch_detail_paymstat FOREIGN KEY (payment_status_id) REFERENCES payment_status(payment_status_id); 
+ALTER TABLE beneficiary ADD CONSTRAINT fk_beneficiary_unit FOREIGN KEY (sys_unit_id) REFERENCES sys_unit(sys_unit_id); 
+ALTER TABLE beneficiary ADD CONSTRAINT fk_beneficiary_contract FOREIGN KEY (contract_id) REFERENCES contract(contract_id) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE beneficiary ADD CONSTRAINT fk_beneficiary_document FOREIGN KEY (document_id) REFERENCES document(document_id); 
+ALTER TABLE beneficiary ADD CONSTRAINT fk_beneficiary_funservice FOREIGN KEY (service_funeral_id) REFERENCES service_funeral(service_funeral_id); 
+ALTER TABLE beneficiary ADD CONSTRAINT fk_beneficiary_gender FOREIGN KEY (gender_id) REFERENCES gender(gender_id); 
+ALTER TABLE carteirinha ADD CONSTRAINT fk_carteirinha_unit FOREIGN KEY (sys_unit_id) REFERENCES sys_unit(sys_unit_id); 
+ALTER TABLE carteirinha ADD CONSTRAINT fk_carteirinha_user FOREIGN KEY (sys_user_id) REFERENCES sys_user(sys_user_id); 
+ALTER TABLE carteirinha ADD CONSTRAINT fk_carteirinha_service FOREIGN KEY (performed_service_id) REFERENCES performed_service(performed_service_id); 
+ALTER TABLE cep_cache ADD CONSTRAINT fk_cep_cache_cidade FOREIGN KEY (cidade_id) REFERENCES cidade(id); 
+ALTER TABLE cep_cache ADD CONSTRAINT fk_cep_cache_estado FOREIGN KEY (estado_id) REFERENCES estado(id); 
+ALTER TABLE charge ADD CONSTRAINT fk_charge_users FOREIGN KEY (sys_user_id) REFERENCES sys_user(sys_user_id); 
+ALTER TABLE charge ADD CONSTRAINT fk_charge_unit FOREIGN KEY (sys_unit_id) REFERENCES sys_unit(sys_unit_id); 
+ALTER TABLE charge ADD CONSTRAINT fk_charge_group FOREIGN KEY (group_batch_id) REFERENCES group_batch(group_batch_id); 
+ALTER TABLE cidade ADD CONSTRAINT fk_cidade_estado FOREIGN KEY (estado_id) REFERENCES estado(id); 
+ALTER TABLE classe ADD CONSTRAINT fk_class_users FOREIGN KEY (sys_user_id) REFERENCES sys_user(sys_user_id); 
+ALTER TABLE classe ADD CONSTRAINT fk_class_unit FOREIGN KEY (sys_unit_id) REFERENCES sys_unit(sys_unit_id); 
+ALTER TABLE contract ADD CONSTRAINT fk_contract_owner FOREIGN KEY (owner_id) REFERENCES sys_user(sys_user_id); 
+ALTER TABLE contract ADD CONSTRAINT fk_contract_users FOREIGN KEY (sys_user_id) REFERENCES sys_user(sys_user_id); 
+ALTER TABLE contract ADD CONSTRAINT fk_contract_unit FOREIGN KEY (sys_unit_id) REFERENCES sys_unit(sys_unit_id); 
+ALTER TABLE contract ADD CONSTRAINT fk_contract_status FOREIGN KEY (status_id) REFERENCES contract_status(status_id); 
+ALTER TABLE contract ADD CONSTRAINT fk_contract_collector FOREIGN KEY (collector_id) REFERENCES sys_user(sys_user_id); 
+ALTER TABLE contract ADD CONSTRAINT fk_contract_seller FOREIGN KEY (seller_id) REFERENCES sys_user(sys_user_id); 
+ALTER TABLE contract ADD CONSTRAINT fk_contract_indicated FOREIGN KEY (indicated_by) REFERENCES sys_user(sys_user_id); 
+ALTER TABLE contract ADD CONSTRAINT fk_contract_class FOREIGN KEY (class_id) REFERENCES classe(class_id); 
+ALTER TABLE contract_active ADD CONSTRAINT fk_contract_number_unique_contract FOREIGN KEY (contract_id) REFERENCES contract(contract_id); 
+ALTER TABLE contract_addendum ADD CONSTRAINT fk_contract_addendum_contract FOREIGN KEY (contract_id) REFERENCES contract(contract_id); 
+ALTER TABLE contract_addendum ADD CONSTRAINT fk_contract_addendum_addendum FOREIGN KEY (addendum_id) REFERENCES addendum(addendum_id); 
+ALTER TABLE contract_addendum ADD CONSTRAINT fk_contract_addendum_unit FOREIGN KEY (sys_unit_id) REFERENCES sys_unit(sys_unit_id); 
+ALTER TABLE contract_charge ADD CONSTRAINT fk_contract_charge_contract FOREIGN KEY (contract_id) REFERENCES contract(contract_id) ON DELETE CASCADE ON UPDATE CASCADE; 
+ALTER TABLE contract_charge ADD CONSTRAINT fk_contract_charge_unit FOREIGN KEY (sys_unit_id) REFERENCES sys_unit(sys_unit_id); 
+ALTER TABLE contract_charge ADD CONSTRAINT fk_contract_charge_payment FOREIGN KEY (payment_status_id) REFERENCES payment_status(payment_status_id); 
+ALTER TABLE contract_status_history ADD CONSTRAINT fk_contract_status_history_statreason FOREIGN KEY (status_reason_id) REFERENCES status_reason(status_reason_id); 
+ALTER TABLE contract_status_history ADD CONSTRAINT fk_contract_status_history_statpossib FOREIGN KEY (status_possible_id) REFERENCES contract_status(status_id); 
+ALTER TABLE contract_status_history ADD CONSTRAINT fk_contract_status_history_contract FOREIGN KEY (contract_id) REFERENCES contract(contract_id); 
+ALTER TABLE document ADD CONSTRAINT fk_document_doctype FOREIGN KEY (document_type_id) REFERENCES document_type(document_type_id); 
+ALTER TABLE document ADD CONSTRAINT fk_document_users FOREIGN KEY (sys_user_id) REFERENCES sys_user(sys_user_id); 
+ALTER TABLE equipament_rental ADD CONSTRAINT fk_equipament_rental_perfservic FOREIGN KEY (performed_service_id) REFERENCES performed_service(performed_service_id); 
+ALTER TABLE group_batch ADD CONSTRAINT fk_group_batch_unit FOREIGN KEY (sys_unit_id) REFERENCES sys_unit(sys_unit_id); 
+ALTER TABLE group_batch ADD CONSTRAINT fk_group_batch_users FOREIGN KEY (sys_user_id) REFERENCES sys_user(sys_user_id); 
+ALTER TABLE group_batch ADD CONSTRAINT fk_group_batch_class FOREIGN KEY (class_id) REFERENCES classe(class_id); 
+ALTER TABLE group_class ADD CONSTRAINT fk_group_class_users FOREIGN KEY (sys_user_id) REFERENCES sys_user(sys_user_id); 
+ALTER TABLE group_class ADD CONSTRAINT fk_group_class_unit FOREIGN KEY (sys_unit_id) REFERENCES sys_unit(sys_unit_id); 
+ALTER TABLE group_class ADD CONSTRAINT fk_group_class_group FOREIGN KEY (group_batch_id) REFERENCES group_batch(group_batch_id); 
+ALTER TABLE group_class ADD CONSTRAINT fk_group_class_class FOREIGN KEY (class_id) REFERENCES classe(class_id); 
+ALTER TABLE medical_foward ADD CONSTRAINT fk_medical_foward_users FOREIGN KEY (sys_user_id) REFERENCES sys_user(sys_user_id); 
+ALTER TABLE medical_foward ADD CONSTRAINT fk_medical_foward_unit FOREIGN KEY (sys_unit_id) REFERENCES sys_unit(sys_unit_id); 
+ALTER TABLE medical_foward ADD CONSTRAINT fk_medical_foward_accredit FOREIGN KEY (partner_id) REFERENCES partner(partner_id); 
+ALTER TABLE medical_foward ADD CONSTRAINT fk_medical_foward_perfservic FOREIGN KEY (performed_service_id) REFERENCES performed_service(performed_service_id); 
+ALTER TABLE ordpgrc ADD CONSTRAINT fk_ordpgrc_unit FOREIGN KEY (sys_unit_id) REFERENCES sys_unit(sys_unit_id); 
+ALTER TABLE ordpgrc ADD CONSTRAINT fk_ordpgrc_users FOREIGN KEY (sys_user_id) REFERENCES sys_user(sys_user_id); 
+ALTER TABLE payment_receipt ADD CONSTRAINT fk_payment_receipt_users FOREIGN KEY (sys_user_id) REFERENCES sys_user(sys_user_id); 
+ALTER TABLE payment_receipt ADD CONSTRAINT fk_payment_receipt_unit  FOREIGN KEY (sys_unit_id) REFERENCES sys_unit(sys_unit_id); 
+ALTER TABLE payment_receipt ADD CONSTRAINT fk_payment_receipt_contract FOREIGN KEY (contract_id) REFERENCES contract(contract_id); 
+ALTER TABLE payment_receipt ADD CONSTRAINT fk_payment_receipt_subsidiary FOREIGN KEY (subsidiary_id) REFERENCES subsidiary(subsidiary_id); 
+ALTER TABLE payment_receipt ADD CONSTRAINT fk_payment_receipt_ordpgrc FOREIGN KEY (ordpgrc_id) REFERENCES ordpgrc(ordpgrc_id); 
+ALTER TABLE payment_receipt ADD CONSTRAINT fk_payment_receipt_paystat FOREIGN KEY (payment_status_id) REFERENCES payment_status(payment_status_id); 
+ALTER TABLE performed_service ADD CONSTRAINT fk_performed_service_servtype FOREIGN KEY (service_type_id) REFERENCES service_type(service_type_id); 
+ALTER TABLE performed_service ADD CONSTRAINT fk_performed_service_unit FOREIGN KEY (sys_unit_id) REFERENCES sys_unit(sys_unit_id); 
+ALTER TABLE performed_service ADD CONSTRAINT fk_performed_service_contract FOREIGN KEY (contract_id) REFERENCES contract(contract_id); 
+ALTER TABLE performed_service ADD CONSTRAINT fk_performed_service_benefic FOREIGN KEY (beneficiary_id) REFERENCES beneficiary(beneficiary_id); 
+ALTER TABLE prorated_service ADD CONSTRAINT fk_prorated_service_id_charge FOREIGN KEY (charge_id) REFERENCES charge(charge_id); 
+ALTER TABLE prorated_service ADD CONSTRAINT fk_prorated_service_id_servfuner FOREIGN KEY (service_funeral_id) REFERENCES service_funeral(service_funeral_id); 
+ALTER TABLE prorated_service ADD CONSTRAINT fk_prorated_service_id_unit FOREIGN KEY (sys_unit_id) REFERENCES sys_unit(sys_unit_id); 
+ALTER TABLE prorated_service ADD CONSTRAINT fk_prorated_service_id_user FOREIGN KEY (sys_user_id) REFERENCES sys_user(sys_user_id); 
+ALTER TABLE service_funeral ADD CONSTRAINT fk_service_funeral_unit FOREIGN KEY (sys_unit_id) REFERENCES sys_unit(sys_unit_id); 
+ALTER TABLE service_funeral ADD CONSTRAINT fk_service_funeral_users FOREIGN KEY (sys_user_id) REFERENCES sys_user(sys_user_id); 
+ALTER TABLE service_funeral ADD CONSTRAINT fk_service_funeral_declarant FOREIGN KEY (declarant_id) REFERENCES sys_user(sys_user_id); 
+ALTER TABLE service_funeral ADD CONSTRAINT fk_service_funeral_officer FOREIGN KEY (office_users_id) REFERENCES sys_user(sys_user_id); 
+ALTER TABLE service_funeral ADD CONSTRAINT fk_service_funeral_perfservic FOREIGN KEY (performed_service_id) REFERENCES performed_service(performed_service_id); 
+ALTER TABLE service_funeral ADD CONSTRAINT fk_service_funeral_deceased FOREIGN KEY (deceased_id) REFERENCES beneficiary(beneficiary_id); 
+ALTER TABLE service_funeral ADD CONSTRAINT fk_service_funeral_group FOREIGN KEY (group_batch_id) REFERENCES group_batch(group_batch_id);
+ALTER TABLE service_type ADD CONSTRAINT fk_service_type_unit FOREIGN KEY (sys_unit_id) REFERENCES sys_unit(sys_unit_id); 
+ALTER TABLE specialty ADD CONSTRAINT fk_specialty_unit FOREIGN KEY (sys_unit_id) REFERENCES sys_unit(sys_unit_id); 
+ALTER TABLE specialty ADD CONSTRAINT fk_specialty_users FOREIGN KEY (sys_user_id) REFERENCES sys_user(sys_user_id); 
+ALTER TABLE sys_group_program ADD CONSTRAINT fk_sys_group_program_program FOREIGN KEY (sys_program_id) REFERENCES sys_program(s_program_id); 
+ALTER TABLE sys_group_program ADD CONSTRAINT fk_sys_group_program_group FOREIGN KEY (sys_group_id) REFERENCES sys_group(sys_group_id); 
+ALTER TABLE sys_unit ADD CONSTRAINT fk_sys_unit_subsidiary FOREIGN KEY (subsidiary_id) REFERENCES subsidiary(subsidiary_id); 
+ALTER TABLE sys_unit ADD CONSTRAINT fk_sys_unit_genstat FOREIGN KEY (general_status_id) REFERENCES general_status(general_status_id); 
+ALTER TABLE sys_user_group ADD CONSTRAINT fk_sys_user_group_user FOREIGN KEY (sys_user_id) REFERENCES sys_user(sys_user_id); 
+ALTER TABLE sys_user_group ADD CONSTRAINT fk_sys_user_group_group FOREIGN KEY (sys_group_id) REFERENCES sys_group(sys_group_id); 
+ALTER TABLE sys_user_program ADD CONSTRAINT fk_sys_user_program_user FOREIGN KEY (sys_user_id) REFERENCES sys_user(sys_user_id); 
+ALTER TABLE sys_user_program ADD CONSTRAINT fk_sys_user_program_progrm FOREIGN KEY (sys_program_id) REFERENCES sys_program(s_program_id); 
+ALTER TABLE sys_user ADD CONSTRAINT fk_sys_user_unit FOREIGN KEY (sys_unit_id) REFERENCES sys_unit(sys_unit_id); 
+ALTER TABLE sys_user ADD CONSTRAINT fk_sys_user_frontpg FOREIGN KEY (frontpage_id) REFERENCES sys_program(s_program_id); 
+ALTER TABLE sys_user_unit ADD CONSTRAINT fk_sys_user_unit_user FOREIGN KEY (sys_user_id) REFERENCES sys_user(sys_user_id); 
+ALTER TABLE sys_user_unit ADD CONSTRAINT fk_sys_user_unit_unit FOREIGN KEY (sys_unit_id) REFERENCES sys_unit(sys_unit_id); 
+ALTER TABLE sys_unit ADD CONSTRAINT fk_sys_unit_genstat FOREIGN KEY (general_status_id) REFERENCES general_status(general_status_id); 
+ALTER TABLE sys_unit ADD CONSTRAINT fk_sys_unit_subsidiary FOREIGN KEY (subsidiary_id) REFERENCES subsidiary(subsidiary_id); 
+ALTER TABLE audit_log 

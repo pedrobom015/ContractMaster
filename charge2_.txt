@@ -1,0 +1,102 @@
+CREATE FUNCTION create_group_charge_2(
+    p_group_batch_id INT,
+    p_death_count INT
+) RETURNS INT
+BEGIN
+    DECLARE v_charge_id INT;
+    DECLARE v_charge_number VARCHAR(7);
+    DECLARE v_month_ref VARCHAR(100);
+    DECLARE v_total_value DECIMAL  (19,4);
+    DECLARE v_rate_per_death DECIMAL  (19,4) DEFAULT 50.00;
+    
+    -- Calculate total charge amount
+    SET v_total_value = p_death_count * v_rate_per_death;
+    
+    -- Generate a charge number (using auto-increment simulation)
+    SELECT CONCAT('CH', LPAD(COALESCE(MAX(SUBSTRING(charge_number, 3) + 1), 1), 5, '0'))
+    INTO v_charge_number
+    FROM charge;
+    
+    -- Set month reference
+    SET v_month_ref = DATE_FORMAT(CURRENT_DATE, '%Y-%m');
+    
+    -- Create the charge record
+    INSERT INTO charge (
+        sys_unit_id, sys_user_id, group_batch_id,
+        charge_number, month_ref, value, status
+    ) VALUES (
+        1, 1, p_group_batch_id,
+        v_charge_number, v_month_ref, v_total_value, 'PENDING'
+    );
+    
+    SET v_charge_id = LAST_INSERT_ID();
+    
+    -- Link funeral services to this charge
+    INSERT INTO prorated_service (
+        charge_id, service_funeral_id, sys_unit_id, sys_user_id
+    )
+    SELECT 
+        v_charge_id, sf.service_funeral_id, 1, 1
+    FROM 
+        service_funeral sf
+    WHERE 
+        sf.group_batch_id = p_group_batch_id
+        AND NOT EXISTS (
+            SELECT 1 FROM prorated_service ps 
+            WHERE ps.service_funeral_id = sf.service_funeral_id
+        );
+    
+    -- Create contract charges for all contracts in the group
+    CALL create_contract_charges(v_charge_id, p_group_batch_id, v_total_value);
+    
+    RETURN v_charge_id;
+END -- //
+
+DELIMITER ; --
+
+-- Enhanced Contract Charges with Auditing (ad27t30) (ae03s50)
+DELIMITER -- //
+
+CREATE PROCEDURE create_contract_charges_2(
+    IN p_charge_id INT,
+    IN p_group_batch_id INT,
+    IN p_total_value DECIMAL  (19,4)
+)
+BEGIN
+    DECLARE v_contract_count INT;
+    DECLARE v_individual_charge DECIMAL  (19,4);
+    
+    -- Count active contracts in group
+    SELECT COUNT(*) INTO v_contract_count
+    FROM contract c
+    JOIN contract_status cs ON c.status_id = cs.status_id
+    WHERE c.group_batch_id = p_group_batch_id
+    AND cs.generate_charge = TRUE;
+    
+    -- Calculate individual charge amount (distribute total across contracts)
+    SET v_individual_charge = ROUND(p_total_value / v_contract_count, 2);
+    
+    -- Create contract charge records
+    INSERT INTO contract_charge (
+        contract_id, unit_id, payment_status_id,
+        charge_code, due_date, amount
+    )
+    SELECT 
+        c.contract_id, 
+        c.sys_unit_id, 
+        1, -- PENDING payment status
+        CONCAT('GRP', p_charge_id), -- Group charge code
+        DATE_ADD(CURRENT_DATE, INTERVAL 30 DAY), -- Due 30 days from now
+        v_individual_charge
+    FROM 
+        contract c
+    JOIN 
+        contract_status cs ON c.status_id = cs.status_id
+    WHERE 
+        c.group_batch_id = p_group_batch_id
+        AND cs.generate_charge = TRUE;
+END -- //
+
+DELIMITER ;--
+
+

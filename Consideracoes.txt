@@ -1,0 +1,40 @@
+Pontos iniciais a serem considerados na migração:
+
+Complexidade no modelo dos planos-  
+São processamentos bastante complexos e com detalhes que exigem cuidado.  
+
+Regras de grupos para cobrança
+São definidas nos contratos, 10 falecidos do mesmo grupo na Empresa Limeira (010) e 07 falecidos no mesmo grupo na FAC (030) 
+
+Funerais “na fila” para serem cobrados
+Existe no sistema Presserv um controle dos atendimentos cobrados e não cobrados. 
+
+Emissão de pagamentos mensais e bimestrais
+As cobranças do rateio não seguem esta regra de periodicidade, mas existe uma regra de limitação na frequência da cobrança
+
+Processo de contratos remidos
+regra contratual, 50 parcelas por atendimento funerário.
+
+Produtos e serviços contemplados nos contratos
+Segue a mesma tabela já informada nas migrações anteriores
+
+Migração do volume de taxas já emitidas ao longo dos anos
+Definir o período
+
+Contratos cancelados
+Segue os mesmos critérios dos demais contratos cancelados
+
+Contratos inadimplentes
+Segue regras definidas pela Empresa
+
+Processo de emissão e baixa de cobrança por cobrador (protocolo de cobrança)
+Existe um controle de cobranças entregues e retornadas possibilitando emissão de segunda via.
+
+Migração da roleta de atendimento (funerárias) em Limeira
+Não cabe aqui pois a distribuição do atendimento ocorre na venda.
+
+Remanejamento 
+Processo complexo e com critérios para preencher os contratos vagos (cancelados/remidos) nos grupos.
+
+os Processos de Remissão e de Remanejamento do contrato mantêm um histórico completo da movimentação do contrato.
+

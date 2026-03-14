@@ -1,0 +1,36 @@
+CREATE TABLE document( 
+CREATE TABLE entity_document (
+CREATE TABLE address( 
+CREATE TABLE entity_address (
+CREATE TABLE subsidiary( 
+CREATE TABLE address_type( 
+CREATE TABLE cidade( 
+CREATE TABLE estado( 
+CREATE TABLE document_type( 
+CREATE TABLE gender( 
+CREATE TABLE schema_version (
+CREATE TABLE sys_group( 
+CREATE TABLE sys_group_program( 
+CREATE TABLE sys_preference( 
+CREATE TABLE sys_program( 
+CREATE TABLE sys_unit( 
+CREATE TABLE sys_user_group( 
+CREATE TABLE sys_user_program( 
+CREATE TABLE sys_user( 
+CREATE TABLE sys_user_unit( 
+CREATE TABLE user_company_access (
+CREATE TABLE entity_sys_user (
+CREATE TABLE partner_type (
+CREATE TABLE partner (
+ALTER TABLE partner 
+ALTER TABLE partner 
+CREATE TABLE partner_bank_account (
+CREATE TABLE company (
+CREATE TABLE general_status( 
+CREATE TABLE billing_rates (
+CREATE TABLE account_type (
+CREATE TABLE account (
+CREATE TABLE currency (
+CREATE TABLE cep_cache( 
+CREATE TABLE api_error( 
+CREATE TABLE audit_log( 

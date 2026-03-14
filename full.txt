@@ -1,0 +1,68 @@
+CREATE TABLE schema_version (
+CREATE TABLE gender( 
+CREATE TABLE document_type( 
+CREATE TABLE address_type( 
+CREATE TABLE payment_status( 
+CREATE TABLE estado( 
+CREATE TABLE cidade( 
+CREATE TABLE currency (
+CREATE TABLE general_status( 
+CREATE TABLE sys_group( 
+CREATE TABLE sys_group_program( 
+CREATE TABLE sys_preference( 
+CREATE TABLE sys_program( 
+CREATE TABLE sys_unit( 
+CREATE TABLE sys_user_group( 
+CREATE TABLE sys_user_program( 
+CREATE TABLE sys_user( 
+CREATE TABLE address( 
+CREATE TABLE entity_address (
+CREATE TABLE company (
+CREATE TABLE sys_user_unit( 
+CREATE TABLE user_company_access (
+CREATE TABLE entity_sys_user (
+CREATE TABLE subsidiary( 
+CREATE TABLE partner_type (
+CREATE TABLE account_type (
+CREATE TABLE classe( N
+CREATE TABLE group_batch( 
+CREATE TABLE document( 
+CREATE TABLE entity_document (
+CREATE TABLE partner (
+ALTER TABLE partner 
+ALTER TABLE partner 
+CREATE TABLE contract( 
+CREATE TABLE performed_service( 
+CREATE TABLE service_funeral ( 
+CREATE TABLE beneficiary( 
+CREATE TABLE contract_charge( 
+CREATE TABLE addendum( 
+CREATE TABLE contract_addendum( 
+CREATE TABLE account (
+CREATE TABLE partner_bank_account (
+ALTER TABLE company ADD CONSTRAINT fk_company_currency FOREIGN KEY (default_currency) REFERENCES currency(currency_code); 
+ALTER TABLE company ADD CONSTRAINT fk_company_parent2 FOREIGN KEY (parent_company_id) REFERENCES company(company_id);
+ALTER TABLE company ADD CONSTRAINT valid_parent CHECK (parent_company_id != company_id OR parent_company_id IS NULL) ;
+ALTER TABLE performed_service ADD FOREIGN KEY (beneficiary_id) REFERENCES beneficiary(beneficiary_id) ;
+ALTER TABLE service_funeral ADD FOREIGN KEY (deceased_id) REFERENCES beneficiary(beneficiary_id) ;
+ALTER TABLE beneficiary ADD  FOREIGN KEY (service_funeral_id) REFERENCES service_funeral(service_funeral_id) ;
+-- ALTER TABLE account ADD  CONSTRAINT fk_account_currency FOREIGN KEY (currency) REFERENCES currency(currency_code) ;
+-- ALTER TABLE account_type ADD CONSTRAINT fk_account_type_company FOREIGN KEY (company_id) REFERENCES company(company_id) ON DELETE CASCADE;
+
+Tabelas do common e inexistentes no full
+CREATE TABLE billing_rates (
+CREATE TABLE cep_cache( 
+CREATE TABLE api_error( 
+CREATE TABLE audit_log( 
+tabelas do plano e niexistentes no full
+CREATE TABLE contract_status( 
+CREATE TABLE contract_status_history( 
+CREATE TABLE payment_receipt( 
+CREATE TABLE batch_chk( 
+CREATE TABLE batch_detail( 
+CREATE TABLE charge( 
+
+
+
+
+

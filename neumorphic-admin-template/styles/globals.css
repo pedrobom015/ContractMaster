@@ -1,0 +1,114 @@
+/* styles/globals.css */
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
+    Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+  background-color: #e0e0e0;
+  color: #555;
+  display: flex; /* Using flex to help center content for demo */
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  padding-top: 20px; /* Add some top padding to the body */
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Neumorphic container base */
+.neumorphic-container {
+  background-color: #e0e0e0;
+  border-radius: 20px;
+  padding: 25px; /* Increased padding */
+  box-shadow:
+    9px 9px 18px #bcbcbc, /* Slightly adjusted shadow color */
+    -9px -9px 18px #ffffff;
+  margin-bottom: 20px; /* Add some margin for stacked containers */
+}
+
+.neumorphic-container-inset {
+  background-color: #e0e0e0; /* Can be slightly different if needed, e.g., #d1d1d1 */
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow:
+    inset 7px 7px 14px #bababa, /* Adjusted shadow color */
+    inset -7px -7px 14px #ffffff;
+}
+
+/* Neumorphic button base */
+.neumorphic-button {
+  border: none;
+  outline: none;
+  background-color: #e0e0e0;
+  padding: 12px 24px;
+  border-radius: 10px;
+  color: #555;
+  font-size: 16px;
+  font-weight: 600; /* Bolder text for buttons */
+  cursor: pointer;
+  box-shadow:
+    5px 5px 10px #bcbcbc,
+    -5px -5px 10px #ffffff;
+  transition: all 0.1s ease-in-out;
+  text-align: center;
+}
+
+.neumorphic-button:hover {
+  /* For Neumorphism, hover can sometimes be subtle or make the element more 'flat' before pressing */
+  /* Option 1: Slightly more pronounced */
+  /* box-shadow: 7px 7px 14px #bebebe, -7px -7px 14px #ffffff; */
+  /* Option 2: Make it look slightly flatter, ready to be pressed */
+   box-shadow:
+    2px 2px 5px #bcbcbc,
+    -2px -2px 5px #ffffff;
+   color: #333;
+}
+
+.neumorphic-button:active {
+  box-shadow:
+    inset 5px 5px 10px #bcbcbc,
+    inset -5px -5px 10px #ffffff;
+  /* font-size: 15.8px; */ /* Avoid font size change if it causes layout shifts */
+  color: #333;
+}
+
+/* Neumorphic input base */
+.neumorphic-input {
+  border: none;
+  outline: none;
+  background-color: #e0e0e0; /* Or a slightly inset color like #dcdcdc */
+  padding: 12px 18px;
+  border-radius: 10px;
+  color: #555;
+  font-size: 16px;
+  box-shadow:
+    inset 4px 4px 8px #bababa,
+    inset -4px -4px 8px #ffffff;
+  width: 100%;
+  margin-bottom: 15px; /* Add some space below inputs */
+}
+
+.neumorphic-input:focus {
+  box-shadow:
+    inset 2px 2px 4px #bababa,
+    inset -2px -2px 4px #ffffff,
+    /* Subtle outer glow to indicate focus, but avoid strong colors */
+    0 0 0 2px #e0e0e0, /* Same as background to blend */
+    1px 1px 3px #bcbcbc, /* Outer dark shadow */
+    -1px -1px 3px #ffffff; /* Outer light shadow */
+}
+
+/* Basic styling for headings */
+h1, h2, h3, h4, h5, h6 {
+  color: #484848;
+  font-weight: 500;
+  margin-top: 0; /* Remove default top margin for cleaner layout in components */
+  margin-bottom: 0.75em;
+}
+
+/* styles/globals.css - append this */
+.neumorphic-menu-item:hover {
+  box-shadow: 2px 2px 5px #bcbcbc, -2px -2px 5px #ffffff;
+  color: #333;
+}

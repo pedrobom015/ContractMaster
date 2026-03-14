@@ -1,0 +1,58 @@
+As an experienced developer, I'd like you to review some changes I made to the user table (sys_user) so that these changes are reflected in the CRUD in the "Administration - User Management - Users" menu. The sys_user table is one of the system's main tables, and it contains all users, customers, and partners.
+
+A few observations:
+
+the id field must be displayed on the screen;
+
+the accepted_term_policy_at field must be displayed on the screen;
+
+the new birth_at and frontpage_id fields must be editable;
+
+the gender_id field must be editable and linked to the gender table;
+
+the company_id field must be editable and linked to the company table;
+
+the subsidiary_id field must be editable and linked to the subsidiary table;
+
+the system_Unit_id field must be editable and linked to the system_unit table;
+
+the marital_id field must be editable and linked to the general_status table.
+
+I welcome suggestions for improvements.
+
+Changed SQL structure of sys_user:
+CREATE TABLE sys_user(
+id INT UNSIGNED AUTO_INCREMENT NOT NULL,
+name VARCHAR(50) NOT NULL UNIQUE,
+login varchar(200) NOT NULL,
+email VARCHAR(100) NOT NULL UNIQUE,
+password_hash VARCHAR(255) NOT NULL,
+password_salt VARCHAR(100),
+first_name VARCHAR(50),
+last_name VARCHAR(50),
+gender_id INT INT REFERENCES gender(id),
+birth_at DATE,
+marital_id INT UNSIGNED,
+frontpage_id INT UNSIGNED,
+active TINYINT(1) DEFAULT 1,
+company_id REFERENCES INT INT company(id),
+subsidiary_id REFERENCES INT INT subsidiary(id),
+system_unit_id REFERENCES INTEGER system_unit(id),
+two_factor_enabled TINYINT(1) DEFAULT 0,
+two_factor_type VARCHAR(100),
+two_factor_secret VARCHAR(255),
+accepted_term_policy_at TIMESTAMP NULL,
+accepted_term_policy TINYINT(1),
+is_admin TINYINT(1) DEFAULT 0,
+last_login TIMESTAMP NULL,
+created_at TIMESTAMP DEFAULT CURRENT TIMESTAMP,
+updated_at TIMESTAMP DEFAULT CURRENT TIMESTAMP ON UPDATE CURRENT TIMESTAMP,
+deleted_at TIMESTAMP NULL,
+created_by INT,
+updated_by INT,
+deleted_by INT,
+PRIMARY KEY (system_user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ;
+CREATE INDEX idx_user_id ON sys_user(system_user_id);
+CREATE INDEX idx_user_email ON sys_user(email);
+CREATE INDEX idx_user_username ON sys_user(name);

@@ -1,0 +1,10 @@
+-L\instalados\tools\clipper\lib
+xhb.hbc
+hbwin.hbc
+hbct.hbc
+-inc 
+-prgflag=l
+-compr=yes
+-b
+
+migration.prg
