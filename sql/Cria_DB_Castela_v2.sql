@@ -4,10 +4,16 @@
 -- Data: 2026-01-13
 -- Descrição: Schema completo compatível com MySQL 8.0+
 --            Inclui sistema de versionamento de contratos
--- Altera‡?es v2.0.1:
+-- Altera‡?es v2.0.3:
 --   - contract_services ? contract_covers
 --   - contract_billing_config ? contract_config_billing
 --   - created_by, updated_by, deleted_by ? INT UNSIGNED
+--   - foreign key (FK) bug fixed 
+--   - all tables with audit fields 
+--   - new sys_user fields in contract and partner table
+--   - deleted ON... CASCADE
+--   - better contract_version control
+--   - new table contract_access 
 -- =============================================================================
 
 SET NAMES utf8mb4;
@@ -21,7 +27,13 @@ CREATE TABLE IF NOT EXISTS schema_version (
     schema_version_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     version VARCHAR(20) NOT NULL,
     applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    description TEXT
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL DEFAULT NULL,
+    created_by INT UNSIGNED,
+    updated_by INT UNSIGNED,
+    deleted_by INT UNSIGNED,
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO schema_version (version, description) 
@@ -135,8 +147,8 @@ CREATE TABLE IF NOT EXISTS currency (
     UNIQUE KEY uk_currency_code (currency_code)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS general_status( 
-    general_status_id INT UNSIGNED AUTO_INCREMENT NOT NULL,
+CREATE TABLE IF NOT EXISTS status( 
+    status_id INT UNSIGNED AUTO_INCREMENT NOT NULL,
     status_code VARCHAR(20) NOT NULL,
     status_name VARCHAR(50) NOT NULL,
     description TEXT,
@@ -156,8 +168,8 @@ CREATE TABLE IF NOT EXISTS general_status(
     created_by INT UNSIGNED,
     updated_by INT UNSIGNED,
     deleted_by INT UNSIGNED,
-    PRIMARY KEY (general_status_id),
-    UNIQUE KEY uk_general_status_code (status_code)
+    PRIMARY KEY (status_id),
+    UNIQUE KEY uk_status_code (status_code)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci 
 COMMENT='Reference table for status codes used throughout the system';
 
@@ -235,6 +247,12 @@ CREATE TABLE IF NOT EXISTS sys_group(
     sys_group_id INT UNSIGNED AUTO_INCREMENT NOT NULL,
     name TEXT NOT NULL,
     uuid VARCHAR(36),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL DEFAULT NULL,
+    created_by INT UNSIGNED,
+    updated_by INT UNSIGNED,
+    deleted_by INT UNSIGNED,
     PRIMARY KEY (sys_group_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -242,6 +260,12 @@ CREATE TABLE IF NOT EXISTS sys_program(
     sys_program_id INT UNSIGNED AUTO_INCREMENT NOT NULL,
     name TEXT NOT NULL,
     controller TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL DEFAULT NULL,
+    created_by INT UNSIGNED,
+    updated_by INT UNSIGNED,
+    deleted_by INT UNSIGNED,
     actions TEXT,
     PRIMARY KEY (sys_program_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -251,6 +275,12 @@ CREATE TABLE IF NOT EXISTS sys_group_program(
     sys_group_id INT UNSIGNED NOT NULL,
     sys_program_id INT UNSIGNED NOT NULL,
     actions TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL DEFAULT NULL,
+    created_by INT UNSIGNED,
+    updated_by INT UNSIGNED,
+    deleted_by INT UNSIGNED,
     PRIMARY KEY (sys_group_program_id),
     INDEX idx_sys_group_program_group (sys_group_id),
     INDEX idx_sys_group_program_program (sys_program_id),
@@ -261,6 +291,12 @@ CREATE TABLE IF NOT EXISTS sys_group_program(
 CREATE TABLE IF NOT EXISTS sys_preference( 
     sys_preference_id VARCHAR(200) NOT NULL,
     preference TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL DEFAULT NULL,
+    created_by INT UNSIGNED,
+    updated_by INT UNSIGNED,
+    deleted_by INT UNSIGNED,
     PRIMARY KEY (sys_preference_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -281,16 +317,22 @@ CREATE TABLE IF NOT EXISTS subsidiary(
 CREATE TABLE IF NOT EXISTS sys_unit( 
     sys_unit_id INT UNSIGNED AUTO_INCREMENT NOT NULL,
     subsidiary_id INT UNSIGNED NOT NULL,
-    general_status_id INT UNSIGNED,
+    status_id INT UNSIGNED,
     name TEXT NOT NULL,
     connection_name TEXT,
     code VARCHAR(20) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL DEFAULT NULL,
+    created_by INT UNSIGNED,
+    updated_by INT UNSIGNED,
+    deleted_by INT UNSIGNED,
     PRIMARY KEY (sys_unit_id),
     UNIQUE KEY uk_sys_unit_code (code),
     INDEX idx_sys_unit_subsidiary (subsidiary_id),
-    INDEX idx_sys_unit_status (general_status_id),
+    INDEX idx_sys_unit_status (status_id),
     CONSTRAINT fk_sys_unit_subsidiary FOREIGN KEY (subsidiary_id) REFERENCES subsidiary(subsidiary_id),
-    CONSTRAINT fk_sys_unit_genstat FOREIGN KEY (general_status_id) REFERENCES general_status(general_status_id)
+    CONSTRAINT fk_sys_unit_genstat FOREIGN KEY (status_id) REFERENCES status(status_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS sys_user( 
@@ -324,6 +366,7 @@ CREATE TABLE IF NOT EXISTS sys_user(
     INDEX idx_user_id (sys_user_id),
     INDEX idx_user_email (email),
     INDEX idx_user_username (name),
+    INDEX idx_sys_user_login (login);
     INDEX idx_sys_user_unit (sys_unit_id),
     CONSTRAINT fk_sys_user_unit FOREIGN KEY (sys_unit_id) REFERENCES sys_unit(sys_unit_id),
     CONSTRAINT fk_sys_user_frontpg FOREIGN KEY (frontpage_id) REFERENCES sys_program(sys_program_id)
@@ -333,6 +376,12 @@ CREATE TABLE IF NOT EXISTS sys_user_group(
     sys_user_group_id INT UNSIGNED AUTO_INCREMENT NOT NULL,
     sys_user_id INT UNSIGNED NOT NULL,
     sys_group_id INT UNSIGNED NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL DEFAULT NULL,
+    created_by INT UNSIGNED,
+    updated_by INT UNSIGNED,
+    deleted_by INT UNSIGNED,
     PRIMARY KEY (sys_user_group_id),
     INDEX idx_sys_user_group_user (sys_user_id),
     INDEX idx_sys_user_group_group (sys_group_id),
@@ -344,6 +393,12 @@ CREATE TABLE IF NOT EXISTS sys_user_program(
     sys_user_program_id INT UNSIGNED AUTO_INCREMENT NOT NULL,
     sys_user_id INT UNSIGNED NOT NULL,
     sys_program_id INT UNSIGNED NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL DEFAULT NULL,
+    created_by INT UNSIGNED,
+    updated_by INT UNSIGNED,
+    deleted_by INT UNSIGNED,
     PRIMARY KEY (sys_user_program_id),
     INDEX idx_sys_user_program_user (sys_user_id),
     INDEX idx_sys_user_program_program (sys_program_id),
@@ -355,12 +410,35 @@ CREATE TABLE IF NOT EXISTS sys_user_unit(
     sys_user_unit_id INT UNSIGNED AUTO_INCREMENT NOT NULL,
     sys_user_id INT UNSIGNED NOT NULL,
     sys_unit_id INT UNSIGNED NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL DEFAULT NULL,
+    created_by INT UNSIGNED,
+    updated_by INT UNSIGNED,
+    deleted_by INT UNSIGNED,
     PRIMARY KEY (sys_user_unit_id),
     INDEX idx_sys_user_unit_user (sys_user_id),
     INDEX idx_sys_user_unit_unit (sys_unit_id),
     CONSTRAINT fk_sys_user_unit_user FOREIGN KEY (sys_user_id) REFERENCES sys_user(sys_user_id),
     CONSTRAINT fk_sys_user_unit_unit FOREIGN KEY (sys_unit_id) REFERENCES sys_unit(sys_unit_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- garantir que titular, dependentes e representantes legais tenham acesso aos contratos do mesmo titular 
+CREATE TABLE contract_access (
+    contract_access_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    contract_id INT UNSIGNED NOT NULL,
+    sys_user_id INT UNSIGNED NOT NULL,
+    access_level ENUM('OWNER', 'DEPENDENT', 'LEGAL_REPRESENTATIVE') DEFAULT 'OWNER',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL DEFAULT NULL,
+    created_by INT UNSIGNED,
+    updated_by INT UNSIGNED,
+    deleted_by INT UNSIGNED,
+    UNIQUE KEY uk_contract_user (contract_id, sys_user_id),
+    FOREIGN KEY (contract_id) REFERENCES contract(contract_id),
+    FOREIGN KEY (sys_user_id) REFERENCES sys_user(sys_user_id)
+) ENGINE=InnoDB;
 
 -- -----------------------------------------------------------------------------
 -- PARTE 4: ENDEREÇOS E DOCUMENTOS
@@ -399,6 +477,12 @@ CREATE TABLE IF NOT EXISTS entity_address (
     entity_id INT UNSIGNED NOT NULL,
     address_id INT UNSIGNED NOT NULL,
     is_primary TINYINT(1) DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL DEFAULT NULL,
+    created_by INT UNSIGNED,
+    updated_by INT UNSIGNED,
+    deleted_by INT UNSIGNED,
     INDEX idx_entity_address_entity (entity_type, entity_id),
     INDEX idx_entity_address_address (address_id),
     CONSTRAINT fk_entity_address_address FOREIGN KEY (address_id) REFERENCES address(address_id)
@@ -432,6 +516,12 @@ CREATE TABLE IF NOT EXISTS entity_document (
     entity_id INT UNSIGNED NOT NULL,
     document_id INT UNSIGNED NOT NULL,
     is_active TINYINT(1) DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL DEFAULT NULL,
+    created_by INT UNSIGNED,
+    updated_by INT UNSIGNED,
+    deleted_by INT UNSIGNED,
     INDEX idx_entity_document_entity (entity_type, entity_id),
     INDEX idx_entity_document_doc (document_id),
     CONSTRAINT fk_entity_document_doc FOREIGN KEY (document_id) REFERENCES document(document_id)
@@ -481,22 +571,15 @@ CREATE TABLE IF NOT EXISTS user_company_access (
     can_admin TINYINT(1) DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL DEFAULT NULL,
+    created_by INT UNSIGNED,
+    updated_by INT UNSIGNED,
+    deleted_by INT UNSIGNED,
     PRIMARY KEY (user_company_access_id),
     UNIQUE KEY uk_user_company (sys_user_id, company_id),
     INDEX idx_user_access_company (company_id),
-    CONSTRAINT fk_user_access_user FOREIGN KEY (sys_user_id) REFERENCES sys_user(sys_user_id) ON DELETE CASCADE,
-    CONSTRAINT fk_user_access_company FOREIGN KEY (company_id) REFERENCES company(company_id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS entity_sys_user (
-    entity_sys_user_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    entity_type ENUM('client', 'partner') NOT NULL,
-    entity_id INT UNSIGNED NOT NULL,
-    sys_user_id INT UNSIGNED NOT NULL,
-    is_active TINYINT(1) DEFAULT 1,
-    INDEX idx_entity_sys_user_entity (entity_type, entity_id),
-    INDEX idx_entity_sys_user_user (sys_user_id),
-    CONSTRAINT fk_entity_sys_user_user FOREIGN KEY (sys_user_id) REFERENCES sys_user(sys_user_id)
+    CONSTRAINT fk_user_access_user FOREIGN KEY (sys_user_id) REFERENCES sys_user(sys_user_id),
+    CONSTRAINT fk_user_access_company FOREIGN KEY (company_id) REFERENCES company(company_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS partner_type (
@@ -508,9 +591,13 @@ CREATE TABLE IF NOT EXISTS partner_type (
     active TINYINT(1) DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL DEFAULT NULL,
+    created_by INT UNSIGNED,
+    updated_by INT UNSIGNED,
+    deleted_by INT UNSIGNED,
     UNIQUE KEY uk_partner_type_company (company_id, type_name),
     INDEX idx_partner_type_company (company_id),
-    CONSTRAINT fk_partner_type_company FOREIGN KEY (company_id) REFERENCES company(company_id) ON DELETE CASCADE
+    CONSTRAINT fk_partner_type_company FOREIGN KEY (company_id) REFERENCES company(company_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS account_type (
@@ -523,9 +610,13 @@ CREATE TABLE IF NOT EXISTS account_type (
     active TINYINT(1) DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL DEFAULT NULL,
+    created_by INT UNSIGNED,
+    updated_by INT UNSIGNED,
+    deleted_by INT UNSIGNED,
     UNIQUE KEY uk_account_type_company (company_id, type_name),
     INDEX idx_account_type_company (company_id),
-    CONSTRAINT fk_account_type_company FOREIGN KEY (company_id) REFERENCES company(company_id) ON DELETE CASCADE,
+    CONSTRAINT fk_account_type_company FOREIGN KEY (company_id) REFERENCES company(company_id),
     CONSTRAINT chk_account_type_nature CHECK (nature IN ('ASSET', 'LIABILITY', 'EQUITY', 'REVENUE', 'EXPENSE'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -573,6 +664,10 @@ CREATE TABLE IF NOT EXISTS partner (
     partner_code VARCHAR(30) NOT NULL,
     partner_name VARCHAR(100) NOT NULL,
     legal_name VARCHAR(150),
+    login VARCHAR(200) NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    first_name VARCHAR(50),
+    last_name VARCHAR(50),
     tax_id VARCHAR(30),
     partner_type_id INT UNSIGNED NOT NULL,
     is_customer TINYINT(1) DEFAULT 0,
@@ -613,7 +708,7 @@ CREATE TABLE IF NOT EXISTS partner (
     INDEX idx_partner_type (partner_type_id),
     INDEX idx_partner_name (partner_name),
     INDEX idx_partner_specialty (specialty_id),
-    CONSTRAINT fk_partner_company FOREIGN KEY (company_id) REFERENCES company(company_id) ON DELETE CASCADE,
+    CONSTRAINT fk_partner_company FOREIGN KEY (company_id) REFERENCES company(company_id),
     CONSTRAINT fk_partner_unit FOREIGN KEY (sys_unit_id) REFERENCES sys_unit(sys_unit_id),
     CONSTRAINT fk_partner_users FOREIGN KEY (sys_user_id) REFERENCES sys_user(sys_user_id),
     CONSTRAINT fk_partner_owner FOREIGN KEY (owner_id) REFERENCES sys_user(sys_user_id),
@@ -653,7 +748,7 @@ CREATE TABLE IF NOT EXISTS partner_bank_account (
     updated_by INT UNSIGNED,
     deleted_by INT UNSIGNED,
     INDEX idx_partner_bank_partner (partner_id),
-    CONSTRAINT fk_partner_bank_partner FOREIGN KEY (partner_id) REFERENCES partner(partner_id) ON DELETE CASCADE
+    CONSTRAINT fk_partner_bank_partner FOREIGN KEY (partner_id) REFERENCES partner(partner_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- -----------------------------------------------------------------------------
@@ -735,29 +830,6 @@ CREATE TABLE IF NOT EXISTS group_batch(
     CONSTRAINT fk_group_batch_class FOREIGN KEY (class_id) REFERENCES category(category_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS group_class( 
-    group_class_id INT UNSIGNED AUTO_INCREMENT NOT NULL,
-    sys_unit_id INT UNSIGNED NOT NULL,
-    sys_user_id INT UNSIGNED NOT NULL,
-    group_batch_id INT UNSIGNED NOT NULL,
-    class_id INT UNSIGNED NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP NULL DEFAULT NULL,
-    created_by INT UNSIGNED,
-    updated_by INT UNSIGNED,
-    deleted_by INT UNSIGNED,
-    PRIMARY KEY (group_class_id),
-    INDEX idx_group_class_unit (sys_unit_id),
-    INDEX idx_group_class_user (sys_user_id),
-    INDEX idx_group_class_group (group_batch_id),
-    INDEX idx_group_class_class (class_id),
-    CONSTRAINT fk_group_class_unit FOREIGN KEY (sys_unit_id) REFERENCES sys_unit(sys_unit_id),
-    CONSTRAINT fk_group_class_users FOREIGN KEY (sys_user_id) REFERENCES sys_user(sys_user_id),
-    CONSTRAINT fk_group_class_group FOREIGN KEY (group_batch_id) REFERENCES group_batch(group_batch_id),
-    CONSTRAINT fk_group_class_class FOREIGN KEY (class_id) REFERENCES category(category_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
 -- -----------------------------------------------------------------------------
 -- PARTE 7: CONTRATOS E VERSIONAMENTO
 -- Estrutura de versionamento:
@@ -774,15 +846,15 @@ CREATE TABLE IF NOT EXISTS contract(
     partner_id INT UNSIGNED,
     indicated_by INT UNSIGNED,
     contract_name VARCHAR(100) NOT NULL,
+    login VARCHAR(200) NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    first_name VARCHAR(50),
+    last_name VARCHAR(50),
     contract_number VARCHAR(20) NOT NULL,
     original_contract_number VARCHAR(100),
     current_status VARCHAR(50) DEFAULT 'active' COMMENT 'Status: active, canceled, redeemed, transferred',
     status_id INT UNSIGNED,
-    class_id INT UNSIGNED,
-    collector_id INT UNSIGNED,
     seller_id INT UNSIGNED,
-    region_id INT UNSIGNED,
-    group_batch_id INT UNSIGNED,
     obs TEXT,
     services_amount INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -798,23 +870,15 @@ CREATE TABLE IF NOT EXISTS contract(
     INDEX idx_contract_owner (owner_id),
     INDEX idx_contract_partner (partner_id),
     INDEX idx_contract_status (current_status),
-    INDEX idx_contract_class (class_id),
-    INDEX idx_contract_collector (collector_id),
     INDEX idx_contract_seller (seller_id),
-    INDEX idx_contract_region (region_id),
     INDEX idx_contract_indicated (indicated_by),
-    INDEX idx_contract_group (group_batch_id),
     CONSTRAINT fk_contract_unit FOREIGN KEY (sys_unit_id) REFERENCES sys_unit(sys_unit_id),
     CONSTRAINT fk_contract_users FOREIGN KEY (sys_user_id) REFERENCES sys_user(sys_user_id),
     CONSTRAINT fk_contract_owner FOREIGN KEY (owner_id) REFERENCES sys_user(sys_user_id),
     CONSTRAINT fk_contract_partner FOREIGN KEY (partner_id) REFERENCES partner(partner_id),
     CONSTRAINT fk_contract_indicated FOREIGN KEY (indicated_by) REFERENCES sys_user(sys_user_id),
     CONSTRAINT fk_contract_status FOREIGN KEY (status_id) REFERENCES contract_status(contract_status_id),
-    CONSTRAINT fk_contract_class FOREIGN KEY (class_id) REFERENCES category(category_id),
-    CONSTRAINT fk_contract_collector FOREIGN KEY (collector_id) REFERENCES sys_user(sys_user_id),
-    CONSTRAINT fk_contract_seller FOREIGN KEY (seller_id) REFERENCES sys_user(sys_user_id),
-    CONSTRAINT fk_contract_region FOREIGN KEY (region_id) REFERENCES region(region_id),
-    CONSTRAINT fk_contract_group FOREIGN KEY (group_batch_id) REFERENCES group_batch(group_batch_id)
+    CONSTRAINT fk_contract_seller FOREIGN KEY (seller_id) REFERENCES partner(partner_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
  COMMENT='Tabela principal de contratos - identidade e titular';
 
@@ -826,6 +890,10 @@ CREATE TABLE IF NOT EXISTS contract_version (
     valid_from DATE NOT NULL COMMENT 'Data de início da validade',
     valid_to DATE NULL COMMENT 'Data de término (NULL = versão atual)',
     is_current TINYINT(1) DEFAULT 1 COMMENT 'Indica se é a versão ativa',
+    class_id INT UNSIGNED,
+    collector_id INT UNSIGNED,
+    region_id INT UNSIGNED,
+    group_batch_id INT UNSIGNED,
     change_reason VARCHAR(255) COMMENT 'Motivo da alteração',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -836,9 +904,16 @@ CREATE TABLE IF NOT EXISTS contract_version (
     INDEX idx_contract_version_contract (contract_id),
     INDEX idx_contract_version_group (group_batch_id),
     INDEX idx_contract_version_current (is_current),
+    INDEX idx_contract_version_class (class_id),
+    INDEX idx_contract_version_collector (collector_id),
+    INDEX idx_contract_region (region_id),
     INDEX idx_contract_version_valid (valid_from, valid_to),
     UNIQUE KEY uk_contract_version (contract_id, version_number),
-    CONSTRAINT fk_contract_version_contract FOREIGN KEY (contract_id) REFERENCES contract(contract_id) ON DELETE CASCADE,
+    CONSTRAINT fk_contract_version_contract FOREIGN KEY (contract_id) REFERENCES contract(contract_id) ,
+    CONSTRAINT fk_contract_version_group FOREIGN KEY (group_batch_id) REFERENCES group_batch(group_batch_id),
+    CONSTRAINT fk_contract_version_class FOREIGN KEY (class_id) REFERENCES category(category_id),
+    CONSTRAINT fk_contract_version_collector FOREIGN KEY (collector_id) REFERENCES partner(partner_id),
+    CONSTRAINT fk_contract_version_region FOREIGN KEY (region_id) REFERENCES region(region_id),
     CONSTRAINT fk_contract_version_group FOREIGN KEY (group_batch_id) REFERENCES group_batch(group_batch_id),
     CONSTRAINT fk_contract_version_created_by FOREIGN KEY (created_by) REFERENCES sys_user(sys_user_id),
     CONSTRAINT fk_contract_version_updated_by FOREIGN KEY (updated_by) REFERENCES sys_user(sys_user_id),
@@ -881,10 +956,10 @@ CREATE TABLE IF NOT EXISTS contract_covers (
     INDEX idx_contract_covers_type (contract_type),
     INDEX idx_contract_covers_start (start_date),
     INDEX idx_contract_covers_group (group_batch_id),
-    CONSTRAINT fk_contract_covers_version FOREIGN KEY (contract_version_id) REFERENCES contract_version(contract_version_id) ON DELETE CASCADE,
+    CONSTRAINT fk_contract_covers_version FOREIGN KEY (contract_version_id) REFERENCES contract_version(contract_version_id),
     CONSTRAINT fk_contract_covers_group FOREIGN KEY (group_batch_id) REFERENCES group_batch(group_batch_id),
     CONSTRAINT fk_contract_covers_class FOREIGN KEY (class_id) REFERENCES category(category_id),
-    CONSTRAINT fk_contract_covers_status FOREIGN KEY (status_id) REFERENCES general_status(general_status_id)
+    CONSTRAINT fk_contract_covers_status FOREIGN KEY (status_id) REFERENCES status(status_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
  COMMENT='Coberturas do contrato - detalhes do ciclo de vida';
 
@@ -917,7 +992,7 @@ CREATE TABLE IF NOT EXISTS contract_config_billing (
     INDEX idx_contract_config_billing_seller (seller_id),
     INDEX idx_contract_config_billing_collector (collector_id),
     INDEX idx_contract_config_billing_region (region_id),
-    CONSTRAINT fk_contract_config_billing_version FOREIGN KEY (contract_version_id) REFERENCES contract_version(contract_version_id) ON DELETE CASCADE,
+    CONSTRAINT fk_contract_config_billing_version FOREIGN KEY (contract_version_id) REFERENCES contract_version(contract_version_id),
     CONSTRAINT fk_contract_config_billing_seller FOREIGN KEY (seller_id) REFERENCES sys_user(sys_user_id),
     CONSTRAINT fk_contract_config_billing_collector FOREIGN KEY (collector_id) REFERENCES sys_user(sys_user_id),
     CONSTRAINT fk_contract_config_billing_region FOREIGN KEY (region_id) REFERENCES region(region_id)
@@ -926,18 +1001,20 @@ CREATE TABLE IF NOT EXISTS contract_config_billing (
 
 CREATE TABLE IF NOT EXISTS contract_events (
     contract_events_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    contract_id INT UNSIGNED NOT NULL,
     contract_version_id INT UNSIGNED,
     event_type VARCHAR(50) NOT NULL COMMENT 'CRIACAO, ADITIVO, CANCELAMENTO, ATENDIMENTO',
     event_date TIMESTAMP NOT NULL,
     payload JSON COMMENT 'Dados adicionais do evento',
-    created_by INT UNSIGNED,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL DEFAULT NULL,
+    created_by INT UNSIGNED,
+    updated_by INT UNSIGNED,
+    deleted_by INT UNSIGNED,
     INDEX idx_contract_events_contract (contract_id),
     INDEX idx_contract_events_version (contract_version_id),
     INDEX idx_contract_events_type (event_type),
     INDEX idx_contract_events_date (event_date),
-    CONSTRAINT fk_contract_events_contract FOREIGN KEY (contract_id) REFERENCES contract(contract_id) ON DELETE CASCADE,
     CONSTRAINT fk_contract_events_version FOREIGN KEY (contract_version_id) REFERENCES contract_version(contract_version_id),
     CONSTRAINT fk_contract_events_created_by FOREIGN KEY (created_by) REFERENCES sys_user(sys_user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
@@ -1126,6 +1203,12 @@ CREATE TABLE IF NOT EXISTS death_event (
     service_funeral_id INT UNSIGNED NOT NULL,
     event_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     processed_for_billing TINYINT(1) DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL DEFAULT NULL,
+    created_by INT UNSIGNED,
+    updated_by INT UNSIGNED,
+    deleted_by INT UNSIGNED,
     PRIMARY KEY (death_event_id),
     INDEX idx_death_event_group (group_batch_id),
     INDEX idx_death_event_beneficiary (beneficiary_id),
@@ -1158,6 +1241,7 @@ CREATE TABLE IF NOT EXISTS membership_card(
     deleted_at TIMESTAMP NULL DEFAULT NULL,
     created_by INT UNSIGNED,
     updated_by INT UNSIGNED,
+    deleted_by INT UNSIGNED,
     PRIMARY KEY (membership_card_id),
     INDEX idx_membership_card_performed (performed_service_id),
     INDEX idx_membership_card_unit (sys_unit_id),
@@ -1198,7 +1282,7 @@ CREATE TABLE IF NOT EXISTS equipament_rental(
 CREATE TABLE IF NOT EXISTS addendum( 
     addendum_id INT UNSIGNED AUTO_INCREMENT NOT NULL,
     sys_unit_id INT UNSIGNED NOT NULL,
-    general_status_id INT UNSIGNED,
+    status_id INT UNSIGNED,
     name VARCHAR(100) NOT NULL,
     description VARCHAR(200) NOT NULL,
     amount DECIMAL(19,4) NOT NULL,
@@ -1211,9 +1295,9 @@ CREATE TABLE IF NOT EXISTS addendum(
     PRIMARY KEY (addendum_id),
     UNIQUE KEY uk_addendum_name (name),
     INDEX idx_addendum_unit (sys_unit_id),
-    INDEX idx_addendum_status (general_status_id),
+    INDEX idx_addendum_status (status_id),
     CONSTRAINT fk_addendum_unit FOREIGN KEY (sys_unit_id) REFERENCES sys_unit(sys_unit_id),
-    CONSTRAINT fk_addendum_gstat FOREIGN KEY (general_status_id) REFERENCES general_status(general_status_id)
+    CONSTRAINT fk_addendum_gstat FOREIGN KEY (status_id) REFERENCES status(status_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS age_addendum( 
@@ -1296,7 +1380,7 @@ CREATE TABLE IF NOT EXISTS contract_charge (
     INDEX idx_contract_charge_unit (sys_unit_id),
     INDEX idx_contract_charge_status (payment_status_id),
     INDEX idx_contract_charge_due (due_date),
-    CONSTRAINT fk_contract_charge_contract FOREIGN KEY (contract_version_id) REFERENCES contract_version(contract_version_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_contract_charge_contract FOREIGN KEY (contract_version_id) REFERENCES contract_version(contract_version_id) ON UPDATE CASCADE,
     CONSTRAINT fk_contract_charge_unit FOREIGN KEY (sys_unit_id) REFERENCES sys_unit(sys_unit_id),
     CONSTRAINT fk_contract_charge_payment FOREIGN KEY (payment_status_id) REFERENCES payment_status(payment_status_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -1515,6 +1599,12 @@ CREATE TABLE IF NOT EXISTS billing_cycle (
     charge_date TIMESTAMP NOT NULL,
     amount_per_contract DECIMAL(19,4) NOT NULL,
     status VARCHAR(20) DEFAULT 'PENDING',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL DEFAULT NULL,
+    created_by INT UNSIGNED,
+    updated_by INT UNSIGNED,
+    deleted_by INT UNSIGNED,
     PRIMARY KEY (billing_cycle_id),
     INDEX idx_billing_cycle_group (group_batch_id),
     CONSTRAINT fk_billing_cycle_group FOREIGN KEY (group_batch_id) REFERENCES group_batch(group_batch_id),
@@ -1531,6 +1621,12 @@ CREATE TABLE IF NOT EXISTS contract_billing (
     charge_id INT UNSIGNED,
     amount DECIMAL(19,4) NOT NULL,
     status VARCHAR(20) DEFAULT 'PENDING',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL DEFAULT NULL,
+    created_by INT UNSIGNED,
+    updated_by INT UNSIGNED,
+    deleted_by INT UNSIGNED,
     PRIMARY KEY (contract_billing_id),
     INDEX idx_contract_billing_cycle (cycle_id),
     INDEX idx_contract_billing_version (contract_version_id),
@@ -1554,7 +1650,10 @@ CREATE TABLE IF NOT EXISTS payment_plan (
     status VARCHAR(20) DEFAULT 'ACTIVE',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL DEFAULT NULL,
     created_by INT UNSIGNED,
+    updated_by INT UNSIGNED,
+    deleted_by INT UNSIGNED,
     PRIMARY KEY (payment_plan_id),
     INDEX idx_payment_plan_version (contract_version_id),
     CONSTRAINT fk_payment_plan_version FOREIGN KEY (contract_version_id) REFERENCES contract_version(contract_version_id),
@@ -1575,6 +1674,10 @@ CREATE TABLE IF NOT EXISTS payment_plan_installment (
     charge_id INT UNSIGNED,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL DEFAULT NULL,
+    created_by INT UNSIGNED,
+    updated_by INT UNSIGNED,
+    deleted_by INT UNSIGNED,
     PRIMARY KEY (payment_plan_installment_id),
     INDEX idx_installment_plan (plan_id),
     INDEX idx_installment_charge (charge_id),
@@ -1598,7 +1701,11 @@ CREATE TABLE IF NOT EXISTS payment_transaction (
     status VARCHAR(20) DEFAULT 'COMPLETED',
     notes TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL DEFAULT NULL,
     created_by INT UNSIGNED,
+    updated_by INT UNSIGNED,
+    deleted_by INT UNSIGNED,
     PRIMARY KEY (payment_transaction_id),
     INDEX idx_transaction_version (contract_version_id),
     INDEX idx_transaction_charge (charge_id),
@@ -1624,6 +1731,12 @@ CREATE TABLE IF NOT EXISTS billing_rule (
     condition_expression TEXT,
     charge_expression TEXT,
     is_active TINYINT(1) DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL DEFAULT NULL,
+    created_by INT UNSIGNED,
+    updated_by INT UNSIGNED,
+    deleted_by INT UNSIGNED,
     PRIMARY KEY (billing_rule_id),
     INDEX idx_billing_rule_unit (sys_unit_id),
     CONSTRAINT fk_billing_rule_unit FOREIGN KEY (sys_unit_id) REFERENCES sys_unit(sys_unit_id),
@@ -1639,6 +1752,12 @@ CREATE TABLE IF NOT EXISTS billing_rule_application (
     entity_id INT NOT NULL,
     applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     applied_by INT UNSIGNED,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL DEFAULT NULL,
+    created_by INT UNSIGNED,
+    updated_by INT UNSIGNED,
+    deleted_by INT UNSIGNED,
     PRIMARY KEY (billing_rule_application_id),
     INDEX idx_billing_rule_app_rule (rule_id),
     INDEX idx_billing_rule_app_entity (entity_type, entity_id),
@@ -1709,7 +1828,7 @@ CREATE TABLE IF NOT EXISTS account (
     INDEX idx_account_company (company_id),
     INDEX idx_account_parent (parent_account_id),
     INDEX idx_account_type (account_type_id),
-    CONSTRAINT fk_account_company FOREIGN KEY (company_id) REFERENCES company(company_id) ON DELETE CASCADE,
+    CONSTRAINT fk_account_company FOREIGN KEY (company_id) REFERENCES company(company_id) ,
     CONSTRAINT fk_account_type FOREIGN KEY (account_type_id) REFERENCES account_type(account_type_id),
     CONSTRAINT fk_account_parent FOREIGN KEY (parent_account_id) REFERENCES account(account_id) ON DELETE RESTRICT,
     CONSTRAINT chk_account_level CHECK (level >= 1)  -- ,
@@ -1772,6 +1891,12 @@ CREATE TABLE IF NOT EXISTS api_error(
     resolved_at TIMESTAMP NULL,
     resolved_by INT UNSIGNED,
     resolution_notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL DEFAULT NULL,
+    created_by INT UNSIGNED,
+    updated_by INT UNSIGNED,
+    deleted_by INT UNSIGNED,
     PRIMARY KEY (api_error_id),
     INDEX idx_api_error_user (sys_user_id),
     INDEX idx_api_error_timestamp (api_timestamp),
@@ -1792,6 +1917,11 @@ CREATE TABLE IF NOT EXISTS audit_log(
     process_outcome VARCHAR(50),
     error_message TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL DEFAULT NULL,
+    created_by INT UNSIGNED,
+    updated_by INT UNSIGNED,
+    deleted_by INT UNSIGNED,
     PRIMARY KEY (audit_log_id),
     INDEX idx_audit_log_user (sys_user_id),
     INDEX idx_audit_log_record (record_id),
@@ -1804,7 +1934,7 @@ CREATE TABLE IF NOT EXISTS audit_log(
 -- PARTE 15: DADOS INICIAIS
 -- =============================================================================
 
-INSERT INTO general_status (status_code, status_name, description) VALUES
+INSERT INTO status (status_code, status_name, description) VALUES
 ('ACTIVE', 'Active', 'Active record'),
 ('INACTIVE', 'Inactive', 'Inactive record'),
 ('DRAFT', 'Draft', 'Initial draft state'),
