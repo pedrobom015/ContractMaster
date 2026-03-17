@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";

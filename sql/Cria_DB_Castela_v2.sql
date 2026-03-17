@@ -1,13 +1,13 @@
-﻿-- =============================================================================
+-- =============================================================================
 -- ContractMaster - Schema MySQL Corrigido
--- Versão: 2.0.1
+-- Versão: 2.0.2
 -- Data: 2026-01-13
 -- Descrição: Schema completo compatível com MySQL 8.0+
 --            Inclui sistema de versionamento de contratos
--- Altera‡?es v2.0.1:
---   - contract_services ? contract_covers
---   - contract_billing_config ? contract_config_billing
---   - created_by, updated_by, deleted_by ? INT UNSIGNED
+-- Alterações v2.0.2:
+--   - Fixed primary key references in procedures (id -> {table}_id)
+--   - Renamed medical_foward -> medical_forward
+--   - Cleaned up duplicated code blocks
 -- =============================================================================
 
 SET NAMES utf8mb4;
@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS schema_version (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO schema_version (version, description) 
-VALUES ('2.0.1', 'ContractMaster schema with contract versioning support - fixed naming');
+VALUES ('2.0.2', 'ContractMaster schema with fixed PK references in procedures');
 
 -- -----------------------------------------------------------------------------
 -- PARTE 2: TABELAS BASE (sem dependências)
@@ -395,7 +395,7 @@ CREATE TABLE IF NOT EXISTS address(
 
 CREATE TABLE IF NOT EXISTS entity_address (
     entity_address_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    entity_type ENUM('client', 'partner') NOT NULL,
+    entity_type ENUM('client', 'partner', 'contract') NOT NULL,
     entity_id INT UNSIGNED NOT NULL,
     address_id INT UNSIGNED NOT NULL,
     is_primary TINYINT(1) DEFAULT 0,
@@ -428,7 +428,7 @@ CREATE TABLE IF NOT EXISTS document(
 
 CREATE TABLE IF NOT EXISTS entity_document (
     entity_document_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    entity_type ENUM('client', 'partner') NOT NULL,
+    entity_type ENUM('client', 'partner', 'contract') NOT NULL,
     entity_id INT UNSIGNED NOT NULL,
     document_id INT UNSIGNED NOT NULL,
     is_active TINYINT(1) DEFAULT 1,
@@ -847,7 +847,7 @@ CREATE TABLE IF NOT EXISTS contract_version (
  COMMENT='Versões do contrato - histórico de alterações';
 
 ALTER TABLE contract 
-    ADD COLUMN current_version_id INT UNSIGNED AFTER id,
+    ADD COLUMN current_version_id INT UNSIGNED AFTER contract_id,
     ADD CONSTRAINT fk_contract_current_version FOREIGN KEY (current_version_id) REFERENCES contract_version(contract_version_id);
 
 -- Tabela de coberturas do contrato (renomeada de contract_services)
@@ -1132,7 +1132,7 @@ CREATE TABLE IF NOT EXISTS death_event (
     INDEX idx_death_event_service (service_funeral_id),
     INDEX idx_death_event_group_processed (group_batch_id, processed_for_billing),
     CONSTRAINT fk_death_event_group FOREIGN KEY (group_batch_id) REFERENCES group_batch(group_batch_id),
-    CONSTRAINT fk_death_event_beneficiary FOREIGN KEY (beneficiary_id) REFERENCES beneficiary(beneficiary_id),
+    CONSTRAINT fk_death_event_beneficiary KEY (beneficiary_id) REFERENCES beneficiary(beneficiary_id),
     CONSTRAINT fk_death_event_service FOREIGN KEY (service_funeral_id) REFERENCES service_funeral(service_funeral_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -1647,8 +1647,8 @@ CREATE TABLE IF NOT EXISTS billing_rule_application (
     CONSTRAINT fk_billing_rule_app_user FOREIGN KEY (sys_user_id) REFERENCES sys_user(sys_user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS medical_foward( 
-    medical_foward_id INT UNSIGNED AUTO_INCREMENT NOT NULL,
+CREATE TABLE IF NOT EXISTS medical_forward(
+    medical_forward_id INT UNSIGNED AUTO_INCREMENT NOT NULL,
     sys_unit_id INT UNSIGNED NOT NULL,
     sys_user_id INT UNSIGNED NOT NULL,
     partner_id INT UNSIGNED NOT NULL,
@@ -1667,16 +1667,16 @@ CREATE TABLE IF NOT EXISTS medical_foward(
     created_by INT UNSIGNED,
     updated_by INT UNSIGNED,
     deleted_by INT UNSIGNED,
-    PRIMARY KEY (medical_foward_id),
-    INDEX idx_medical_foward_unit (sys_unit_id),
-    INDEX idx_medical_foward_user (sys_user_id),
-    INDEX idx_medical_foward_partner (partner_id),
-    INDEX idx_medical_foward_service (performed_service_id),
-    CONSTRAINT fk_medical_foward_unit FOREIGN KEY (sys_unit_id) REFERENCES sys_unit(sys_unit_id),
-    CONSTRAINT fk_medical_foward_users FOREIGN KEY (sys_user_id) REFERENCES sys_user(sys_user_id),
-    CONSTRAINT fk_medical_foward_accredit FOREIGN KEY (partner_id) REFERENCES partner(partner_id),
-    CONSTRAINT fk_medical_foward_perfservic FOREIGN KEY (performed_service_id) REFERENCES performed_service(performed_service_id),
-    CONSTRAINT fk_medical_foward_ordpgrc FOREIGN KEY (ordpgrc_id) REFERENCES ordpgrc(ordpgrc_id)
+    PRIMARY KEY (medical_forward_id),
+    INDEX idx_medical_forward_unit (sys_unit_id),
+    INDEX idx_medical_forward_user (sys_user_id),
+    INDEX idx_medical_forward_partner (partner_id),
+    INDEX idx_medical_forward_service (performed_service_id),
+    CONSTRAINT fk_medical_forward_unit FOREIGN KEY (sys_unit_id) REFERENCES sys_unit(sys_unit_id),
+    CONSTRAINT fk_medical_forward_users FOREIGN KEY (sys_user_id) REFERENCES sys_user(sys_user_id),
+    CONSTRAINT fk_medical_forward_accredit FOREIGN KEY (partner_id) REFERENCES partner(partner_id),
+    CONSTRAINT fk_medical_forward_perfservic FOREIGN KEY (performed_service_id) REFERENCES performed_service(performed_service_id),
+    CONSTRAINT fk_medical_forward_ordpgrc FOREIGN KEY (ordpgrc_id) REFERENCES ordpgrc(ordpgrc_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- -----------------------------------------------------------------------------
@@ -1712,8 +1712,7 @@ CREATE TABLE IF NOT EXISTS account (
     CONSTRAINT fk_account_company FOREIGN KEY (company_id) REFERENCES company(company_id) ON DELETE CASCADE,
     CONSTRAINT fk_account_type FOREIGN KEY (account_type_id) REFERENCES account_type(account_type_id),
     CONSTRAINT fk_account_parent FOREIGN KEY (parent_account_id) REFERENCES account(account_id) ON DELETE RESTRICT,
-    CONSTRAINT chk_account_level CHECK (level >= 1)  -- ,
---    CONSTRAINT chk_no_self_parent CHECK (parent_account_id != id OR parent_account_id IS NULL)
+    CONSTRAINT chk_account_level CHECK (level >= 1)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- -----------------------------------------------------------------------------
@@ -1853,7 +1852,7 @@ BEGIN
     DECLARE v_current_version_id INT UNSIGNED;
     DECLARE v_new_version_number INT UNSIGNED;
     
-    SELECT id, version_number INTO v_current_version_id, v_new_version_number
+    SELECT contract_version_id, version_number INTO v_current_version_id, v_new_version_number
     FROM contract_version
     WHERE contract_id = p_contract_id AND is_current = 1
     ORDER BY version_number DESC
@@ -1866,7 +1865,7 @@ BEGIN
         SET is_current = 0, 
             valid_to = DATE_SUB(p_valid_from, INTERVAL 1 DAY),
             updated_at = CURRENT_TIMESTAMP
-        WHERE id = v_current_version_id;
+        WHERE contract_version_id = v_current_version_id;
     END IF;
     
     INSERT INTO contract_version (
@@ -1882,7 +1881,7 @@ BEGIN
     UPDATE contract 
     SET current_version_id = p_new_version_id,
         updated_at = CURRENT_TIMESTAMP
-    WHERE id = p_contract_id;
+    WHERE contract_id = p_contract_id;
 END //
 
 CREATE FUNCTION get_current_contract_version(p_contract_id INT UNSIGNED)
@@ -1892,7 +1891,7 @@ READS SQL DATA
 BEGIN
     DECLARE v_version_id INT UNSIGNED;
     
-    SELECT id INTO v_version_id
+    SELECT contract_version_id INTO v_version_id
     FROM contract_version
     WHERE contract_id = p_contract_id 
       AND is_current = 1
@@ -1911,7 +1910,7 @@ READS SQL DATA
 BEGIN
     DECLARE v_version_id INT UNSIGNED;
     
-    SELECT id INTO v_version_id
+    SELECT contract_version_id INTO v_version_id
     FROM contract_version
     WHERE contract_id = p_contract_id 
       AND valid_from <= p_date
@@ -1929,12 +1928,11 @@ CREATE PROCEDURE create_group_charge(
 BEGIN
     DECLARE v_amount_per_contract DECIMAL(19,4);
     DECLARE v_contract_count INT;
-    DECLARE v_charge_id INT UNSIGNED;
     DECLARE v_cycle_id INT UNSIGNED;
     
     SELECT COUNT(*) INTO v_contract_count
     FROM contract c
-    INNER JOIN contract_version cv ON cv.contract_id = c.id AND cv.is_current = 1
+    INNER JOIN contract_version cv ON cv.contract_id = c.contract_id AND cv.is_current = 1
     WHERE cv.group_batch_id = p_group_batch_id
     AND c.current_status = 'active';
     
@@ -1954,7 +1952,7 @@ BEGIN
         UPDATE group_batch 
         SET current_death_count = 0,
             last_death_charge_date = CURRENT_TIMESTAMP
-        WHERE id = p_group_batch_id;
+        WHERE group_batch_id = p_group_batch_id;
         
         UPDATE death_event 
         SET processed_for_billing = 1
@@ -1975,7 +1973,7 @@ BEGIN
     
     SELECT amount INTO v_total_amount
     FROM contract_charge
-    WHERE id = p_charge_id;
+    WHERE contract_charge_id = p_charge_id;
     
     SELECT COALESCE(SUM(amount), 0) INTO v_paid_amount
     FROM payment_transaction
@@ -1989,8 +1987,8 @@ BEGIN
         SET v_new_status = 'PENDING';
     END IF;
     
-    SELECT id INTO v_paid_status_id FROM payment_status WHERE name = 'Paid' LIMIT 1;
-    SELECT id INTO v_partial_status_id FROM payment_status WHERE name = 'Partial' LIMIT 1;
+    SELECT payment_status_id INTO v_paid_status_id FROM payment_status WHERE name = 'Paid' LIMIT 1;
+    SELECT payment_status_id INTO v_partial_status_id FROM payment_status WHERE name = 'Partial' LIMIT 1;
     
     UPDATE contract_charge
     SET 
@@ -2000,172 +1998,7 @@ BEGIN
             WHEN v_new_status = 'PARTIAL' THEN COALESCE(v_partial_status_id, payment_status_id)
             ELSE payment_status_id
         END
-    WHERE id = p_charge_id;
-END //
-
-DELIMITER ;
-DELIMITER //
-
-CREATE PROCEDURE create_contract_version(
-    IN p_contract_id INT UNSIGNED,
-    IN p_group_batch_id INT UNSIGNED,
-    IN p_valid_from DATE,
-    IN p_change_reason VARCHAR(255),
-    IN p_created_by INT UNSIGNED,
-    OUT p_new_version_id INT UNSIGNED
-)
-BEGIN
-    DECLARE v_current_version_id INT UNSIGNED;
-    DECLARE v_new_version_number INT UNSIGNED;
-    
-    SELECT id, version_number INTO v_current_version_id, v_new_version_number
-    FROM contract_version
-    WHERE contract_id = p_contract_id AND is_current = 1
-    ORDER BY version_number DESC
-    LIMIT 1;
-    
-    SET v_new_version_number = COALESCE(v_new_version_number, 0) + 1;
-    
-    IF v_current_version_id IS NOT NULL THEN
-        UPDATE contract_version 
-        SET is_current = 0, 
-            valid_to = DATE_SUB(p_valid_from, INTERVAL 1 DAY),
-            updated_at = CURRENT_TIMESTAMP
-        WHERE id = v_current_version_id;
-    END IF;
-    
-    INSERT INTO contract_version (
-        contract_id, group_batch_id, version_number,
-        valid_from, valid_to, is_current, change_reason, created_by
-    ) VALUES (
-        p_contract_id, p_group_batch_id, v_new_version_number,
-        p_valid_from, NULL, 1, p_change_reason, p_created_by
-    );
-    
-    SET p_new_version_id = LAST_INSERT_ID();
-    
-    UPDATE contract 
-    SET current_version_id = p_new_version_id,
-        updated_at = CURRENT_TIMESTAMP
-    WHERE id = p_contract_id;
-END //
-
-CREATE FUNCTION get_current_contract_version(p_contract_id INT UNSIGNED)
-RETURNS INT UNSIGNED
-DETERMINISTIC
-READS SQL DATA
-BEGIN
-    DECLARE v_version_id INT UNSIGNED;
-    
-    SELECT id INTO v_version_id
-    FROM contract_version
-    WHERE contract_id = p_contract_id 
-      AND is_current = 1
-    LIMIT 1;
-    
-    RETURN v_version_id;
-END //
-
-CREATE FUNCTION get_contract_version_at_date(
-    p_contract_id INT UNSIGNED,
-    p_date DATE
-)
-RETURNS INT UNSIGNED
-DETERMINISTIC
-READS SQL DATA
-BEGIN
-    DECLARE v_version_id INT UNSIGNED;
-    
-    SELECT id INTO v_version_id
-    FROM contract_version
-    WHERE contract_id = p_contract_id 
-      AND valid_from <= p_date
-      AND (valid_to IS NULL OR valid_to >= p_date)
-    ORDER BY version_number DESC
-    LIMIT 1;
-    
-    RETURN v_version_id;
-END //
-
-CREATE PROCEDURE create_group_charge(
-    IN p_group_batch_id INT UNSIGNED,
-    IN p_death_count INT
-)
-BEGIN
-    DECLARE v_amount_per_contract DECIMAL(19,4);
-    DECLARE v_contract_count INT;
-    DECLARE v_charge_id INT UNSIGNED;
-    DECLARE v_cycle_id INT UNSIGNED;
-    
-    SELECT COUNT(*) INTO v_contract_count
-    FROM contract c
-    INNER JOIN contract_version cv ON cv.contract_id = c.id AND cv.is_current = 1
-    WHERE cv.group_batch_id = p_group_batch_id
-    AND c.current_status = 'active';
-    
-    IF v_contract_count > 0 THEN
-        SET v_amount_per_contract = p_death_count / v_contract_count;
-        
-        INSERT INTO billing_cycle (
-            sys_unit_id, sys_user_id, group_batch_id, 
-            death_event_count, charge_date, amount_per_contract, status
-        ) VALUES (
-            1, 1, p_group_batch_id, 
-            p_death_count, CURRENT_TIMESTAMP, v_amount_per_contract, 'PENDING'
-        );
-        
-        SET v_cycle_id = LAST_INSERT_ID();
-        
-        UPDATE group_batch 
-        SET current_death_count = 0,
-            last_death_charge_date = CURRENT_TIMESTAMP
-        WHERE id = p_group_batch_id;
-        
-        UPDATE death_event 
-        SET processed_for_billing = 1
-        WHERE group_batch_id = p_group_batch_id 
-        AND processed_for_billing = 0;
-    END IF;
-END //
-
-CREATE PROCEDURE update_charge_status(
-    IN p_charge_id INT UNSIGNED
-)
-BEGIN
-    DECLARE v_total_amount DECIMAL(19,4);
-    DECLARE v_paid_amount DECIMAL(19,4);
-    DECLARE v_new_status VARCHAR(20);
-    DECLARE v_paid_status_id INT UNSIGNED;
-    DECLARE v_partial_status_id INT UNSIGNED;
-    
-    SELECT amount INTO v_total_amount
-    FROM contract_charge
-    WHERE id = p_charge_id;
-    
-    SELECT COALESCE(SUM(amount), 0) INTO v_paid_amount
-    FROM payment_transaction
-    WHERE charge_id = p_charge_id;
-    
-    IF v_paid_amount >= v_total_amount THEN
-        SET v_new_status = 'PAID';
-    ELSEIF v_paid_amount > 0 THEN
-        SET v_new_status = 'PARTIAL';
-    ELSE
-        SET v_new_status = 'PENDING';
-    END IF;
-    
-    SELECT id INTO v_paid_status_id FROM payment_status WHERE name = 'Paid' LIMIT 1;
-    SELECT id INTO v_partial_status_id FROM payment_status WHERE name = 'Partial' LIMIT 1;
-    
-    UPDATE contract_charge
-    SET 
-        paid_amount = v_paid_amount,
-        payment_status_id = CASE 
-            WHEN v_new_status = 'PAID' THEN COALESCE(v_paid_status_id, payment_status_id)
-            WHEN v_new_status = 'PARTIAL' THEN COALESCE(v_partial_status_id, payment_status_id)
-            ELSE payment_status_id
-        END
-    WHERE id = p_charge_id;
+    WHERE contract_charge_id = p_charge_id;
 END //
 
 DELIMITER ;
@@ -2179,6 +2012,4 @@ SET FOREIGN_KEY_CHECKS = 1;
 -- Atualização da versão do schema
 UPDATE schema_version 
 SET applied_at = CURRENT_TIMESTAMP 
-WHERE version = '2.0.1';
-
-
+WHERE version = '2.0.2';

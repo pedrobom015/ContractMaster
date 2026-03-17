@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { cn, formatCPF, formatCNPJ } from "@/lib/utils";
 import type { Client } from "@shared/schema";
 

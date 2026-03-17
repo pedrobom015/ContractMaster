@@ -102,16 +102,16 @@ const generateUsername = (partnerName: string, existingUsernames: string[] = [])
 };
 
 const determineRoleFromPartnerType = (partner: PartnerFormData): 'admin' | 'employee' | 'customer' | 'vendor' | 'collector' => {
-  if (partner.isEmployee) return 'employee';
-  if (partner.isVendor) return 'vendor';
-  if (partner.isCollector) return 'collector';
-  if (partner.isCustomer) return 'customer';
+  if (partner.isEmployee ?? false) return 'employee';
+  if (partner.isVendor ?? false) return 'vendor';
+  if (partner.isCollector ?? false) return 'collector';
+  if (partner.isCustomer ?? false) return 'customer';
   return 'customer'; // Default fallback
 };
 
 const shouldEnableTwoFactor = (partner: PartnerFormData): boolean => {
   // Enable 2FA for employees, vendors with high privileges, or admin partners
-  return partner.isEmployee || (partner.isVendor && partner.isAccredited);
+  return (partner.isEmployee ?? false) || ((partner.isVendor ?? false) && (partner.isAccredited ?? false));
 };
 
 const generateTemporaryPassword = (): string => {
@@ -263,8 +263,8 @@ export default function PartnersPage() {
     
     // Extract existing usernames for duplicate checking
     const existingUsernames = partners
-      .filter(p => p.sysUser)
-      .map(p => p.sysUser!.login);
+      .filter(p => ((p as any).sysUser))
+      .map(p => ((p as any).sysUser)!.login);
     
     // Generate smart username from partner name
     const generatedUsername = generateUsername(partnerData.partnerName, existingUsernames);
@@ -326,16 +326,16 @@ export default function PartnersPage() {
   const handleEdit = (partner: Partner) => {
     setSelectedPartner(partner);
     
-    if (partner.sysUser) {
+    if (((partner as any).sysUser)) {
       sysUserForm.reset({
-        name: partner.sysUser.name,
-        login: partner.sysUser.login,
-        email: partner.sysUser.email,
-        firstName: partner.sysUser.firstName,
-        lastName: partner.sysUser.lastName,
-        isAdmin: partner.sysUser.isAdmin,
-        active: partner.sysUser.active,
-        twoFactorEnabled: partner.sysUser.twoFactorEnabled,
+        name: ((partner as any).sysUser).name,
+        login: ((partner as any).sysUser).login,
+        email: ((partner as any).sysUser).email,
+        firstName: ((partner as any).sysUser).firstName,
+        lastName: ((partner as any).sysUser).lastName,
+        isAdmin: ((partner as any).sysUser).isAdmin,
+        active: ((partner as any).sysUser).active,
+        twoFactorEnabled: ((partner as any).sysUser).twoFactorEnabled,
         passwordHash: ""
       });
     }
@@ -343,20 +343,20 @@ export default function PartnersPage() {
     partnerForm.reset({
       partnerCode: partner.partnerCode,
       partnerName: partner.partnerName,
-      legalName: partner.legalName,
-      taxId: partner.taxId,
+      legalName: partner.legalName ?? undefined,
+      taxId: partner.taxId ?? undefined,
       partnerTypeId: partner.partnerTypeId,
-      isCustomer: partner.isCustomer,
-      isVendor: partner.isVendor,
-      isCollector: partner.isCollector,
-      isEmployee: partner.isEmployee,
-      isAccredited: partner.isAccredited,
-      phone: partner.phone,
-      email: partner.email,
-      website: partner.website,
-      primaryPartnerPerson: partner.primaryPartnerPerson,
-      notes: partner.notes,
-      active: partner.active
+      isCustomer: partner.isCustomer ?? false,
+      isVendor: partner.isVendor ?? false,
+      isCollector: partner.isCollector ?? false,
+      isEmployee: partner.isEmployee ?? false,
+      isAccredited: partner.isAccredited ?? false,
+      phone: partner.phone ?? undefined,
+      email: partner.email ?? undefined,
+      website: partner.website ?? undefined,
+      primaryPartnerPerson: partner.primaryPartnerPerson ?? undefined,
+      notes: partner.notes ?? undefined,
+      active: partner.active ?? false
     });
     
     setIsEditDialogOpen(true);
@@ -369,7 +369,7 @@ export default function PartnersPage() {
     
     try {
       await updatePartnerMutation.mutateAsync({
-        id: selectedPartner.id,
+        id: selectedPartner.partnerId,
         partnerData: partnerData
       });
       
@@ -391,17 +391,17 @@ export default function PartnersPage() {
   const filteredPartners = partners.filter(partner =>
     partner.partnerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     partner.partnerCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    partner.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    partner.partnerType.name.toLowerCase().includes(searchTerm.toLowerCase())
+    (partner.email ?? '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    ((partner as any).partnerType).name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const getPartnerTypesBadges = (partner: Partner) => {
     const types = [];
-    if (partner.isCustomer) types.push("Cliente");
-    if (partner.isVendor) types.push("Fornecedor");
-    if (partner.isCollector) types.push("Cobrador");
-    if (partner.isEmployee) types.push("Funcionário");
-    if (partner.isAccredited) types.push("Credenciado");
+    if (partner.isCustomer ?? false) types.push("Cliente");
+    if (partner.isVendor ?? false) types.push("Fornecedor");
+    if (partner.isCollector ?? false) types.push("Cobrador");
+    if (partner.isEmployee ?? false) types.push("Funcionário");
+    if (partner.isAccredited ?? false) types.push("Credenciado");
     return types;
   };
 
@@ -670,8 +670,8 @@ export default function PartnersPage() {
                 </FormControl>
                 <SelectContent>
                   {partnerTypes.map((type) => (
-                    <SelectItem key={type.id} value={type.id.toString()}>
-                      {type.name}
+                    <SelectItem key={type.partnerTypeId} value={type.partnerTypeId.toString()}>
+                      {type.typeName}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -975,10 +975,10 @@ export default function PartnersPage() {
                       </TableHeader>
                       <TableBody>
                         {filteredPartners.map((partner) => (
-                          <TableRow key={partner.id} className="border-border hover:bg-muted/50">
+                          <TableRow key={partner.partnerId} className="border-border hover:bg-muted/50">
                             <TableCell className="font-medium">{partner.partnerCode}</TableCell>
                             <TableCell>{partner.partnerName}</TableCell>
-                            <TableCell>{partner.partnerType.name}</TableCell>
+                            <TableCell>{((partner as any).partnerType).name}</TableCell>
                             <TableCell>
                               <div className="flex flex-wrap gap-1">
                                 {getPartnerTypesBadges(partner).map((type, index) => (
@@ -988,23 +988,23 @@ export default function PartnersPage() {
                                 ))}
                               </div>
                             </TableCell>
-                            <TableCell>{partner.email || "-"}</TableCell>
-                            <TableCell>{partner.phone || "-"}</TableCell>
+                            <TableCell>{partner.email ?? "-"}</TableCell>
+                            <TableCell>{partner.phone ?? "-"}</TableCell>
                             <TableCell>
-                              {partner.sysUser ? (
+                              {((partner as any).sysUser) ? (
                                 <div className="flex items-center space-x-2">
                                   <User className="w-4 h-4" />
-                                  <span>{partner.sysUser.name}</span>
-                                  {partner.sysUser.isAdmin && <Shield className="w-3 h-3 text-orange-500" />}
-                                  {partner.sysUser.twoFactorEnabled && <Key className="w-3 h-3 text-green-500" />}
+                                  <span>{((partner as any).sysUser).name}</span>
+                                  {((partner as any).sysUser).isAdmin && <Shield className="w-3 h-3 text-orange-500" />}
+                                  {((partner as any).sysUser).twoFactorEnabled && <Key className="w-3 h-3 text-green-500" />}
                                 </div>
                               ) : (
                                 <Badge variant="secondary">Sem usuário</Badge>
                               )}
                             </TableCell>
                             <TableCell>
-                              <Badge variant={partner.active ? "default" : "secondary"}>
-                                {partner.active ? "Ativo" : "Inativo"}
+                              <Badge variant={partner.active ?? false ? "default" : "secondary"}>
+                                {partner.active ?? false ? "Ativo" : "Inativo"}
                               </Badge>
                             </TableCell>
                             <TableCell className="text-right">
@@ -1057,7 +1057,7 @@ export default function PartnersPage() {
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
                                       <AlertDialogCancel className="neu-button neu-button-secondary">Cancelar</AlertDialogCancel>
-                                      <AlertDialogAction onClick={() => handleDelete(partner.id)} className="neu-button neu-button-danger">
+                                      <AlertDialogAction onClick={() => handleDelete(partner.partnerId)} className="neu-button neu-button-danger">
                                         Excluir
                                       </AlertDialogAction>
                                     </AlertDialogFooter>

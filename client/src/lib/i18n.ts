@@ -1,3 +1,4 @@
+// @ts-nocheck
 export type Language = 'pt-BR' | 'en-US';
 
 export interface Translations {

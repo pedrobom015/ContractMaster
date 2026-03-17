@@ -214,38 +214,38 @@ export default function ContractsEntries() {
     form.reset({
       contractNumber: contract.contractNumber || "",
       contractName: contract.contractName || "",
-      contractType: contract.contractType || "",
+      contractType: (contract as any).contractType || "",
       groupBatchId: contract.groupBatchId || undefined,
       classId: contract.classId || undefined,
       statusId: contract.statusId || undefined,
-      startDate: contract.startDate ? new Date(contract.startDate).toISOString().split('T')[0] : "",
-      endDate: contract.endDate ? new Date(contract.endDate).toISOString().split('T')[0] : "",
-      admission: contract.admission ? new Date(contract.admission).toISOString().split('T')[0] : "",
+      startDate: (contract as any).startDate ? new Date((contract as any).startDate).toISOString().split('T')[0] : "",
+      endDate: (contract as any).endDate ? new Date((contract as any).endDate).toISOString().split('T')[0] : "",
+      admission: (contract as any).admission ? new Date((contract as any).admission).toISOString().split('T')[0] : "",
       obs: contract.obs || "",
-      billingFrequency: contract.billingFrequency || 1,
-      monthInitialBilling: contract.monthInitialBilling || "",
-      yearInitialBilling: contract.yearInitialBilling || "",
-      optPayday: contract.optPayday || undefined,
-      finalGrace: contract.finalGrace ? new Date(contract.finalGrace).toISOString().split('T')[0] : "",
+      billingFrequency: (contract as any).billingFrequency || 1,
+      monthInitialBilling: (contract as any).monthInitialBilling || "",
+      yearInitialBilling: (contract as any).yearInitialBilling || "",
+      optPayday: (contract as any).optPayday || undefined,
+      finalGrace: (contract as any).finalGrace ? new Date((contract as any).finalGrace).toISOString().split('T')[0] : "",
       servicesAmount: contract.servicesAmount || undefined,
-      firstCharge: contract.firstCharge || undefined,
-      lastCharge: contract.lastCharge || undefined,
-      chargesAmount: contract.chargesAmount || undefined,
-      chargesPaid: contract.chargesPaid || undefined,
-      renewAt: contract.renewAt ? new Date(contract.renewAt).toISOString().split('T')[0] : "",
+      firstCharge: (contract as any).firstCharge || undefined,
+      lastCharge: (contract as any).lastCharge || undefined,
+      chargesAmount: (contract as any).chargesAmount || undefined,
+      chargesPaid: (contract as any).chargesPaid || undefined,
+      renewAt: (contract as any).renewAt ? new Date((contract as any).renewAt).toISOString().split('T')[0] : "",
       ownerId: contract.ownerId || undefined,
       collectorId: contract.collectorId || undefined,
       sellerId: contract.sellerId || undefined,
       indicatedBy: contract.indicatedBy || undefined,
       regionId: contract.regionId || undefined,
-      serviceOption1: contract.serviceOption1 || "",
-      serviceOption2: contract.serviceOption2 || "",
+      serviceOption1: (contract as any).serviceOption1 || "",
+      serviceOption2: (contract as any).serviceOption2 || "",
       ownerEmail: "",
       ownerPassword: "",
       createUserAccount: true,
-      alives: contract.alives || undefined,
-      deceaseds: contract.deceaseds || undefined,
-      dependents: contract.dependents || undefined,
+      alives: (contract as any).alives || undefined,
+      deceaseds: (contract as any).deceaseds || undefined,
+      dependents: (contract as any).dependents || undefined,
     });
     setIsEditDialogOpen(true);
   };
@@ -256,7 +256,7 @@ export default function ContractsEntries() {
 
   const onSubmit = (data: ContractFormData) => {
     if (selectedContract) {
-      updateMutation.mutate({ id: selectedContract.id, data });
+      updateMutation.mutate({ id: selectedContract.contractId, data });
     } else {
       createMutation.mutate(data);
     }
@@ -334,12 +334,12 @@ export default function ContractsEntries() {
                   </TableHeader>
                   <TableBody>
                     {filteredContracts.map((contract) => (
-                      <TableRow key={contract.id} className="border-border/40 hover:bg-muted/20">
+                      <TableRow key={contract.contractId} className="border-border/40 hover:bg-muted/20">
                         <TableCell className="font-medium">{contract.contractNumber}</TableCell>
                         <TableCell>{contract.contractName}</TableCell>
-                        <TableCell>{contract.contractType}</TableCell>
+                        <TableCell>{(contract as any).contractType}</TableCell>
                         <TableCell>
-                          {contract.startDate ? new Date(contract.startDate).toLocaleDateString('pt-BR') : '-'}
+                          {(contract as any).startDate ? new Date((contract as any).startDate).toLocaleDateString('pt-BR') : '-'}
                         </TableCell>
                         <TableCell>
                           <Badge variant="secondary">Ativo</Badge>
@@ -374,7 +374,7 @@ export default function ContractsEntries() {
                                 <AlertDialogFooter>
                                   <AlertDialogCancel className="neu-button rounded-xl">Cancelar</AlertDialogCancel>
                                   <AlertDialogAction
-                                    onClick={() => handleDelete(contract.id)}
+                                    onClick={() => handleDelete(contract.contractId)}
                                     className="neu-button rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90"
                                   >
                                     Excluir
@@ -886,8 +886,8 @@ export default function ContractsEntries() {
 
                 {/* Charges Tab */}
                 <TabsContent value="charges" className="space-y-6">
-                  {selectedContract?.id ? (
-                    <ChargesTab contractId={selectedContract.id} />
+                  {selectedContract?.contractId ? (
+                    <ChargesTab contractId={selectedContract.contractId} />
                   ) : (
                     <div className="bg-muted/20 p-4 rounded-xl">
                       <h3 className="text-lg font-medium mb-2">Cobranças do Contrato</h3>

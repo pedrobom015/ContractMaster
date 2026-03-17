@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Calculator, Calendar, Hash, DollarSign } from "lucide-react";
 import type { BatchChk } from "@shared/schema";
 

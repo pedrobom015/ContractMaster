@@ -14,7 +14,6 @@ import {
   clientsTable,
   contractsTable,
   beneficiariesTable,
-  chargesTable,
   contractChargesTable,
   addendumsTable,
   batchChkTable,
@@ -381,103 +380,112 @@ export interface IStorage {
 export class DrizzleStorage implements IStorage {
   // System Users
   async createSysUser(data: NewSysUser): Promise<SysUser> {
-    const [user] = await db.insert(sysUsersTable).values(data).returning();
+    const [result] = await db.insert(sysUsersTable).values(data);
+    const [user] = await db.select().from(sysUsersTable).where(eq(sysUsersTable.sysUserId, result.insertId));
     return user;
   }
 
   async getSysUsers(): Promise<SysUser[]> {
-    return await db.select().from(sysUsersTable).where(eq(sysUsersTable.deletedAt, null)).orderBy(desc(sysUsersTable.createdAt));
+    return await db.select().from(sysUsersTable).where(isNull(sysUsersTable.deletedAt)).orderBy(desc(sysUsersTable.createdAt));
   }
 
   async getSysUserById(id: number): Promise<SysUser | null> {
-    const [user] = await db.select().from(sysUsersTable).where(and(eq(sysUsersTable.id, id), eq(sysUsersTable.deletedAt, null)));
+    const [user] = await db.select().from(sysUsersTable).where(and(eq(sysUsersTable.sysUserId, id), isNull(sysUsersTable.deletedAt)));
     return user || null;
   }
 
   async updateSysUser(id: number, data: Partial<NewSysUser>): Promise<SysUser | null> {
-    const [user] = await db.update(sysUsersTable).set({ ...data, updatedAt: new Date() }).where(eq(sysUsersTable.id, id)).returning();
+    await db.update(sysUsersTable).set({ ...data, updatedAt: new Date() }).where(eq(sysUsersTable.sysUserId, id));
+    const [user] = await db.select().from(sysUsersTable).where(eq(sysUsersTable.sysUserId, id));
     return user || null;
   }
 
   async deleteSysUser(id: number): Promise<void> {
-    await db.update(sysUsersTable).set({ deletedAt: new Date() }).where(eq(sysUsersTable.id, id));
+    await db.update(sysUsersTable).set({ deletedAt: new Date() }).where(eq(sysUsersTable.sysUserId, id));
   }
 
   // Address Types
   async createAddressType(data: NewAddressType): Promise<AddressType> {
-    const [addressType] = await db.insert(addressTypesTable).values(data).returning();
+    const [result] = await db.insert(addressTypesTable).values(data);
+    const [addressType] = await db.select().from(addressTypesTable).where(eq(addressTypesTable.addressTypeId, result.insertId));
     return addressType;
   }
 
   async getAddressTypes(): Promise<AddressType[]> {
-    return await db.select().from(addressTypesTable).where(eq(addressTypesTable.deletedAt, null)).orderBy(desc(addressTypesTable.createdAt));
+    return await db.select().from(addressTypesTable).where(isNull(addressTypesTable.deletedAt)).orderBy(desc(addressTypesTable.createdAt));
   }
 
   async getAddressTypeById(id: number): Promise<AddressType | null> {
-    const [addressType] = await db.select().from(addressTypesTable).where(and(eq(addressTypesTable.id, id), eq(addressTypesTable.deletedAt, null)));
+    const [addressType] = await db.select().from(addressTypesTable).where(and(eq(addressTypesTable.addressTypeId, id), isNull(addressTypesTable.deletedAt)));
     return addressType || null;
   }
 
   async updateAddressType(id: number, data: Partial<NewAddressType>): Promise<AddressType | null> {
-    const [addressType] = await db.update(addressTypesTable).set({ ...data, updatedAt: new Date() }).where(eq(addressTypesTable.id, id)).returning();
+    await db.update(addressTypesTable).set({ ...data, updatedAt: new Date() }).where(eq(addressTypesTable.addressTypeId, id));
+    const [addressType] = await db.select().from(addressTypesTable).where(eq(addressTypesTable.addressTypeId, id));
     return addressType || null;
   }
 
   async deleteAddressType(id: number): Promise<void> {
-    await db.update(addressTypesTable).set({ deletedAt: new Date() }).where(eq(addressTypesTable.id, id));
+    await db.update(addressTypesTable).set({ deletedAt: new Date() }).where(eq(addressTypesTable.addressTypeId, id));
   }
 
   // Addresses
   async createAddress(data: NewAddress): Promise<Address> {
-    const [address] = await db.insert(addressesTable).values(data).returning();
+    const [result] = await db.insert(addressesTable).values(data);
+    const [address] = await db.select().from(addressesTable).where(eq(addressesTable.addressId, result.insertId));
     return address;
   }
 
   async getAddresses(): Promise<Address[]> {
-    return await db.select().from(addressesTable).where(eq(addressesTable.deletedAt, null)).orderBy(desc(addressesTable.createdAt));
+    return await db.select().from(addressesTable).where(isNull(addressesTable.deletedAt)).orderBy(desc(addressesTable.createdAt));
   }
 
   async getAddressById(id: number): Promise<Address | null> {
-    const [address] = await db.select().from(addressesTable).where(and(eq(addressesTable.id, id), eq(addressesTable.deletedAt, null)));
+    const [address] = await db.select().from(addressesTable).where(and(eq(addressesTable.addressId, id), isNull(addressesTable.deletedAt)));
     return address || null;
   }
 
   async updateAddress(id: number, data: Partial<NewAddress>): Promise<Address | null> {
-    const [address] = await db.update(addressesTable).set({ ...data, updatedAt: new Date() }).where(eq(addressesTable.id, id)).returning();
+    await db.update(addressesTable).set({ ...data, updatedAt: new Date() }).where(eq(addressesTable.addressId, id));
+    const [address] = await db.select().from(addressesTable).where(eq(addressesTable.addressId, id));
     return address || null;
   }
 
   async deleteAddress(id: number): Promise<void> {
-    await db.update(addressesTable).set({ deletedAt: new Date() }).where(eq(addressesTable.id, id));
+    await db.update(addressesTable).set({ deletedAt: new Date() }).where(eq(addressesTable.addressId, id));
   }
 
   // Entity Addresses
   async createEntityAddress(data: NewEntityAddress): Promise<EntityAddress> {
-    const [entityAddress] = await db.insert(entityAddressesTable).values(data).returning();
+    const [result] = await db.insert(entityAddressesTable).values(data);
+    const [entityAddress] = await db.select().from(entityAddressesTable).where(eq(entityAddressesTable.entityAddressId, result.insertId));
     return entityAddress;
   }
 
   async getEntityAddresses(): Promise<EntityAddress[]> {
-    return await db.select().from(entityAddressesTable).orderBy(desc(entityAddressesTable.id));
+    return await db.select().from(entityAddressesTable).orderBy(desc(entityAddressesTable.entityAddressId));
   }
 
   async getEntityAddressesByEntity(entityType: string, entityId: number): Promise<EntityAddress[]> {
     return await db.select().from(entityAddressesTable)
-      .where(and(eq(entityAddressesTable.entityType, entityType), eq(entityAddressesTable.entityId, entityId)));
+      .where(and(eq(entityAddressesTable.entityType, entityType as 'client' | 'partner' | 'contract'), eq(entityAddressesTable.entityId, entityId)));
   }
 
   async updateEntityAddress(id: number, data: Partial<NewEntityAddress>): Promise<EntityAddress | null> {
-    const [entityAddress] = await db.update(entityAddressesTable).set(data).where(eq(entityAddressesTable.id, id)).returning();
+    await db.update(entityAddressesTable).set(data).where(eq(entityAddressesTable.entityAddressId, id));
+    const [entityAddress] = await db.select().from(entityAddressesTable).where(eq(entityAddressesTable.entityAddressId, id));
     return entityAddress || null;
   }
 
   async deleteEntityAddress(id: number): Promise<void> {
-    await db.delete(entityAddressesTable).where(eq(entityAddressesTable.id, id));
+    await db.delete(entityAddressesTable).where(eq(entityAddressesTable.entityAddressId, id));
   }
 
   // Partner Types
   async createPartnerType(data: NewPartnerType): Promise<PartnerType> {
-    const [partnerType] = await db.insert(partnerTypesTable).values(data).returning();
+    const [result] = await db.insert(partnerTypesTable).values(data);
+    const [partnerType] = await db.select().from(partnerTypesTable).where(eq(partnerTypesTable.partnerTypeId, result.insertId));
     return partnerType;
   }
 
@@ -486,118 +494,158 @@ export class DrizzleStorage implements IStorage {
   }
 
   async getPartnerTypeById(id: number): Promise<PartnerType | null> {
-    const [partnerType] = await db.select().from(partnerTypesTable).where(eq(partnerTypesTable.id, id));
+    const [partnerType] = await db.select().from(partnerTypesTable).where(eq(partnerTypesTable.partnerTypeId, id));
     return partnerType || null;
   }
 
   async updatePartnerType(id: number, data: Partial<NewPartnerType>): Promise<PartnerType | null> {
-    const [partnerType] = await db.update(partnerTypesTable).set({ ...data, updatedAt: new Date() }).where(eq(partnerTypesTable.id, id)).returning();
+    await db.update(partnerTypesTable).set({ ...data, updatedAt: new Date() }).where(eq(partnerTypesTable.partnerTypeId, id));
+    const [partnerType] = await db.select().from(partnerTypesTable).where(eq(partnerTypesTable.partnerTypeId, id));
     return partnerType || null;
   }
 
   async deletePartnerType(id: number): Promise<void> {
-    await db.delete(partnerTypesTable).where(eq(partnerTypesTable.id, id));
+    await db.delete(partnerTypesTable).where(eq(partnerTypesTable.partnerTypeId, id));
   }
 
   // Partners
   async createPartner(data: NewPartner): Promise<Partner> {
-    const [partner] = await db.insert(partnersTable).values(data).returning();
+    const [result] = await db.insert(partnersTable).values(data);
+    const [partner] = await db.select().from(partnersTable).where(eq(partnersTable.partnerId, result.insertId));
     return partner;
   }
 
-  async getPartners(): Promise<Partner[]> {
-    return await db.select().from(partnersTable).where(isNull(partnersTable.deletedAt)).orderBy(desc(partnersTable.createdAt));
+async getPartners(): Promise<Partner[]> {
+    const results = await db.select({
+      partner: partnersTable,
+      partnerType: partnerTypesTable,
+      sysUser: sysUsersTable
+    })
+    .from(partnersTable)
+    .leftJoin(partnerTypesTable, eq(partnersTable.partnerTypeId, partnerTypesTable.partnerTypeId))
+    .leftJoin(sysUsersTable, eq(partnersTable.sysUserId, sysUsersTable.sysUserId))
+    .where(isNull(partnersTable.deletedAt))
+    .orderBy(desc(partnersTable.createdAt));
+
+    return results.map(r => ({
+      ...r.partner,
+      partnerType: r.partnerType,
+      sysUser: r.sysUser
+    })) as Partner[];
   }
 
   async getPartnerById(id: number): Promise<Partner | null> {
-    const [partner] = await db.select().from(partnersTable).where(eq(partnersTable.id, id));
-    return partner || null;
+    const [result] = await db.select({
+      partner: partnersTable,
+      partnerType: partnerTypesTable,
+      sysUser: sysUsersTable
+    })
+    .from(partnersTable)
+    .leftJoin(partnerTypesTable, eq(partnersTable.partnerTypeId, partnerTypesTable.partnerTypeId))
+    .leftJoin(sysUsersTable, eq(partnersTable.sysUserId, sysUsersTable.sysUserId))
+    .where(eq(partnersTable.partnerId, id));
+
+    if (!result) return null;
+
+    return {
+      ...result.partner,
+      partnerType: result.partnerType,
+      sysUser: result.sysUser
+    } as any;
   }
 
   async updatePartner(id: number, data: Partial<NewPartner>): Promise<Partner | null> {
-    const [partner] = await db.update(partnersTable).set({ ...data, updatedAt: new Date() }).where(eq(partnersTable.id, id)).returning();
+    await db.update(partnersTable).set({ ...data, updatedAt: new Date() }).where(eq(partnersTable.partnerId, id));
+    const [partner] = await db.select().from(partnersTable).where(eq(partnersTable.partnerId, id));
     return partner || null;
   }
 
   async deletePartner(id: number): Promise<void> {
-    await db.update(partnersTable).set({ deletedAt: new Date(), updatedAt: new Date() }).where(eq(partnersTable.id, id));
+    await db.update(partnersTable).set({ deletedAt: new Date(), updatedAt: new Date() }).where(eq(partnersTable.partnerId, id));
   }
 
   // Document Types
   async createDocumentType(data: NewDocumentType): Promise<DocumentType> {
-    const [documentType] = await db.insert(documentTypesTable).values(data).returning();
+    const [result] = await db.insert(documentTypesTable).values(data);
+    const [documentType] = await db.select().from(documentTypesTable).where(eq(documentTypesTable.documentTypeId, result.insertId));
     return documentType;
   }
 
   async getDocumentTypes(): Promise<DocumentType[]> {
-    return await db.select().from(documentTypesTable).where(eq(documentTypesTable.deletedAt, null)).orderBy(desc(documentTypesTable.createdAt));
+    return await db.select().from(documentTypesTable).where(isNull(documentTypesTable.deletedAt)).orderBy(desc(documentTypesTable.createdAt));
   }
 
   async getDocumentTypeById(id: number): Promise<DocumentType | null> {
-    const [documentType] = await db.select().from(documentTypesTable).where(and(eq(documentTypesTable.id, id), eq(documentTypesTable.deletedAt, null)));
+    const [documentType] = await db.select().from(documentTypesTable).where(and(eq(documentTypesTable.documentTypeId, id), isNull(documentTypesTable.deletedAt)));
     return documentType || null;
   }
 
   async updateDocumentType(id: number, data: Partial<NewDocumentType>): Promise<DocumentType | null> {
-    const [documentType] = await db.update(documentTypesTable).set({ ...data, updatedAt: new Date() }).where(eq(documentTypesTable.id, id)).returning();
+    await db.update(documentTypesTable).set({ ...data, updatedAt: new Date() }).where(eq(documentTypesTable.documentTypeId, id));
+    const [documentType] = await db.select().from(documentTypesTable).where(eq(documentTypesTable.documentTypeId, id));
     return documentType || null;
   }
 
   async deleteDocumentType(id: number): Promise<void> {
-    await db.update(documentTypesTable).set({ deletedAt: new Date() }).where(eq(documentTypesTable.id, id));
+    await db.update(documentTypesTable).set({ deletedAt: new Date() }).where(eq(documentTypesTable.documentTypeId, id));
   }
 
   // Documents
   async createDocument(data: NewDocument): Promise<Document> {
-    const [document] = await db.insert(documentsTable).values(data).returning();
+    const [result] = await db.insert(documentsTable).values(data);
+    const [document] = await db.select().from(documentsTable).where(eq(documentsTable.documentId, result.insertId));
     return document;
   }
 
   async getDocuments(): Promise<Document[]> {
-    return await db.select().from(documentsTable).where(eq(documentsTable.deletedAt, null)).orderBy(desc(documentsTable.createdAt));
+    return await db.select().from(documentsTable).where(isNull(documentsTable.deletedAt)).orderBy(desc(documentsTable.createdAt));
   }
 
   async getDocumentById(id: number): Promise<Document | null> {
-    const [document] = await db.select().from(documentsTable).where(and(eq(documentsTable.id, id), eq(documentsTable.deletedAt, null)));
+    const [document] = await db.select().from(documentsTable).where(and(eq(documentsTable.documentId, id), isNull(documentsTable.deletedAt)));
     return document || null;
   }
 
   async updateDocument(id: number, data: Partial<NewDocument>): Promise<Document | null> {
-    const [document] = await db.update(documentsTable).set({ ...data, updatedAt: new Date() }).where(eq(documentsTable.id, id)).returning();
+    await db.update(documentsTable).set({ ...data, updatedAt: new Date() }).where(eq(documentsTable.documentId, id));
+    const [document] = await db.select().from(documentsTable).where(eq(documentsTable.documentId, id));
     return document || null;
   }
 
   async deleteDocument(id: number): Promise<void> {
-    await db.update(documentsTable).set({ deletedAt: new Date() }).where(eq(documentsTable.id, id));
+    await db.update(documentsTable).set({ deletedAt: new Date() }).where(eq(documentsTable.documentId, id));
   }
 
   // Entity Documents
   async createEntityDocument(data: NewEntityDocument): Promise<EntityDocument> {
-    const [entityDocument] = await db.insert(entityDocumentsTable).values(data).returning();
+    const [result] = await db.insert(entityDocumentsTable).values(data);
+    const [entityDocument] = await db.select().from(entityDocumentsTable).where(eq(entityDocumentsTable.entityDocumentId, result.insertId));
     return entityDocument;
   }
 
   async getEntityDocuments(): Promise<EntityDocument[]> {
-    return await db.select().from(entityDocumentsTable).orderBy(desc(entityDocumentsTable.id));
+    return await db.select().from(entityDocumentsTable).orderBy(desc(entityDocumentsTable.entityDocumentId));
   }
 
   async getEntityDocumentsByEntity(entityType: string, entityId: number): Promise<EntityDocument[]> {
     return await db.select().from(entityDocumentsTable)
-      .where(and(eq(entityDocumentsTable.entityType, entityType), eq(entityDocumentsTable.entityId, entityId)));
+      .where(and(eq(entityDocumentsTable.entityType, entityType as 'client' | 'partner' | 'contract'), eq(entityDocumentsTable.entityId, entityId)));
   }
 
   async updateEntityDocument(id: number, data: Partial<NewEntityDocument>): Promise<EntityDocument | null> {
-    const [entityDocument] = await db.update(entityDocumentsTable).set(data).where(eq(entityDocumentsTable.id, id)).returning();
+    await db.update(entityDocumentsTable).set(data).where(eq(entityDocumentsTable.entityDocumentId, id));
+    const [entityDocument] = await db.select().from(entityDocumentsTable).where(eq(entityDocumentsTable.entityDocumentId, id));
     return entityDocument || null;
   }
 
   async deleteEntityDocument(id: number): Promise<void> {
-    await db.delete(entityDocumentsTable).where(eq(entityDocumentsTable.id, id));
+    await db.delete(entityDocumentsTable).where(eq(entityDocumentsTable.entityDocumentId, id));
   }
 
   // Clients
   async createClient(data: NewClient): Promise<Client> {
-    const [client] = await db.insert(clientsTable).values(data).returning();
+    const [result] = await db.insert(clientsTable).values(data);
+    const [client] = await db.select().from(clientsTable).where(eq(clientsTable.clientId, result.insertId));
     return client;
   }
 
@@ -606,28 +654,31 @@ export class DrizzleStorage implements IStorage {
   }
 
   async getClientById(id: number): Promise<Client | null> {
-    const [client] = await db.select().from(clientsTable).where(eq(clientsTable.id, id));
+    const [client] = await db.select().from(clientsTable).where(eq(clientsTable.clientId, id));
     return client || null;
   }
 
   async updateClient(id: number, data: Partial<NewClient>): Promise<Client | null> {
-    const [client] = await db.update(clientsTable).set({ ...data, updatedAt: new Date() }).where(eq(clientsTable.id, id)).returning();
+    await db.update(clientsTable).set({ ...data, updatedAt: new Date() }).where(eq(clientsTable.clientId, id));
+    const [client] = await db.select().from(clientsTable).where(eq(clientsTable.clientId, id));
     return client || null;
   }
 
   async deleteClient(id: number): Promise<void> {
-    await db.delete(clientsTable).where(eq(clientsTable.id, id));
+    await db.delete(clientsTable).where(eq(clientsTable.clientId, id));
   }
 
   // Contracts
   async createContract(data: NewContract): Promise<Contract> {
-    const [contract] = await db.insert(contractsTable).values(data).returning();
+    const [result] = await db.insert(contractsTable).values(data);
+    const [contract] = await db.select().from(contractsTable).where(eq(contractsTable.contractId, result.insertId));
     return contract;
   }
 
   async createContractWithUser(contractData: NewContract, userData?: { email: string; password: string; name: string }): Promise<{ contract: Contract; user?: SysUser }> {
     // First create the contract
-    const [contract] = await db.insert(contractsTable).values(contractData).returning();
+    const [result] = await db.insert(contractsTable).values(contractData);
+    const [contract] = await db.select().from(contractsTable).where(eq(contractsTable.contractId, result.insertId));
     
     let user: SysUser | undefined;
     
@@ -636,12 +687,12 @@ export class DrizzleStorage implements IStorage {
       const sysUserData: NewSysUser = {
         login: userData.email,
         email: userData.email,
-        password: userData.password, // In production, this should be hashed
+        passwordHash: userData.password, // In production, this should be hashed
         name: userData.name,
-        phone: null,
-        contactId: null,
+
+
         sysUnitId: contract.sysUnitId,
-        companyId: 1, // Default company ID
+         // Default company ID
         active: true,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -653,11 +704,11 @@ export class DrizzleStorage implements IStorage {
         
         // Update the contract to link it to the created user
         await db.update(contractsTable)
-          .set({ sysUserId: user.id, updatedAt: new Date() })
-          .where(eq(contractsTable.id, contract.id));
+          .set({ sysUserId: user.sysUserId, updatedAt: new Date() })
+          .where(eq(contractsTable.contractId, contract.contractId));
           
         // Re-fetch the updated contract
-        const [updatedContract] = await db.select().from(contractsTable).where(eq(contractsTable.id, contract.id));
+        const [updatedContract] = await db.select().from(contractsTable).where(eq(contractsTable.contractId, contract.contractId));
         return { contract: updatedContract, user };
       } catch (error) {
         console.error('Error creating sys_user for contract:', error);
@@ -674,22 +725,24 @@ export class DrizzleStorage implements IStorage {
   }
 
   async getContractById(id: number): Promise<Contract | null> {
-    const [contract] = await db.select().from(contractsTable).where(and(eq(contractsTable.id, id), isNull(contractsTable.deletedAt)));
+    const [contract] = await db.select().from(contractsTable).where(and(eq(contractsTable.contractId, id), isNull(contractsTable.deletedAt)));
     return contract || null;
   }
 
   async updateContract(id: number, data: Partial<NewContract>): Promise<Contract | null> {
-    const [contract] = await db.update(contractsTable).set({ ...data, updatedAt: new Date() }).where(eq(contractsTable.id, id)).returning();
+    await db.update(contractsTable).set({ ...data, updatedAt: new Date() }).where(eq(contractsTable.contractId, id));
+    const [contract] = await db.select().from(contractsTable).where(eq(contractsTable.contractId, id));
     return contract || null;
   }
 
   async deleteContract(id: number): Promise<void> {
-    await db.update(contractsTable).set({ deletedAt: new Date() }).where(eq(contractsTable.id, id));
+    await db.update(contractsTable).set({ deletedAt: new Date() }).where(eq(contractsTable.contractId, id));
   }
 
   // Beneficiaries
   async createBeneficiary(data: NewBeneficiary): Promise<Beneficiary> {
-    const [beneficiary] = await db.insert(beneficiariesTable).values(data).returning();
+    const [result] = await db.insert(beneficiariesTable).values(data);
+    const [beneficiary] = await db.select().from(beneficiariesTable).where(eq(beneficiariesTable.beneficiaryId, result.insertId));
     return beneficiary;
   }
 
@@ -698,54 +751,58 @@ export class DrizzleStorage implements IStorage {
   }
 
   async getBeneficiaryById(id: number): Promise<Beneficiary | null> {
-    const [beneficiary] = await db.select().from(beneficiariesTable).where(eq(beneficiariesTable.id, id));
+    const [beneficiary] = await db.select().from(beneficiariesTable).where(eq(beneficiariesTable.beneficiaryId, id));
     return beneficiary || null;
   }
 
   async getBeneficiariesByContract(contractId: number): Promise<Beneficiary[]> {
-    return await db.select().from(beneficiariesTable).where(eq(beneficiariesTable.contractId, contractId));
+    return await db.select().from(beneficiariesTable).where(eq(beneficiariesTable.contractVersionId, contractId));
   }
 
   async updateBeneficiary(id: number, data: Partial<NewBeneficiary>): Promise<Beneficiary | null> {
-    const [beneficiary] = await db.update(beneficiariesTable).set({ ...data, updatedAt: new Date() }).where(eq(beneficiariesTable.id, id)).returning();
+    await db.update(beneficiariesTable).set({ ...data, updatedAt: new Date() }).where(eq(beneficiariesTable.beneficiaryId, id));
+    const [beneficiary] = await db.select().from(beneficiariesTable).where(eq(beneficiariesTable.beneficiaryId, id));
     return beneficiary || null;
   }
 
   async deleteBeneficiary(id: number): Promise<void> {
-    await db.delete(beneficiariesTable).where(eq(beneficiariesTable.id, id));
+    await db.delete(beneficiariesTable).where(eq(beneficiariesTable.beneficiaryId, id));
   }
 
   // Charges
   async createCharge(data: NewCharge): Promise<Charge> {
-    const [charge] = await db.insert(chargesTable).values(data).returning();
+    const [result] = await db.insert(contractChargesTable).values(data);
+    const [charge] = await db.select().from(contractChargesTable).where(eq(contractChargesTable.contractChargeId, result.insertId));
     return charge;
   }
 
   async getCharges(): Promise<Charge[]> {
-    return await db.select().from(chargesTable).orderBy(desc(chargesTable.createdAt));
+    return await db.select().from(contractChargesTable).orderBy(desc(contractChargesTable.createdAt));
   }
 
   async getChargeById(id: number): Promise<Charge | null> {
-    const [charge] = await db.select().from(chargesTable).where(eq(chargesTable.id, id));
+    const [charge] = await db.select().from(contractChargesTable).where(eq(contractChargesTable.contractChargeId, id));
     return charge || null;
   }
 
   async getChargesByContract(contractId: number): Promise<Charge[]> {
-    return await db.select().from(chargesTable).where(eq(chargesTable.contractId, contractId));
+    return await db.select().from(contractChargesTable).where(eq(contractChargesTable.contractVersionId, contractId));
   }
 
   async updateCharge(id: number, data: Partial<NewCharge>): Promise<Charge | null> {
-    const [charge] = await db.update(chargesTable).set({ ...data, updatedAt: new Date() }).where(eq(chargesTable.id, id)).returning();
+    await db.update(contractChargesTable).set({ ...data, updatedAt: new Date() }).where(eq(contractChargesTable.contractChargeId, id));
+    const [charge] = await db.select().from(contractChargesTable).where(eq(contractChargesTable.contractChargeId, id));
     return charge || null;
   }
 
   async deleteCharge(id: number): Promise<void> {
-    await db.delete(chargesTable).where(eq(chargesTable.id, id));
+    await db.delete(contractChargesTable).where(eq(contractChargesTable.contractChargeId, id));
   }
 
   // Contract Charges Implementation
   async createContractCharge(data: InsertContractCharge): Promise<ContractCharge> {
-    const [contractCharge] = await db.insert(contractChargesTable).values(data).returning();
+    const [result] = await db.insert(contractChargesTable).values(data);
+    const [contractCharge] = await db.select().from(contractChargesTable).where(eq(contractChargesTable.contractChargeId, result.insertId));
     return contractCharge;
   }
 
@@ -754,26 +811,28 @@ export class DrizzleStorage implements IStorage {
   }
 
   async getContractChargeById(id: number): Promise<ContractCharge | null> {
-    const [contractCharge] = await db.select().from(contractChargesTable).where(and(eq(contractChargesTable.id, id), isNull(contractChargesTable.deletedAt)));
+    const [contractCharge] = await db.select().from(contractChargesTable).where(and(eq(contractChargesTable.contractChargeId, id), isNull(contractChargesTable.deletedAt)));
     return contractCharge || null;
   }
 
   async getContractChargesByContract(contractId: number): Promise<ContractCharge[]> {
-    return await db.select().from(contractChargesTable).where(and(eq(contractChargesTable.contractId, contractId), isNull(contractChargesTable.deletedAt))).orderBy(desc(contractChargesTable.dueDate));
+    return await db.select().from(contractChargesTable).where(and(eq(contractChargesTable.contractVersionId, contractId), isNull(contractChargesTable.deletedAt))).orderBy(desc(contractChargesTable.dueDate));
   }
 
   async updateContractCharge(id: number, data: Partial<InsertContractCharge>): Promise<ContractCharge | null> {
-    const [contractCharge] = await db.update(contractChargesTable).set({ ...data, updatedAt: new Date() }).where(eq(contractChargesTable.id, id)).returning();
+    await db.update(contractChargesTable).set({ ...data, updatedAt: new Date() }).where(eq(contractChargesTable.contractChargeId, id));
+    const [contractCharge] = await db.select().from(contractChargesTable).where(eq(contractChargesTable.contractChargeId, id));
     return contractCharge || null;
   }
 
   async deleteContractCharge(id: number): Promise<void> {
-    await db.update(contractChargesTable).set({ deletedAt: new Date() }).where(eq(contractChargesTable.id, id));
+    await db.update(contractChargesTable).set({ deletedAt: new Date() }).where(eq(contractChargesTable.contractChargeId, id));
   }
 
   // Addendums
   async createAddendum(data: NewAddendum): Promise<Addendum> {
-    const [addendum] = await db.insert(addendumsTable).values(data).returning();
+    const [result] = await db.insert(addendumsTable).values(data);
+    const [addendum] = await db.select().from(addendumsTable).where(eq(addendumsTable.addendumId, result.insertId));
     return addendum;
   }
 
@@ -782,7 +841,7 @@ export class DrizzleStorage implements IStorage {
   }
 
   async getAddendumById(id: number): Promise<Addendum | null> {
-    const [addendum] = await db.select().from(addendumsTable).where(eq(addendumsTable.id, id));
+    const [addendum] = await db.select().from(addendumsTable).where(eq(addendumsTable.addendumId, id));
     return addendum || null;
   }
 
@@ -791,17 +850,19 @@ export class DrizzleStorage implements IStorage {
   }
 
   async updateAddendum(id: number, data: Partial<NewAddendum>): Promise<Addendum | null> {
-    const [addendum] = await db.update(addendumsTable).set({ ...data, updatedAt: new Date() }).where(eq(addendumsTable.id, id)).returning();
+    await db.update(addendumsTable).set({ ...data, updatedAt: new Date() }).where(eq(addendumsTable.addendumId, id));
+    const [addendum] = await db.select().from(addendumsTable).where(eq(addendumsTable.addendumId, id));
     return addendum || null;
   }
 
   async deleteAddendum(id: number): Promise<void> {
-    await db.delete(addendumsTable).where(eq(addendumsTable.id, id));
+    await db.delete(addendumsTable).where(eq(addendumsTable.addendumId, id));
   }
 
   // Batch CHK
   async createBatchChk(data: NewBatchChk): Promise<BatchChk> {
-    const [batchChk] = await db.insert(batchChkTable).values(data).returning();
+    const [result] = await db.insert(batchChkTable).values(data);
+    const [batchChk] = await db.select().from(batchChkTable).where(eq(batchChkTable.batchChkId, result.insertId));
     return batchChk;
   }
 
@@ -810,22 +871,24 @@ export class DrizzleStorage implements IStorage {
   }
 
   async getBatchChkById(id: number): Promise<BatchChk | null> {
-    const [batchChk] = await db.select().from(batchChkTable).where(eq(batchChkTable.id, id));
+    const [batchChk] = await db.select().from(batchChkTable).where(eq(batchChkTable.batchChkId, id));
     return batchChk || null;
   }
 
   async updateBatchChk(id: number, data: Partial<NewBatchChk>): Promise<BatchChk | null> {
-    const [batchChk] = await db.update(batchChkTable).set({ ...data, updatedAt: new Date() }).where(eq(batchChkTable.id, id)).returning();
+    await db.update(batchChkTable).set({ ...data, updatedAt: new Date() }).where(eq(batchChkTable.batchChkId, id));
+    const [batchChk] = await db.select().from(batchChkTable).where(eq(batchChkTable.batchChkId, id));
     return batchChk || null;
   }
 
   async deleteBatchChk(id: number): Promise<void> {
-    await db.delete(batchChkTable).where(eq(batchChkTable.id, id));
+    await db.delete(batchChkTable).where(eq(batchChkTable.batchChkId, id));
   }
 
   // Batch Detail
   async createBatchDetail(data: NewBatchDetail): Promise<BatchDetail> {
-    const [batchDetail] = await db.insert(batchDetailTable).values(data).returning();
+    const [result] = await db.insert(batchDetailTable).values(data);
+    const [batchDetail] = await db.select().from(batchDetailTable).where(eq(batchDetailTable.batchDetailId, result.insertId));
     return batchDetail;
   }
 
@@ -834,136 +897,147 @@ export class DrizzleStorage implements IStorage {
   }
 
   async getBatchDetailById(id: number): Promise<BatchDetail | null> {
-    const [batchDetail] = await db.select().from(batchDetailTable).where(eq(batchDetailTable.id, id));
+    const [batchDetail] = await db.select().from(batchDetailTable).where(eq(batchDetailTable.batchDetailId, id));
     return batchDetail || null;
   }
 
   async getBatchDetailsByBatch(batchId: number): Promise<BatchDetail[]> {
-    return await db.select().from(batchDetailTable).where(eq(batchDetailTable.batchId, batchId));
+    return await db.select().from(batchDetailTable).where(eq(batchDetailTable.batchChkId, batchId));
   }
 
   async updateBatchDetail(id: number, data: Partial<NewBatchDetail>): Promise<BatchDetail | null> {
-    const [batchDetail] = await db.update(batchDetailTable).set({ ...data, updatedAt: new Date() }).where(eq(batchDetailTable.id, id)).returning();
+    await db.update(batchDetailTable).set({ ...data, updatedAt: new Date() }).where(eq(batchDetailTable.batchDetailId, id));
+    const [batchDetail] = await db.select().from(batchDetailTable).where(eq(batchDetailTable.batchDetailId, id));
     return batchDetail || null;
   }
 
   async deleteBatchDetail(id: number): Promise<void> {
-    await db.delete(batchDetailTable).where(eq(batchDetailTable.id, id));
+    await db.delete(batchDetailTable).where(eq(batchDetailTable.batchDetailId, id));
   }
 
   // Core System Tables Implementation
   async createGender(data: NewGender): Promise<Gender> {
-    const [gender] = await db.insert(genderTable).values(data).returning();
+    const [result] = await db.insert(genderTable).values(data);
+    const [gender] = await db.select().from(genderTable).where(eq(genderTable.genderId, result.insertId));
     return gender;
   }
 
   async getGenders(): Promise<Gender[]> {
-    return await db.select().from(genderTable).where(eq(genderTable.deletedAt, null)).orderBy(desc(genderTable.createdAt));
+    return await db.select().from(genderTable).where(isNull(genderTable.deletedAt)).orderBy(desc(genderTable.createdAt));
   }
 
   async getGenderById(id: number): Promise<Gender | null> {
-    const [gender] = await db.select().from(genderTable).where(and(eq(genderTable.id, id), eq(genderTable.deletedAt, null)));
+    const [gender] = await db.select().from(genderTable).where(and(eq(genderTable.genderId, id), isNull(genderTable.deletedAt)));
     return gender || null;
   }
 
   async updateGender(id: number, data: Partial<NewGender>): Promise<Gender | null> {
-    const [gender] = await db.update(genderTable).set({ ...data, updatedAt: new Date() }).where(eq(genderTable.id, id)).returning();
+    await db.update(genderTable).set({ ...data, updatedAt: new Date() }).where(eq(genderTable.genderId, id));
+    const [gender] = await db.select().from(genderTable).where(eq(genderTable.genderId, id));
     return gender || null;
   }
 
   async deleteGender(id: number): Promise<void> {
-    await db.update(genderTable).set({ deletedAt: new Date() }).where(eq(genderTable.id, id));
+    await db.update(genderTable).set({ deletedAt: new Date() }).where(eq(genderTable.genderId, id));
   }
 
   async createPaymentStatus(data: NewPaymentStatus): Promise<PaymentStatus> {
-    const [paymentStatus] = await db.insert(paymentStatusTable).values(data).returning();
+    const [result] = await db.insert(paymentStatusTable).values(data);
+    const [paymentStatus] = await db.select().from(paymentStatusTable).where(eq(paymentStatusTable.paymentStatusId, result.insertId));
     return paymentStatus;
   }
 
   async getPaymentStatuses(): Promise<PaymentStatus[]> {
-    return await db.select().from(paymentStatusTable).where(eq(paymentStatusTable.deletedAt, null)).orderBy(desc(paymentStatusTable.createdAt));
+    return await db.select().from(paymentStatusTable).where(isNull(paymentStatusTable.deletedAt)).orderBy(desc(paymentStatusTable.createdAt));
   }
 
   async getPaymentStatusById(id: number): Promise<PaymentStatus | null> {
-    const [paymentStatus] = await db.select().from(paymentStatusTable).where(and(eq(paymentStatusTable.id, id), eq(paymentStatusTable.deletedAt, null)));
+    const [paymentStatus] = await db.select().from(paymentStatusTable).where(and(eq(paymentStatusTable.paymentStatusId, id), isNull(paymentStatusTable.deletedAt)));
     return paymentStatus || null;
   }
 
   async updatePaymentStatus(id: number, data: Partial<NewPaymentStatus>): Promise<PaymentStatus | null> {
-    const [paymentStatus] = await db.update(paymentStatusTable).set({ ...data, updatedAt: new Date() }).where(eq(paymentStatusTable.id, id)).returning();
+    await db.update(paymentStatusTable).set({ ...data, updatedAt: new Date() }).where(eq(paymentStatusTable.paymentStatusId, id));
+    const [paymentStatus] = await db.select().from(paymentStatusTable).where(eq(paymentStatusTable.paymentStatusId, id));
     return paymentStatus || null;
   }
 
   async deletePaymentStatus(id: number): Promise<void> {
-    await db.update(paymentStatusTable).set({ deletedAt: new Date() }).where(eq(paymentStatusTable.id, id));
+    await db.update(paymentStatusTable).set({ deletedAt: new Date() }).where(eq(paymentStatusTable.paymentStatusId, id));
   }
 
   async createEstado(data: NewEstado): Promise<Estado> {
-    const [estado] = await db.insert(estadoTable).values(data).returning();
+    const [result] = await db.insert(estadoTable).values(data);
+    const [estado] = await db.select().from(estadoTable).where(eq(estadoTable.stateId, result.insertId));
     return estado;
   }
 
   async getEstados(): Promise<Estado[]> {
-    return await db.select().from(estadoTable).where(eq(estadoTable.deletedAt, null)).orderBy(desc(estadoTable.createdAt));
+    return await db.select().from(estadoTable).where(isNull(estadoTable.deletedAt)).orderBy(desc(estadoTable.createdAt));
   }
 
   async getEstadoById(id: number): Promise<Estado | null> {
-    const [estado] = await db.select().from(estadoTable).where(and(eq(estadoTable.id, id), eq(estadoTable.deletedAt, null)));
+    const [estado] = await db.select().from(estadoTable).where(and(eq(estadoTable.stateId, id), isNull(estadoTable.deletedAt)));
     return estado || null;
   }
 
   async updateEstado(id: number, data: Partial<NewEstado>): Promise<Estado | null> {
-    const [estado] = await db.update(estadoTable).set({ ...data, updatedAt: new Date() }).where(eq(estadoTable.id, id)).returning();
+    await db.update(estadoTable).set({ ...data, updatedAt: new Date() }).where(eq(estadoTable.stateId, id));
+    const [estado] = await db.select().from(estadoTable).where(eq(estadoTable.stateId, id));
     return estado || null;
   }
 
   async deleteEstado(id: number): Promise<void> {
-    await db.update(estadoTable).set({ deletedAt: new Date() }).where(eq(estadoTable.id, id));
+    await db.update(estadoTable).set({ deletedAt: new Date() }).where(eq(estadoTable.stateId, id));
   }
 
   async createCidade(data: NewCidade): Promise<Cidade> {
-    const [cidade] = await db.insert(cidadeTable).values(data).returning();
+    const [result] = await db.insert(cidadeTable).values(data);
+    const [cidade] = await db.select().from(cidadeTable).where(eq(cidadeTable.cityId, result.insertId));
     return cidade;
   }
 
   async getCidades(): Promise<Cidade[]> {
-    return await db.select().from(cidadeTable).where(eq(cidadeTable.deletedAt, null)).orderBy(desc(cidadeTable.createdAt));
+    return await db.select().from(cidadeTable).where(isNull(cidadeTable.deletedAt)).orderBy(desc(cidadeTable.createdAt));
   }
 
   async getCidadeById(id: number): Promise<Cidade | null> {
-    const [cidade] = await db.select().from(cidadeTable).where(and(eq(cidadeTable.id, id), eq(cidadeTable.deletedAt, null)));
+    const [cidade] = await db.select().from(cidadeTable).where(and(eq(cidadeTable.cityId, id), isNull(cidadeTable.deletedAt)));
     return cidade || null;
   }
 
   async getCidadesByEstado(estadoId: number): Promise<Cidade[]> {
-    return await db.select().from(cidadeTable).where(and(eq(cidadeTable.estadoId, estadoId), eq(cidadeTable.deletedAt, null)));
+    return await db.select().from(cidadeTable).where(and(eq(cidadeTable.stateId, estadoId), isNull(cidadeTable.deletedAt)));
   }
 
   async updateCidade(id: number, data: Partial<NewCidade>): Promise<Cidade | null> {
-    const [cidade] = await db.update(cidadeTable).set({ ...data, updatedAt: new Date() }).where(eq(cidadeTable.id, id)).returning();
+    await db.update(cidadeTable).set({ ...data, updatedAt: new Date() }).where(eq(cidadeTable.cityId, id));
+    const [cidade] = await db.select().from(cidadeTable).where(eq(cidadeTable.cityId, id));
     return cidade || null;
   }
 
   async deleteCidade(id: number): Promise<void> {
-    await db.update(cidadeTable).set({ deletedAt: new Date() }).where(eq(cidadeTable.id, id));
+    await db.update(cidadeTable).set({ deletedAt: new Date() }).where(eq(cidadeTable.cityId, id));
   }
 
   async createCurrency(data: NewCurrency): Promise<Currency> {
-    const [currency] = await db.insert(currencyTable).values(data).returning();
+    const [result] = await db.insert(currencyTable).values(data);
+    const [currency] = await db.select().from(currencyTable).where(eq(currencyTable.currencyId, result.insertId));
     return currency;
   }
 
   async getCurrencies(): Promise<Currency[]> {
-    return await db.select().from(currencyTable).where(eq(currencyTable.deletedAt, null)).orderBy(desc(currencyTable.createdAt));
+    return await db.select().from(currencyTable).where(isNull(currencyTable.deletedAt)).orderBy(desc(currencyTable.createdAt));
   }
 
   async getCurrencyByCode(code: string): Promise<Currency | null> {
-    const [currency] = await db.select().from(currencyTable).where(and(eq(currencyTable.code, code), eq(currencyTable.deletedAt, null)));
+    const [currency] = await db.select().from(currencyTable).where(and(eq(currencyTable.code, code), isNull(currencyTable.deletedAt)));
     return currency || null;
   }
 
   async updateCurrency(code: string, data: Partial<NewCurrency>): Promise<Currency | null> {
-    const [currency] = await db.update(currencyTable).set({ ...data, updatedAt: new Date() }).where(eq(currencyTable.code, code)).returning();
+    await db.update(currencyTable).set({ ...data, updatedAt: new Date() }).where(eq(currencyTable.code, code));
+    const [currency] = await db.select().from(currencyTable).where(eq(currencyTable.code, code));
     return currency || null;
   }
 
@@ -972,141 +1046,153 @@ export class DrizzleStorage implements IStorage {
   }
 
   async createGeneralStatus(data: NewGeneralStatus): Promise<GeneralStatus> {
-    const [generalStatus] = await db.insert(generalStatusTable).values(data).returning();
+    const [result] = await db.insert(generalStatusTable).values(data);
+    const [generalStatus] = await db.select().from(generalStatusTable).where(eq(generalStatusTable.generalStatusId, result.insertId));
     return generalStatus;
   }
 
   async getGeneralStatuses(): Promise<GeneralStatus[]> {
-    return await db.select().from(generalStatusTable).where(eq(generalStatusTable.deletedAt, null)).orderBy(desc(generalStatusTable.createdAt));
+    return await db.select().from(generalStatusTable).where(isNull(generalStatusTable.deletedAt)).orderBy(desc(generalStatusTable.createdAt));
   }
 
   async getGeneralStatusById(id: number): Promise<GeneralStatus | null> {
-    const [generalStatus] = await db.select().from(generalStatusTable).where(and(eq(generalStatusTable.id, id), eq(generalStatusTable.deletedAt, null)));
+    const [generalStatus] = await db.select().from(generalStatusTable).where(and(eq(generalStatusTable.generalStatusId, id), isNull(generalStatusTable.deletedAt)));
     return generalStatus || null;
   }
 
   async updateGeneralStatus(id: number, data: Partial<NewGeneralStatus>): Promise<GeneralStatus | null> {
-    const [generalStatus] = await db.update(generalStatusTable).set({ ...data, updatedAt: new Date() }).where(eq(generalStatusTable.id, id)).returning();
+    await db.update(generalStatusTable).set({ ...data, updatedAt: new Date() }).where(eq(generalStatusTable.generalStatusId, id));
+    const [generalStatus] = await db.select().from(generalStatusTable).where(eq(generalStatusTable.generalStatusId, id));
     return generalStatus || null;
   }
 
   async deleteGeneralStatus(id: number): Promise<void> {
-    await db.update(generalStatusTable).set({ deletedAt: new Date() }).where(eq(generalStatusTable.id, id));
+    await db.update(generalStatusTable).set({ deletedAt: new Date() }).where(eq(generalStatusTable.generalStatusId, id));
   }
 
   async createCompany(data: NewCompany): Promise<Company> {
-    const [company] = await db.insert(companyTable).values(data).returning();
+    const [result] = await db.insert(companyTable).values(data);
+    const [company] = await db.select().from(companyTable).where(eq(companyTable.companyId, result.insertId));
     return company;
   }
 
   async getCompanies(): Promise<Company[]> {
-    return await db.select().from(companyTable).where(eq(companyTable.deletedAt, null)).orderBy(desc(companyTable.createdAt));
+    return await db.select().from(companyTable).where(isNull(companyTable.deletedAt)).orderBy(desc(companyTable.createdAt));
   }
 
   async getCompanyById(id: number): Promise<Company | null> {
-    const [company] = await db.select().from(companyTable).where(and(eq(companyTable.id, id), eq(companyTable.deletedAt, null)));
+    const [company] = await db.select().from(companyTable).where(and(eq(companyTable.companyId, id), isNull(companyTable.deletedAt)));
     return company || null;
   }
 
   async updateCompany(id: number, data: Partial<NewCompany>): Promise<Company | null> {
-    const [company] = await db.update(companyTable).set({ ...data, updatedAt: new Date() }).where(eq(companyTable.id, id)).returning();
+    await db.update(companyTable).set({ ...data, updatedAt: new Date() }).where(eq(companyTable.companyId, id));
+    const [company] = await db.select().from(companyTable).where(eq(companyTable.companyId, id));
     return company || null;
   }
 
   async deleteCompany(id: number): Promise<void> {
-    await db.update(companyTable).set({ deletedAt: new Date() }).where(eq(companyTable.id, id));
+    await db.update(companyTable).set({ deletedAt: new Date() }).where(eq(companyTable.companyId, id));
   }
 
   async createSubsidiary(data: NewSubsidiary): Promise<Subsidiary> {
-    const [subsidiary] = await db.insert(subsidiaryTable).values(data).returning();
+    const [result] = await db.insert(subsidiaryTable).values(data);
+    const [subsidiary] = await db.select().from(subsidiaryTable).where(eq(subsidiaryTable.subsidiaryId, result.insertId));
     return subsidiary;
   }
 
   async getSubsidiaries(): Promise<Subsidiary[]> {
-    return await db.select().from(subsidiaryTable).where(eq(subsidiaryTable.deletedAt, null)).orderBy(desc(subsidiaryTable.createdAt));
+    return await db.select().from(subsidiaryTable).where(isNull(subsidiaryTable.deletedAt)).orderBy(desc(subsidiaryTable.createdAt));
   }
 
   async getSubsidiaryById(id: number): Promise<Subsidiary | null> {
-    const [subsidiary] = await db.select().from(subsidiaryTable).where(and(eq(subsidiaryTable.id, id), eq(subsidiaryTable.deletedAt, null)));
+    const [subsidiary] = await db.select().from(subsidiaryTable).where(and(eq(subsidiaryTable.subsidiaryId, id), isNull(subsidiaryTable.deletedAt)));
     return subsidiary || null;
   }
 
   async updateSubsidiary(id: number, data: Partial<NewSubsidiary>): Promise<Subsidiary | null> {
-    const [subsidiary] = await db.update(subsidiaryTable).set({ ...data, updatedAt: new Date() }).where(eq(subsidiaryTable.id, id)).returning();
+    await db.update(subsidiaryTable).set({ ...data, updatedAt: new Date() }).where(eq(subsidiaryTable.subsidiaryId, id));
+    const [subsidiary] = await db.select().from(subsidiaryTable).where(eq(subsidiaryTable.subsidiaryId, id));
     return subsidiary || null;
   }
 
   async deleteSubsidiary(id: number): Promise<void> {
-    await db.update(subsidiaryTable).set({ deletedAt: new Date() }).where(eq(subsidiaryTable.id, id));
+    await db.update(subsidiaryTable).set({ deletedAt: new Date() }).where(eq(subsidiaryTable.subsidiaryId, id));
   }
 
   async createSysUnit(data: NewSysUnit): Promise<SysUnit> {
-    const [sysUnit] = await db.insert(sysUnitTable).values(data).returning();
+    const [result] = await db.insert(sysUnitTable).values(data);
+    const [sysUnit] = await db.select().from(sysUnitTable).where(eq(sysUnitTable.sysUnitId, result.insertId));
     return sysUnit;
   }
 
   async getSysUnits(): Promise<SysUnit[]> {
-    return await db.select().from(sysUnitTable).orderBy(desc(sysUnitTable.id));
+    return await db.select().from(sysUnitTable).orderBy(desc(sysUnitTable.sysUnitId));
   }
 
   async getSysUnitById(id: number): Promise<SysUnit | null> {
-    const [sysUnit] = await db.select().from(sysUnitTable).where(eq(sysUnitTable.id, id));
+    const [sysUnit] = await db.select().from(sysUnitTable).where(eq(sysUnitTable.sysUnitId, id));
     return sysUnit || null;
   }
 
   async updateSysUnit(id: number, data: Partial<NewSysUnit>): Promise<SysUnit | null> {
-    const [sysUnit] = await db.update(sysUnitTable).set(data).where(eq(sysUnitTable.id, id)).returning();
+    await db.update(sysUnitTable).set(data).where(eq(sysUnitTable.sysUnitId, id));
+    const [sysUnit] = await db.select().from(sysUnitTable).where(eq(sysUnitTable.sysUnitId, id));
     return sysUnit || null;
   }
 
   async deleteSysUnit(id: number): Promise<void> {
-    await db.delete(sysUnitTable).where(eq(sysUnitTable.id, id));
+    await db.delete(sysUnitTable).where(eq(sysUnitTable.sysUnitId, id));
   }
 
   async createClasse(data: NewClasse): Promise<Classe> {
-    const [classe] = await db.insert(classeTable).values(data).returning();
+    const [result] = await db.insert(classeTable).values(data);
+    const [classe] = await db.select().from(classeTable).where(eq(classeTable.categoryId, result.insertId));
     return classe;
   }
 
   async getClasses(): Promise<Classe[]> {
-    return await db.select().from(classeTable).where(eq(classeTable.deletedAt, null)).orderBy(desc(classeTable.createdAt));
+    return await db.select().from(classeTable).where(isNull(classeTable.deletedAt)).orderBy(desc(classeTable.createdAt));
   }
 
   async getClasseById(id: number): Promise<Classe | null> {
-    const [classe] = await db.select().from(classeTable).where(and(eq(classeTable.id, id), eq(classeTable.deletedAt, null)));
+    const [classe] = await db.select().from(classeTable).where(and(eq(classeTable.categoryId, id), isNull(classeTable.deletedAt)));
     return classe || null;
   }
 
   async updateClasse(id: number, data: Partial<NewClasse>): Promise<Classe | null> {
-    const [classe] = await db.update(classeTable).set({ ...data, updatedAt: new Date() }).where(eq(classeTable.id, id)).returning();
+    await db.update(classeTable).set({ ...data, updatedAt: new Date() }).where(eq(classeTable.categoryId, id));
+    const [classe] = await db.select().from(classeTable).where(eq(classeTable.categoryId, id));
     return classe || null;
   }
 
   async deleteClasse(id: number): Promise<void> {
-    await db.update(classeTable).set({ deletedAt: new Date() }).where(eq(classeTable.id, id));
+    await db.update(classeTable).set({ deletedAt: new Date() }).where(eq(classeTable.categoryId, id));
   }
 
   async createGroupBatch(data: NewGroupBatch): Promise<GroupBatch> {
-    const [groupBatch] = await db.insert(groupBatchTable).values(data).returning();
+    const [result] = await db.insert(groupBatchTable).values(data);
+    const [groupBatch] = await db.select().from(groupBatchTable).where(eq(groupBatchTable.groupBatchId, result.insertId));
     return groupBatch;
   }
 
   async getGroupBatches(): Promise<GroupBatch[]> {
-    return await db.select().from(groupBatchTable).where(eq(groupBatchTable.deletedAt, null)).orderBy(desc(groupBatchTable.createdAt));
+    return await db.select().from(groupBatchTable).where(isNull(groupBatchTable.deletedAt)).orderBy(desc(groupBatchTable.createdAt));
   }
 
   async getGroupBatchById(id: number): Promise<GroupBatch | null> {
-    const [groupBatch] = await db.select().from(groupBatchTable).where(and(eq(groupBatchTable.id, id), eq(groupBatchTable.deletedAt, null)));
+    const [groupBatch] = await db.select().from(groupBatchTable).where(and(eq(groupBatchTable.groupBatchId, id), isNull(groupBatchTable.deletedAt)));
     return groupBatch || null;
   }
 
   async updateGroupBatch(id: number, data: Partial<NewGroupBatch>): Promise<GroupBatch | null> {
-    const [groupBatch] = await db.update(groupBatchTable).set({ ...data, updatedAt: new Date() }).where(eq(groupBatchTable.id, id)).returning();
+    await db.update(groupBatchTable).set({ ...data, updatedAt: new Date() }).where(eq(groupBatchTable.groupBatchId, id));
+    const [groupBatch] = await db.select().from(groupBatchTable).where(eq(groupBatchTable.groupBatchId, id));
     return groupBatch || null;
   }
 
   async deleteGroupBatch(id: number): Promise<void> {
-    await db.update(groupBatchTable).set({ deletedAt: new Date() }).where(eq(groupBatchTable.id, id));
+    await db.update(groupBatchTable).set({ deletedAt: new Date() }).where(eq(groupBatchTable.groupBatchId, id));
   }
 
   // =====================================================================================
@@ -1115,7 +1201,8 @@ export class DrizzleStorage implements IStorage {
 
   // Account Types
   async createAccountType(data: InsertAccountType): Promise<SelectAccountType> {
-    const [accountType] = await db.insert(accountTypesTable).values(data).returning();
+    const [result] = await db.insert(accountTypesTable).values(data);
+    const [accountType] = await db.select().from(accountTypesTable).where(eq(accountTypesTable.accountTypeId, result.insertId));
     return accountType;
   }
 
@@ -1124,22 +1211,24 @@ export class DrizzleStorage implements IStorage {
   }
 
   async getAccountTypeById(id: number): Promise<SelectAccountType | null> {
-    const [accountType] = await db.select().from(accountTypesTable).where(eq(accountTypesTable.id, id));
+    const [accountType] = await db.select().from(accountTypesTable).where(eq(accountTypesTable.accountTypeId, id));
     return accountType || null;
   }
 
   async updateAccountType(id: number, data: Partial<InsertAccountType>): Promise<SelectAccountType | null> {
-    const [accountType] = await db.update(accountTypesTable).set({ ...data, updatedAt: new Date() }).where(eq(accountTypesTable.id, id)).returning();
+    await db.update(accountTypesTable).set({ ...data, updatedAt: new Date() }).where(eq(accountTypesTable.accountTypeId, id));
+    const [accountType] = await db.select().from(accountTypesTable).where(eq(accountTypesTable.accountTypeId, id));
     return accountType || null;
   }
 
   async deleteAccountType(id: number): Promise<void> {
-    await db.update(accountTypesTable).set({ active: false }).where(eq(accountTypesTable.id, id));
+    await db.update(accountTypesTable).set({ active: false }).where(eq(accountTypesTable.accountTypeId, id));
   }
 
   // Accounts (Chart of Accounts)
   async createAccount(data: InsertAccount): Promise<SelectAccount> {
-    const [account] = await db.insert(accountsTable).values(data).returning();
+    const [result] = await db.insert(accountsTable).values(data);
+    const [account] = await db.select().from(accountsTable).where(eq(accountsTable.accountId, result.insertId));
     return account;
   }
 
@@ -1148,7 +1237,7 @@ export class DrizzleStorage implements IStorage {
   }
 
   async getAccountById(id: number): Promise<SelectAccount | null> {
-    const [account] = await db.select().from(accountsTable).where(eq(accountsTable.id, id));
+    const [account] = await db.select().from(accountsTable).where(eq(accountsTable.accountId, id));
     return account || null;
   }
 
@@ -1161,17 +1250,19 @@ export class DrizzleStorage implements IStorage {
   }
 
   async updateAccount(id: number, data: Partial<InsertAccount>): Promise<SelectAccount | null> {
-    const [account] = await db.update(accountsTable).set({ ...data, updatedAt: new Date() }).where(eq(accountsTable.id, id)).returning();
+    await db.update(accountsTable).set({ ...data, updatedAt: new Date() }).where(eq(accountsTable.accountId, id));
+    const [account] = await db.select().from(accountsTable).where(eq(accountsTable.accountId, id));
     return account || null;
   }
 
   async deleteAccount(id: number): Promise<void> {
-    await db.update(accountsTable).set({ active: false }).where(eq(accountsTable.id, id));
+    await db.update(accountsTable).set({ active: false }).where(eq(accountsTable.accountId, id));
   }
 
   // Cost Centers
   async createCostCenter(data: InsertCostCenter): Promise<SelectCostCenter> {
-    const [costCenter] = await db.insert(costCentersTable).values(data).returning();
+    const [result] = await db.insert(costCentersTable).values(data);
+    const [costCenter] = await db.select().from(costCentersTable).where(eq(costCentersTable.costCenterId, result.insertId));
     return costCenter;
   }
 
@@ -1180,7 +1271,7 @@ export class DrizzleStorage implements IStorage {
   }
 
   async getCostCenterById(id: number): Promise<SelectCostCenter | null> {
-    const [costCenter] = await db.select().from(costCentersTable).where(eq(costCentersTable.id, id));
+    const [costCenter] = await db.select().from(costCentersTable).where(eq(costCentersTable.costCenterId, id));
     return costCenter || null;
   }
 
@@ -1189,17 +1280,19 @@ export class DrizzleStorage implements IStorage {
   }
 
   async updateCostCenter(id: number, data: Partial<InsertCostCenter>): Promise<SelectCostCenter | null> {
-    const [costCenter] = await db.update(costCentersTable).set({ ...data, updatedAt: new Date() }).where(eq(costCentersTable.id, id)).returning();
+    await db.update(costCentersTable).set({ ...data, updatedAt: new Date() }).where(eq(costCentersTable.costCenterId, id));
+    const [costCenter] = await db.select().from(costCentersTable).where(eq(costCentersTable.costCenterId, id));
     return costCenter || null;
   }
 
   async deleteCostCenter(id: number): Promise<void> {
-    await db.update(costCentersTable).set({ active: false }).where(eq(costCentersTable.id, id));
+    await db.update(costCentersTable).set({ active: false }).where(eq(costCentersTable.costCenterId, id));
   }
 
   // Departments
   async createDepartment(data: InsertDepartment): Promise<SelectDepartment> {
-    const [department] = await db.insert(departmentsTable).values(data).returning();
+    const [result] = await db.insert(departmentsTable).values(data);
+    const [department] = await db.select().from(departmentsTable).where(eq(departmentsTable.departmentId, result.insertId));
     return department;
   }
 
@@ -1208,22 +1301,24 @@ export class DrizzleStorage implements IStorage {
   }
 
   async getDepartmentById(id: number): Promise<SelectDepartment | null> {
-    const [department] = await db.select().from(departmentsTable).where(eq(departmentsTable.id, id));
+    const [department] = await db.select().from(departmentsTable).where(eq(departmentsTable.departmentId, id));
     return department || null;
   }
 
   async updateDepartment(id: number, data: Partial<InsertDepartment>): Promise<SelectDepartment | null> {
-    const [department] = await db.update(departmentsTable).set({ ...data, updatedAt: new Date() }).where(eq(departmentsTable.id, id)).returning();
+    await db.update(departmentsTable).set({ ...data, updatedAt: new Date() }).where(eq(departmentsTable.departmentId, id));
+    const [department] = await db.select().from(departmentsTable).where(eq(departmentsTable.departmentId, id));
     return department || null;
   }
 
   async deleteDepartment(id: number): Promise<void> {
-    await db.update(departmentsTable).set({ active: false }).where(eq(departmentsTable.id, id));
+    await db.update(departmentsTable).set({ active: false }).where(eq(departmentsTable.departmentId, id));
   }
 
   // Projects
   async createProject(data: InsertProject): Promise<SelectProject> {
-    const [project] = await db.insert(projectsTable).values(data).returning();
+    const [result] = await db.insert(projectsTable).values(data);
+    const [project] = await db.select().from(projectsTable).where(eq(projectsTable.projectId, result.insertId));
     return project;
   }
 
@@ -1232,22 +1327,24 @@ export class DrizzleStorage implements IStorage {
   }
 
   async getProjectById(id: number): Promise<SelectProject | null> {
-    const [project] = await db.select().from(projectsTable).where(eq(projectsTable.id, id));
+    const [project] = await db.select().from(projectsTable).where(eq(projectsTable.projectId, id));
     return project || null;
   }
 
   async updateProject(id: number, data: Partial<InsertProject>): Promise<SelectProject | null> {
-    const [project] = await db.update(projectsTable).set({ ...data, updatedAt: new Date() }).where(eq(projectsTable.id, id)).returning();
+    await db.update(projectsTable).set({ ...data, updatedAt: new Date() }).where(eq(projectsTable.projectId, id));
+    const [project] = await db.select().from(projectsTable).where(eq(projectsTable.projectId, id));
     return project || null;
   }
 
   async deleteProject(id: number): Promise<void> {
-    await db.update(projectsTable).set({ active: false }).where(eq(projectsTable.id, id));
+    await db.update(projectsTable).set({ active: false }).where(eq(projectsTable.projectId, id));
   }
 
   // Fiscal Years
   async createFiscalYear(data: InsertFiscalYear): Promise<SelectFiscalYear> {
-    const [fiscalYear] = await db.insert(fiscalYearsTable).values(data).returning();
+    const [result] = await db.insert(fiscalYearsTable).values(data);
+    const [fiscalYear] = await db.select().from(fiscalYearsTable).where(eq(fiscalYearsTable.fiscalYearId, result.insertId));
     return fiscalYear;
   }
 
@@ -1256,22 +1353,24 @@ export class DrizzleStorage implements IStorage {
   }
 
   async getFiscalYearById(id: number): Promise<SelectFiscalYear | null> {
-    const [fiscalYear] = await db.select().from(fiscalYearsTable).where(eq(fiscalYearsTable.id, id));
+    const [fiscalYear] = await db.select().from(fiscalYearsTable).where(eq(fiscalYearsTable.fiscalYearId, id));
     return fiscalYear || null;
   }
 
   async updateFiscalYear(id: number, data: Partial<InsertFiscalYear>): Promise<SelectFiscalYear | null> {
-    const [fiscalYear] = await db.update(fiscalYearsTable).set({ ...data, updatedAt: new Date() }).where(eq(fiscalYearsTable.id, id)).returning();
+    await db.update(fiscalYearsTable).set({ ...data, updatedAt: new Date() }).where(eq(fiscalYearsTable.fiscalYearId, id));
+    const [fiscalYear] = await db.select().from(fiscalYearsTable).where(eq(fiscalYearsTable.fiscalYearId, id));
     return fiscalYear || null;
   }
 
   async deleteFiscalYear(id: number): Promise<void> {
-    await db.delete(fiscalYearsTable).where(eq(fiscalYearsTable.id, id));
+    await db.delete(fiscalYearsTable).where(eq(fiscalYearsTable.fiscalYearId, id));
   }
 
   // Fiscal Periods
   async createFiscalPeriod(data: InsertFiscalPeriod): Promise<SelectFiscalPeriod> {
-    const [fiscalPeriod] = await db.insert(fiscalPeriodsTable).values(data).returning();
+    const [result] = await db.insert(fiscalPeriodsTable).values(data);
+    const [fiscalPeriod] = await db.select().from(fiscalPeriodsTable).where(eq(fiscalPeriodsTable.fiscalPeriodId, result.insertId));
     return fiscalPeriod;
   }
 
@@ -1280,7 +1379,7 @@ export class DrizzleStorage implements IStorage {
   }
 
   async getFiscalPeriodById(id: number): Promise<SelectFiscalPeriod | null> {
-    const [fiscalPeriod] = await db.select().from(fiscalPeriodsTable).where(eq(fiscalPeriodsTable.id, id));
+    const [fiscalPeriod] = await db.select().from(fiscalPeriodsTable).where(eq(fiscalPeriodsTable.fiscalPeriodId, id));
     return fiscalPeriod || null;
   }
 
@@ -1289,17 +1388,19 @@ export class DrizzleStorage implements IStorage {
   }
 
   async updateFiscalPeriod(id: number, data: Partial<InsertFiscalPeriod>): Promise<SelectFiscalPeriod | null> {
-    const [fiscalPeriod] = await db.update(fiscalPeriodsTable).set({ ...data, updatedAt: new Date() }).where(eq(fiscalPeriodsTable.id, id)).returning();
+    await db.update(fiscalPeriodsTable).set({ ...data, updatedAt: new Date() }).where(eq(fiscalPeriodsTable.fiscalPeriodId, id));
+    const [fiscalPeriod] = await db.select().from(fiscalPeriodsTable).where(eq(fiscalPeriodsTable.fiscalPeriodId, id));
     return fiscalPeriod || null;
   }
 
   async deleteFiscalPeriod(id: number): Promise<void> {
-    await db.delete(fiscalPeriodsTable).where(eq(fiscalPeriodsTable.id, id));
+    await db.delete(fiscalPeriodsTable).where(eq(fiscalPeriodsTable.fiscalPeriodId, id));
   }
 
   // Contract Number Registry - Enhanced contract numbering system
   async createContractNumberRegistry(data: InsertContractNumberRegistry): Promise<ContractNumberRegistry> {
-    const [registry] = await db.insert(contractNumberRegistryTable).values(data).returning();
+    const [result] = await db.insert(contractNumberRegistryTable).values(data);
+    const [registry] = await db.select().from(contractNumberRegistryTable).where(eq(contractNumberRegistryTable.contractNumberRegistryId, result.insertId));
     return registry;
   }
 
@@ -1308,7 +1409,7 @@ export class DrizzleStorage implements IStorage {
   }
 
   async getContractNumberRegistryById(id: number): Promise<ContractNumberRegistry | null> {
-    const [registry] = await db.select().from(contractNumberRegistryTable).where(and(eq(contractNumberRegistryTable.id, id), isNull(contractNumberRegistryTable.deletedAt)));
+    const [registry] = await db.select().from(contractNumberRegistryTable).where(and(eq(contractNumberRegistryTable.contractNumberRegistryId, id), isNull(contractNumberRegistryTable.deletedAt)));
     return registry || null;
   }
 
@@ -1333,41 +1434,31 @@ export class DrizzleStorage implements IStorage {
   }
 
   async assignContractNumber(contractNumber: string, contractId: number): Promise<ContractNumberRegistry | null> {
-    const [registry] = await db.update(contractNumberRegistryTable)
-      .set({ 
-        currentContractId: contractId, 
-        status: "assigned",
-        updatedAt: new Date() 
-      })
-      .where(eq(contractNumberRegistryTable.contractNumber, contractNumber))
-      .returning();
+    await db.update(contractNumberRegistryTable).set({ currentContractId: contractId, status: 'assigned', updatedAt: new Date() }).where(eq(contractNumberRegistryTable.contractNumber, contractNumber));
+    const [registry] = await db.select().from(contractNumberRegistryTable).where(eq(contractNumberRegistryTable.contractNumber, contractNumber));
     return registry || null;
   }
 
   async releaseContractNumber(contractNumber: string): Promise<ContractNumberRegistry | null> {
-    const [registry] = await db.update(contractNumberRegistryTable)
-      .set({ 
-        currentContractId: null, 
-        status: "available",
-        updatedAt: new Date() 
-      })
-      .where(eq(contractNumberRegistryTable.contractNumber, contractNumber))
-      .returning();
+    await db.update(contractNumberRegistryTable).set({ currentContractId: null, status: 'available', updatedAt: new Date() }).where(eq(contractNumberRegistryTable.contractNumber, contractNumber));
+    const [registry] = await db.select().from(contractNumberRegistryTable).where(eq(contractNumberRegistryTable.contractNumber, contractNumber));
     return registry || null;
   }
 
   async updateContractNumberRegistry(id: number, data: Partial<InsertContractNumberRegistry>): Promise<ContractNumberRegistry | null> {
-    const [registry] = await db.update(contractNumberRegistryTable).set({ ...data, updatedAt: new Date() }).where(eq(contractNumberRegistryTable.id, id)).returning();
+    await db.update(contractNumberRegistryTable).set({ ...data, updatedAt: new Date() }).where(eq(contractNumberRegistryTable.contractNumberRegistryId, id));
+    const [registry] = await db.select().from(contractNumberRegistryTable).where(eq(contractNumberRegistryTable.contractNumberRegistryId, id));
     return registry || null;
   }
 
   async deleteContractNumberRegistry(id: number): Promise<void> {
-    await db.update(contractNumberRegistryTable).set({ deletedAt: new Date() }).where(eq(contractNumberRegistryTable.id, id));
+    await db.update(contractNumberRegistryTable).set({ deletedAt: new Date() }).where(eq(contractNumberRegistryTable.contractNumberRegistryId, id));
   }
 
   // Contract Status History - Historical tracking
   async createContractStatusHistory(data: InsertContractStatusHistory): Promise<ContractStatusHistory> {
-    const [history] = await db.insert(contractStatusHistoryTable).values(data).returning();
+    const [result] = await db.insert(contractStatusHistoryTable).values(data);
+    const [history] = await db.select().from(contractStatusHistoryTable).where(eq(contractStatusHistoryTable.contractStatusHistoryId, result.insertId));
     return history;
   }
 
@@ -1376,7 +1467,7 @@ export class DrizzleStorage implements IStorage {
   }
 
   async getContractStatusHistoryById(id: number): Promise<ContractStatusHistory | null> {
-    const [history] = await db.select().from(contractStatusHistoryTable).where(and(eq(contractStatusHistoryTable.id, id), isNull(contractStatusHistoryTable.deletedAt)));
+    const [history] = await db.select().from(contractStatusHistoryTable).where(and(eq(contractStatusHistoryTable.contractStatusHistoryId, id), isNull(contractStatusHistoryTable.deletedAt)));
     return history || null;
   }
 
@@ -1390,12 +1481,13 @@ export class DrizzleStorage implements IStorage {
   }
 
   async updateContractStatusHistory(id: number, data: Partial<InsertContractStatusHistory>): Promise<ContractStatusHistory | null> {
-    const [history] = await db.update(contractStatusHistoryTable).set({ ...data, updatedAt: new Date() }).where(eq(contractStatusHistoryTable.id, id)).returning();
+    await db.update(contractStatusHistoryTable).set({ ...data, updatedAt: new Date() }).where(eq(contractStatusHistoryTable.contractStatusHistoryId, id));
+    const [history] = await db.select().from(contractStatusHistoryTable).where(eq(contractStatusHistoryTable.contractStatusHistoryId, id));
     return history || null;
   }
 
   async deleteContractStatusHistory(id: number): Promise<void> {
-    await db.update(contractStatusHistoryTable).set({ deletedAt: new Date() }).where(eq(contractStatusHistoryTable.id, id));
+    await db.update(contractStatusHistoryTable).set({ deletedAt: new Date() }).where(eq(contractStatusHistoryTable.contractStatusHistoryId, id));
   }
 
   // Contract numbering business logic
@@ -1463,14 +1555,15 @@ export class DrizzleStorage implements IStorage {
   }
 
   async createPaymentReceipt(data: InsertPaymentReceipt): Promise<PaymentReceipt> {
-    const [paymentReceipt] = await db.insert(paymentReceiptTable).values(data).returning();
+    const [result] = await db.insert(paymentReceiptTable).values(data);
+    const [paymentReceipt] = await db.select().from(paymentReceiptTable).where(eq(paymentReceiptTable.paymentReceiptId, result.insertId));
     return paymentReceipt;
   }
 
   async getPaymentReceiptById(id: number): Promise<PaymentReceipt | null> {
     const [paymentReceipt] = await db.select().from(paymentReceiptTable).where(
       and(
-        eq(paymentReceiptTable.id, id),
+        eq(paymentReceiptTable.paymentReceiptId, id),
         isNull(paymentReceiptTable.deletedAt)
       )
     );
@@ -1478,12 +1571,13 @@ export class DrizzleStorage implements IStorage {
   }
 
   async updatePaymentReceipt(id: number, data: Partial<InsertPaymentReceipt>): Promise<PaymentReceipt | null> {
-    const [paymentReceipt] = await db.update(paymentReceiptTable).set({ ...data, updatedAt: new Date() }).where(eq(paymentReceiptTable.id, id)).returning();
+    await db.update(paymentReceiptTable).set({ ...data, updatedAt: new Date() }).where(eq(paymentReceiptTable.paymentReceiptId, id));
+    const [paymentReceipt] = await db.select().from(paymentReceiptTable).where(eq(paymentReceiptTable.paymentReceiptId, id));
     return paymentReceipt || null;
   }
 
   async deletePaymentReceipt(id: number): Promise<void> {
-    await db.update(paymentReceiptTable).set({ deletedAt: new Date() }).where(eq(paymentReceiptTable.id, id));
+    await db.update(paymentReceiptTable).set({ deletedAt: new Date() }).where(eq(paymentReceiptTable.paymentReceiptId, id));
   }
 
   // Carteirinha (Member Card) Methods
@@ -1494,14 +1588,15 @@ export class DrizzleStorage implements IStorage {
   }
 
   async createCarteirinha(data: InsertCarteirinha): Promise<Carteirinha> {
-    const [carteirinha] = await db.insert(carteirinhaTable).values(data).returning();
+    const [result] = await db.insert(carteirinhaTable).values(data);
+    const [carteirinha] = await db.select().from(carteirinhaTable).where(eq(carteirinhaTable.membershipCardId, result.insertId));
     return carteirinha;
   }
 
   async getCarteirinhaById(id: number): Promise<Carteirinha | null> {
     const [carteirinha] = await db.select().from(carteirinhaTable).where(
       and(
-        eq(carteirinhaTable.id, id),
+        eq(carteirinhaTable.membershipCardId, id),
         isNull(carteirinhaTable.deletedAt)
       )
     );
@@ -1509,12 +1604,13 @@ export class DrizzleStorage implements IStorage {
   }
 
   async updateCarteirinha(id: number, data: Partial<InsertCarteirinha>): Promise<Carteirinha | null> {
-    const [carteirinha] = await db.update(carteirinhaTable).set({ ...data, updatedAt: new Date() }).where(eq(carteirinhaTable.id, id)).returning();
+    await db.update(carteirinhaTable).set({ ...data, updatedAt: new Date() }).where(eq(carteirinhaTable.membershipCardId, id));
+    const [carteirinha] = await db.select().from(carteirinhaTable).where(eq(carteirinhaTable.membershipCardId, id));
     return carteirinha || null;
   }
 
   async deleteCarteirinha(id: number): Promise<void> {
-    await db.update(carteirinhaTable).set({ deletedAt: new Date() }).where(eq(carteirinhaTable.id, id));
+    await db.update(carteirinhaTable).set({ deletedAt: new Date() }).where(eq(carteirinhaTable.membershipCardId, id));
   }
 
   // Medical Forward Methods
@@ -1525,14 +1621,15 @@ export class DrizzleStorage implements IStorage {
   }
 
   async createMedicalForward(data: InsertMedicalForward): Promise<MedicalForward> {
-    const [medicalForward] = await db.insert(medicalForwardTable).values(data).returning();
+    const [result] = await db.insert(medicalForwardTable).values(data);
+    const [medicalForward] = await db.select().from(medicalForwardTable).where(eq(medicalForwardTable.medicalForwardId, result.insertId));
     return medicalForward;
   }
 
   async getMedicalForwardById(id: number): Promise<MedicalForward | null> {
     const [medicalForward] = await db.select().from(medicalForwardTable).where(
       and(
-        eq(medicalForwardTable.id, id),
+        eq(medicalForwardTable.medicalForwardId, id),
         isNull(medicalForwardTable.deletedAt)
       )
     );
@@ -1540,12 +1637,13 @@ export class DrizzleStorage implements IStorage {
   }
 
   async updateMedicalForward(id: number, data: Partial<InsertMedicalForward>): Promise<MedicalForward | null> {
-    const [medicalForward] = await db.update(medicalForwardTable).set({ ...data, updatedAt: new Date() }).where(eq(medicalForwardTable.id, id)).returning();
+    await db.update(medicalForwardTable).set({ ...data, updatedAt: new Date() }).where(eq(medicalForwardTable.medicalForwardId, id));
+    const [medicalForward] = await db.select().from(medicalForwardTable).where(eq(medicalForwardTable.medicalForwardId, id));
     return medicalForward || null;
   }
 
   async deleteMedicalForward(id: number): Promise<void> {
-    await db.update(medicalForwardTable).set({ deletedAt: new Date() }).where(eq(medicalForwardTable.id, id));
+    await db.update(medicalForwardTable).set({ deletedAt: new Date() }).where(eq(medicalForwardTable.medicalForwardId, id));
   }
 }
 
